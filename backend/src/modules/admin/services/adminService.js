@@ -1,0 +1,79 @@
+import { adminRepository } from '../repositories/adminRepository.js';
+
+export const adminService = {
+  // Labels
+  async getAllLabels(companyId) {
+    return await adminRepository.findAllLabels(companyId);
+  },
+
+  async getLabelById(id, companyId) {
+    const label = await adminRepository.findLabelById(id, companyId);
+    if (!label) {
+      throw new Error('Label not found');
+    }
+    return label;
+  },
+
+  async createLabel(data, companyId) {
+    return await adminRepository.createLabel({
+      ...data,
+      companyId
+    });
+  },
+
+  async updateLabel(id, companyId, updateData) {
+    const label = await adminRepository.updateLabel(id, companyId, updateData);
+    if (!label) {
+      throw new Error('Label not found');
+    }
+    return label;
+  },
+
+  async deleteLabel(id, companyId) {
+    const label = await adminRepository.deleteLabel(id, companyId);
+    if (!label) {
+      throw new Error('Label not found');
+    }
+    return label;
+  },
+
+  // Board Statuses
+  async getAllStatuses(companyId, projectId = null) {
+    return await adminRepository.findAllStatuses(companyId, projectId);
+  },
+
+  async getStatusById(id, companyId) {
+    const status = await adminRepository.findStatusById(id, companyId);
+    if (!status) {
+      throw new Error('Status not found');
+    }
+    return status;
+  },
+
+  async createStatus(data, companyId) {
+    if (!data.projectId) {
+      throw new Error('Project ID is required');
+    }
+    return await adminRepository.createStatus({
+      ...data,
+      companyId
+    });
+  },
+
+  async updateStatus(id, companyId, updateData) {
+    const status = await adminRepository.updateStatus(id, companyId, updateData);
+    if (!status) {
+      throw new Error('Status not found');
+    }
+    return status;
+  },
+
+  async deleteStatus(id, companyId) {
+    const status = await adminRepository.deleteStatus(id, companyId);
+    if (!status) {
+      throw new Error('Status not found');
+    }
+    return status;
+  }
+};
+

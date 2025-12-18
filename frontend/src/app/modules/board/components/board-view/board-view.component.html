@@ -1,0 +1,897 @@
+<div class="max-w-7xl mx-auto px-2 sm:px-4">
+  <div class="mb-4 sm:mb-6">
+    <button
+      (click)="goBack()"
+      class="mb-2 sm:mb-4 text-sm sm:text-base text-indigo-600 hover:text-indigo-800"
+    >
+      ← Volver a tableros
+    </button>
+    <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{{ board?.name }}</h2>
+    <p class="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">{{ board?.description }}</p>
+  </div>
+
+  <div *ngIf="loading" class="text-center py-12">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+  </div>
+
+  <div *ngIf="!loading && board" class="flex gap-2 sm:gap-4 overflow-x-auto pb-4 -mx-2 sm:mx-0 px-2 sm:px-0" cdkDropListGroup>
+    <div
+      *ngFor="let column of columns; let i = index"
+      cdkDropList
+      [id]="'column-' + i"
+      [cdkDropListData]="column.tasks"
+      (cdkDropListDropped)="drop($event, i)"
+      class="flex-shrink-0 w-64 sm:w-72 rounded-lg p-3 sm:p-4"
+      [style.background-color]="column.color ? (column.color + '15') : '#F3F4F6'"
+    >
+      <div class="flex items-center justify-between mb-3 sm:mb-4">
+        <div class="flex items-center space-x-2">
+          <div
+            *ngIf="column.color"
+            class="w-3 h-3 rounded-full flex-shrink-0"
+            [style.background-color]="column.color"
+          ></div>
+          <h3 class="text-sm sm:text-base font-semibold text-gray-900">{{ column.name }}</h3>
+        </div>
+        <span class="text-xs sm:text-sm text-gray-500">{{ column.tasks.length }}</span>
+      </div>
+
+      <div class="space-y-2 sm:space-y-3 min-h-[150px] sm:min-h-[200px]">
+        <div
+          *ngFor="let task of column.tasks"
+          cdkDrag
+          (cdkDragStarted)="onDragStarted()"
+          (cdkDragEnded)="onDragEnded()"
+          (click)="!isDragging && openTaskModal(task)"
+          class="bg-white rounded-lg shadow p-3 sm:p-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+        >
+          <div class="flex items-start justify-between mb-2">
+            <h4 class="text-sm sm:text-base font-medium text-gray-900 flex-1 pr-2">{{ task.title }}</h4>
+            <span
+              [class]="getPriorityClass(task.priority)"
+              class="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs font-medium flex-shrink-0"
+            >
+              {{ task.priority }}
+            </span>
+          </div>
+          <!-- Cliente o Agente -->
+          <div *ngIf="task.clientId" class="mb-2">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <!-- Si es empresa, mostrar solo el agente -->
+              <span *ngIf="getTaskClientType(task) === 'empresa' && getTaskAgentName(task)" class="text-xs text-gray-600 font-medium">
+                {{ getTaskAgentName(task) }}
+              </span>
+              <!-- Si es persona, mostrar el cliente -->
+              <span *ngIf="getTaskClientType(task) === 'persona' && getTaskClientName(task)" class="text-xs text-gray-600 font-medium">
+                {{ getTaskClientName(task) }}
+              </span>
+            </div>
+          </div>
+          <!-- Etiquetas -->
+          <div *ngIf="task.labels && task.labels.length > 0" class="flex flex-wrap gap-1 mb-2">
+            <span
+              *ngFor="let label of task.labels"
+              class="px-2 py-0.5 rounded text-xs font-medium"
+              [style.background-color]="label.color + '20'"
+              [style.color]="label.color"
+              [style.border-color]="label.color"
+              style="border: 1px solid;"
+            >
+              {{ label.name }}
+            </span>
+          </div>
+          <div *ngIf="task.description" class="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2 prose prose-sm max-w-none" [innerHTML]="task.description"></div>
+          <div class="flex items-center justify-between mt-2">
+            <div class="flex -space-x-1.5 sm:-space-x-2">
+              <div
+                *ngFor="let assignee of task.assignees"
+                class="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center"
+                [title]="assignee.firstName + ' ' + assignee.lastName"
+              >
+                {{ assignee.firstName[0] }}{{ assignee.lastName[0] }}
+              </div>
+            </div>
+            <span *ngIf="task.dueDate" class="text-xs text-gray-500">
+              {{ task.dueDate | date: 'short' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <button
+        (click)="openCreateTaskModal(i)"
+        class="mt-3 sm:mt-4 w-full py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+      >
+        + Agregar tarea
+      </button>
+    </div>
+  </div>
+
+  <!-- Task Modal -->
+  <div
+    *ngIf="showTaskModal"
+    class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
+    (click)="closeTaskModal()"
+  >
+    <div class="relative mx-auto p-4 sm:p-6 border w-[80vw] shadow-lg rounded-md bg-white my-auto max-h-[90vh] overflow-hidden flex flex-col" (click)="$event.stopPropagation()">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-900">
+          {{ selectedTask ? (isEditMode ? 'Editar Tarea' : 'Detalles de la Tarea') : 'Nueva Tarea' }}
+        </h3>
+        <div class="relative task-actions-dropdown-container" *ngIf="selectedTask">
+          <button
+            type="button"
+            (click)="showTaskActionsDropdown = !showTaskActionsDropdown"
+            class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            title="Más opciones"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
+          <div
+            *ngIf="showTaskActionsDropdown"
+            class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200"
+          >
+            <div class="py-1">
+              <button
+                type="button"
+                (click)="deleteTask(); showTaskActionsDropdown = false"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>Eliminar tarea</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Modo Vista (solo lectura) -->
+      <div *ngIf="selectedTask && !isEditMode" class="flex-1 overflow-hidden flex flex-col">
+        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 flex-1 min-h-0">
+          <!-- Columna Izquierda: Título y Descripción (70%) -->
+          <div class="space-y-4 lg:col-span-7 overflow-y-auto max-h-[calc(90vh-200px)] pr-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
+              <div 
+                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors"
+                (click)="enableEditMode()"
+              >
+                {{ taskForm.title }}
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+              <div 
+                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md min-h-[200px] prose prose-sm max-w-none cursor-pointer hover:bg-gray-100 transition-colors"
+                [innerHTML]="taskForm.description || 'Sin descripción'"
+                (click)="enableEditMode()"
+              ></div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Adjuntos</label>
+              <div class="border border-gray-300 rounded-md p-4">
+                <input
+                  type="file"
+                  #fileInputView
+                  (change)="onFileSelected($event)"
+                  multiple
+                  class="hidden"
+                />
+                <button
+                  type="button"
+                  (click)="fileInputView.click()"
+                  class="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-600 hover:border-indigo-500 hover:text-indigo-500 transition-colors flex items-center justify-center space-x-2 mb-4"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <span>Subir archivos</span>
+                </button>
+                <div *ngIf="attachments.length === 0" class="text-gray-500 text-sm text-center py-4">
+                  Sin adjuntos
+                </div>
+                <div *ngIf="attachments.length > 0" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+                  <div
+                    *ngFor="let attachment of attachments; let i = index"
+                    class="relative group"
+                  >
+                    <div class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white">
+                      <img
+                        *ngIf="isImageFile(attachment.url || '', attachment.name)"
+                        [src]="attachment.url"
+                        [alt]="attachment.name"
+                        class="w-full h-full object-cover"
+                        (error)="handleImageError($event, attachment)"
+                      />
+                      <div
+                        *ngIf="!isImageFile(attachment.url || '', attachment.name)"
+                        class="w-full h-full flex flex-col items-center justify-center p-2 bg-gray-50"
+                      >
+                        <span class="text-2xl mb-1">{{ getFileIcon(attachment.name) }}</span>
+                        <span class="text-xs text-gray-600 text-center truncate w-full">{{ attachment.name }}</span>
+                      </div>
+                    </div>
+                    <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                      <button
+                        type="button"
+                        (click)="downloadAttachment(attachment)"
+                        class="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600"
+                        title="Descargar"
+                      >
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="enableEditMode(); removeAttachment(i)"
+                        class="bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        title="Eliminar"
+                      >
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="mt-1 text-xs text-gray-600 truncate" [title]="attachment.name">
+                      {{ attachment.name }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Comentarios</label>
+              <div class="space-y-4">
+                <!-- Lista de comentarios -->
+                <div *ngIf="comments.length > 0" class="space-y-3 max-h-64 overflow-y-auto">
+                  <div
+                    *ngFor="let comment of comments"
+                    class="flex space-x-3 p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div class="flex-shrink-0">
+                      <div class="h-8 w-8 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
+                        {{ getUserInitials(comment.userId) }}
+                      </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center space-x-2 mb-1">
+                        <span class="text-sm font-medium text-gray-900">{{ getUserName(comment.userId) }}</span>
+                        <span class="text-xs text-gray-500">{{ formatCommentDate(comment.createdAt || '') }}</span>
+                      </div>
+                      <div class="text-sm text-gray-700 prose prose-sm max-w-none" [innerHTML]="comment.text"></div>
+                    </div>
+                  </div>
+                </div>
+                <div *ngIf="comments.length === 0" class="text-sm text-gray-500 text-center py-4">
+                  No hay comentarios aún
+                </div>
+                <!-- Editor de comentarios -->
+                <div class="border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+                  <div class="flex flex-wrap border-b border-gray-200 bg-gray-50 px-2 py-1 rounded-t-md gap-1">
+                    <!-- Formato de texto básico -->
+                    <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
+                      <button
+                        type="button"
+                        (click)="formatCommentText('bold', $event)"
+                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                        title="Negrita"
+                      >
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="formatCommentText('italic', $event)"
+                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                        title="Cursiva"
+                      >
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="formatCommentText('underline', $event)"
+                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                        title="Subrayado"
+                      >
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14M5 5h14" />
+                        </svg>
+                      </button>
+                    </div>
+                    <!-- Encabezados -->
+                    <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
+                      <button
+                        type="button"
+                        (click)="formatCommentHeading('h1', $event)"
+                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold"
+                        title="Título 1"
+                      >
+                        H1
+                      </button>
+                      <button
+                        type="button"
+                        (click)="formatCommentHeading('h2', $event)"
+                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold"
+                        title="Título 2"
+                      >
+                        H2
+                      </button>
+                      <button
+                        type="button"
+                        (click)="formatCommentHeading('h3', $event)"
+                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold"
+                        title="Título 3"
+                      >
+                        H3
+                      </button>
+                    </div>
+                    <!-- Listas -->
+                    <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
+                      <button
+                        type="button"
+                        (click)="formatCommentText('insertUnorderedList', $event)"
+                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                        title="Lista con viñetas"
+                      >
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="formatCommentText('insertOrderedList', $event)"
+                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                        title="Lista numerada"
+                      >
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                        </svg>
+                      </button>
+                    </div>
+                    <!-- Enlace -->
+                    <div class="flex items-center gap-1">
+                      <button
+                        type="button"
+                        (click)="insertCommentLink($event)"
+                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                        title="Insertar enlace"
+                      >
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    contenteditable="true"
+                    (input)="onCommentChange($event)"
+                    class="comment-editor min-h-[100px] px-3 py-2 focus:outline-none"
+                    style="white-space: pre-wrap; word-wrap: break-word; direction: ltr; text-align: left;"
+                    dir="ltr"
+                    [attr.placeholder]="newCommentText ? '' : 'Escribe un comentario...'"
+                  ></div>
+                </div>
+                <button
+                  type="button"
+                  (click)="addComment()"
+                  class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Agregar comentario
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Cliente, Agente, Asignar a, Prioridad, Fecha de fin (30%) -->
+          <div class="space-y-4 lg:col-span-3 overflow-y-auto max-h-[calc(90vh-200px)] pr-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
+              <div 
+                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
+                (click)="enableEditMode()"
+              >
+                <div *ngIf="!selectedTask?.clientId" class="text-gray-500 text-sm">
+                  Sin cliente asignado
+                </div>
+                <div *ngIf="selectedTask?.clientId" class="text-sm text-gray-900">
+                  {{ getClientName(selectedTask.clientId) }}
+                  <span *ngIf="shouldShowAgent()" class="block text-xs text-gray-600 mt-1">
+                    Agente: {{ selectedTask.agentName }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Asignar a</label>
+              <div 
+                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
+                (click)="enableEditMode()"
+              >
+                <div *ngIf="getSelectedAssignees().length === 0" class="text-gray-500 text-sm">
+                  Sin asignar
+                </div>
+                <div *ngIf="getSelectedAssignees().length > 0" class="flex flex-wrap gap-2">
+                  <div
+                    *ngFor="let user of getSelectedAssignees()"
+                    class="flex items-center space-x-2"
+                  >
+                    <div class="h-8 w-8 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
+                      {{ user.firstName[0] }}{{ user.lastName[0] }}
+                    </div>
+                    <span class="text-sm text-gray-900">{{ user.firstName }} {{ user.lastName }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad</label>
+              <div 
+                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
+                (click)="enableEditMode()"
+              >
+                <span [class]="getPriorityClass(taskForm.priority)" class="px-2 py-1 rounded text-sm font-medium">
+                  {{ getPriorityLabel(taskForm.priority) }}
+                </span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de fin</label>
+              <div 
+                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors"
+                (click)="enableEditMode()"
+              >
+                {{ taskForm.dueDate ? formatDate(taskForm.dueDate) : 'Sin fecha límite' }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-3 pt-4 border-t">
+          <button
+            type="button"
+            (click)="closeTaskModal()"
+            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+
+      <!-- Modo Edición -->
+      <form *ngIf="!selectedTask || isEditMode" (ngSubmit)="saveTask()" class="flex-1 overflow-hidden flex flex-col">
+        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 mb-4 flex-1 min-h-0">
+          <!-- Columna Izquierda: Título y Descripción (70%) -->
+          <div class="space-y-4 lg:col-span-7 overflow-y-auto max-h-[calc(90vh-200px)] pr-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
+              <input
+                type="text"
+                [(ngModel)]="taskForm.title"
+                name="title"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+              <div class="border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+            <div class="flex flex-wrap border-b border-gray-200 bg-gray-50 px-2 py-1 rounded-t-md gap-1">
+              <!-- Formato de texto básico -->
+              <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
+                <button
+                  type="button"
+                  (click)="formatText('bold', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Negrita (Ctrl+B)"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="formatText('italic', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Cursiva (Ctrl+I)"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="formatText('underline', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Subrayado (Ctrl+U)"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14M5 5h14" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="formatText('strikeThrough', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Tachado"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Encabezados -->
+              <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
+                <button
+                  type="button"
+                  (click)="formatHeading('h1', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold"
+                  title="Título 1"
+                >
+                  H1
+                </button>
+                <button
+                  type="button"
+                  (click)="formatHeading('h2', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold"
+                  title="Título 2"
+                >
+                  H2
+                </button>
+                <button
+                  type="button"
+                  (click)="formatHeading('h3', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold"
+                  title="Título 3"
+                >
+                  H3
+                </button>
+              </div>
+
+              <!-- Listas -->
+              <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
+                <button
+                  type="button"
+                  (click)="formatText('insertUnorderedList', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Lista con viñetas"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="formatText('insertOrderedList', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Lista numerada"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Alineación -->
+              <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
+                <button
+                  type="button"
+                  (click)="formatText('justifyLeft', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Alinear izquierda"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8M4 18h16" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="formatText('justifyCenter', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Centrar"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M8 12h8M4 18h16" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="formatText('justifyRight', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Alinear derecha"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M12 12h8M4 18h16" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="formatText('justifyFull', $event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Justificar"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Elementos especiales -->
+              <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
+                <button
+                  type="button"
+                  (click)="insertLink($event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Insertar enlace"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="formatText('formatBlock', $event, 'blockquote')"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Cita"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="formatText('formatBlock', $event, 'pre')"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                  title="Código"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Color de texto -->
+              <div class="flex items-center gap-1">
+                <input
+                  type="color"
+                  (change)="setTextColor($event)"
+                  value="#000000"
+                  class="w-8 h-8 cursor-pointer border border-gray-300 rounded"
+                  title="Color de texto"
+                />
+                <button
+                  type="button"
+                  (click)="removeFormat($event)"
+                  class="p-1.5 hover:bg-gray-200 rounded text-gray-700 text-xs"
+                  title="Limpiar formato"
+                >
+                  Limpiar
+                </button>
+              </div>
+            </div>
+                <div
+                  #descriptionEditor
+                  contenteditable="true"
+                  (input)="onDescriptionChange($event)"
+                  (blur)="updateDescription($event)"
+                  class="description-editor min-h-[200px] px-3 py-2 focus:outline-none"
+                  style="white-space: pre-wrap; word-wrap: break-word; direction: ltr; text-align: left;"
+                  dir="ltr"
+                  [attr.placeholder]="taskForm.description ? '' : 'Escribe la descripción de la tarea...'"
+                ></div>
+              </div>
+              <input
+                type="hidden"
+                [(ngModel)]="taskForm.description"
+                name="description"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Adjuntos</label>
+              <div class="border border-gray-300 rounded-md p-4">
+                <input
+                  type="file"
+                  #fileInput
+                  (change)="onFileSelected($event)"
+                  multiple
+                  class="hidden"
+                />
+                <button
+                  type="button"
+                  (click)="fileInput.click()"
+                  class="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-600 hover:border-indigo-500 hover:text-indigo-500 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <span>Subir archivos</span>
+                </button>
+                <div *ngIf="attachments.length > 0" class="mt-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+                  <div
+                    *ngFor="let attachment of attachments; let i = index"
+                    class="relative group"
+                  >
+                    <div class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white">
+                      <img
+                        *ngIf="isImageFile(attachment.url || '', attachment.name)"
+                        [src]="attachment.url"
+                        [alt]="attachment.name"
+                        class="w-full h-full object-cover"
+                        (error)="handleImageError($event, attachment)"
+                      />
+                      <div
+                        *ngIf="!isImageFile(attachment.url || '', attachment.name)"
+                        class="w-full h-full flex flex-col items-center justify-center p-2 bg-gray-50"
+                      >
+                        <span class="text-2xl mb-1">{{ getFileIcon(attachment.name) }}</span>
+                        <span class="text-xs text-gray-600 text-center truncate w-full">{{ attachment.name }}</span>
+                      </div>
+                    </div>
+                    <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                      <button
+                        type="button"
+                        (click)="downloadAttachment(attachment)"
+                        class="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600"
+                        title="Descargar"
+                      >
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="removeAttachment(i)"
+                        class="bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        title="Eliminar"
+                      >
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="mt-1 text-xs text-gray-600 truncate" [title]="attachment.name">
+                      {{ attachment.name }}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{ formatFileSize(attachment.size) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Cliente, Agente, Asignar a, Prioridad, Fecha de fin (30%) -->
+          <div class="space-y-4 lg:col-span-3 overflow-y-auto max-h-[calc(90vh-200px)] pr-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Cliente *</label>
+              <select
+                [(ngModel)]="taskForm.clientId"
+                (change)="onClientChange()"
+                name="clientId"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">Seleccionar cliente...</option>
+                <option *ngFor="let client of clients" [value]="client._id">
+                  {{ client.name }}<span *ngIf="client.type === 'persona' && client.lastName"> {{ client.lastName }}</span>
+                  <span *ngIf="client.type === 'empresa'"> (Empresa)</span>
+                </option>
+              </select>
+            </div>
+            <div *ngIf="selectedClient && selectedClient.type === 'empresa'">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Agente *</label>
+              <select
+                [(ngModel)]="taskForm.agentId"
+                (change)="onAgentChange()"
+                name="agentId"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">Seleccionar agente...</option>
+                <option *ngFor="let agent of selectedClient.agents; let i = index" [value]="i">
+                  {{ agent.name }}<span *ngIf="agent.email"> - {{ agent.email }}</span>
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Asignar a</label>
+              <div class="relative assignee-dropdown-container">
+                <button
+                  type="button"
+                  (click)="showAssigneeDropdown = !showAssigneeDropdown"
+                  class="w-full px-3 py-2 text-left border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between"
+                >
+                  <span class="text-sm text-gray-700">{{ getSelectedAssigneesNames() }}</span>
+                  <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div
+                  *ngIf="showAssigneeDropdown"
+                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                >
+                  <div *ngIf="loadingUsers" class="p-3 text-sm text-gray-500">Cargando usuarios...</div>
+                  <div *ngIf="!loadingUsers && users.length === 0" class="p-3 text-sm text-gray-500 text-center">
+                    No hay usuarios disponibles
+                  </div>
+                  <div *ngIf="!loadingUsers && users.length > 0">
+                    <div
+                      *ngFor="let user of users"
+                      (click)="toggleAssignee(user._id)"
+                      class="flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        [checked]="isAssigneeSelected(user._id)"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        readonly
+                      />
+                      <div class="h-8 w-8 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center flex-shrink-0">
+                        {{ user.firstName[0] }}{{ user.lastName[0] }}
+                      </div>
+                      <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-900">{{ user.firstName }} {{ user.lastName }}</div>
+                        <div class="text-xs text-gray-500">{{ user.email }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad</label>
+              <select
+                [(ngModel)]="taskForm.priority"
+                name="priority"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="low">Baja</option>
+                <option value="medium">Media</option>
+                <option value="high">Alta</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de fin</label>
+              <input
+                type="date"
+                [(ngModel)]="taskForm.dueDate"
+                name="dueDate"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-3 sm:gap-0 pt-4 border-t">
+          <button
+            type="button"
+            (click)="selectedTask ? cancelEdit() : closeTaskModal()"
+            class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          >
+            {{ selectedTask ? 'Cancelar' : 'Cerrar' }}
+          </button>
+          <button
+            type="submit"
+            class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
