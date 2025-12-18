@@ -35,6 +35,7 @@ interface Client {
 interface Attachment {
   url: string;
   name: string;
+  title?: string;
   size: number;
   uploadedAt?: string;
   _id?: string;
@@ -66,8 +67,8 @@ interface Task {
   comments?: Comment[];
   labels?: Label[];
   clientId?: string | Client;
-  agentId?: string;
-  agentName?: string;
+  agentIds?: string[];
+  agentNames?: string[];
 }
 
 interface Column {
@@ -108,7 +109,11 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   selectedColumnIndex = 0;
   isDragging = false;
   showAssigneeDropdown = false;
+  showAgentDropdown = false;
   showTaskActionsDropdown = false;
+  showAttachmentTitleModal = false;
+  pendingFile: File | null = null;
+  attachmentTitle = '';
   isEditMode = false;
   taskForm = {
     title: '',
@@ -117,8 +122,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     assignees: [] as string[],
     dueDate: '',
     clientId: '',
-    agentId: '',
-    agentName: ''
+    agentIds: [] as string[],
+    agentNames: [] as string[]
   };
   attachments: Attachment[] = [];
   uploadingFiles = false;
@@ -174,22 +179,32 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   onClientChange(): void {
     if (this.taskForm.clientId) {
       this.selectedClient = this.clients.find(c => c._id === this.taskForm.clientId) || null;
-      // Si cambia el cliente, limpiar agente seleccionado
-      this.taskForm.agentId = '';
-      this.taskForm.agentName = '';
+      // Si cambia el cliente, limpiar agentes seleccionados
+      this.taskForm.agentIds = [];
+      this.taskForm.agentNames = [];
     } else {
       this.selectedClient = null;
-      this.taskForm.agentId = '';
-      this.taskForm.agentName = '';
+      this.taskForm.agentIds = [];
+      this.taskForm.agentNames = [];
     }
   }
 
-  onAgentChange(): void {
-    if (this.selectedClient && this.selectedClient.type === 'empresa' && this.taskForm.agentId) {
-      const agent = this.selectedClient.agents?.find((_, index) => index.toString() === this.taskForm.agentId);
-      if (agent) {
-        this.taskForm.agentName = agent.name;
-      }
+  onAgentToggle(agentIndex: number): void {
+    if (!this.selectedClient || this.selectedClient.type !== 'empresa') return;
+    
+    const agent = this.selectedClient.agents?.[agentIndex];
+    if (!agent) return;
+
+    const index = this.taskForm.agentIds.indexOf(agentIndex.toString());
+    
+    if (index > -1) {
+      // Remover agente
+      this.taskForm.agentIds.splice(index, 1);
+      this.taskForm.agentNames.splice(index, 1);
+    } else {
+      // Agregar agente
+      this.taskForm.agentIds.push(agentIndex.toString());
+      this.taskForm.agentNames.push(agent.name);
     }
   }
 
@@ -245,23 +260,33 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   loadTasks(): void {
     this.http.get<Task[]>(`${this.apiUrl}/tasks/board/${this.boardId}`).subscribe({
       next: (tasks) => {
-        // Normalizar URLs de attachments
-        tasks = tasks.map(task => ({
-          ...task,
-          attachments: task.attachments?.map(att => {
-            let url = att.url || '';
-            // Si la URL no es completa, construirla
-            if (url && !url.startsWith('http') && !url.startsWith('data:') && url.startsWith('/')) {
-              // Remover /api si está presente en apiUrl
-              const baseUrl = this.apiUrl.replace('/api', '');
-              url = `${baseUrl}${url}`;
-            }
-            return {
-              ...att,
-              url: url
-            };
-          }) || []
-        }));
+        // Normalizar URLs de attachments y migrar campos antiguos de agentes
+        tasks = tasks.map(task => {
+          // Migración: si tiene agentId/agentName antiguos, convertir a arrays
+          if (!task.agentIds && (task as any).agentId) {
+            task.agentIds = [(task as any).agentId];
+          }
+          if (!task.agentNames && (task as any).agentName) {
+            task.agentNames = [(task as any).agentName];
+          }
+          
+          return {
+            ...task,
+            attachments: task.attachments?.map(att => {
+              let url = att.url || '';
+              // Si la URL no es completa, construirla
+              if (url && !url.startsWith('http') && !url.startsWith('data:') && url.startsWith('/')) {
+                // Remover /api si está presente en apiUrl
+                const baseUrl = this.apiUrl.replace('/api', '');
+                url = `${baseUrl}${url}`;
+              }
+              return {
+                ...att,
+                url: url
+              };
+            }) || []
+          };
+        });
         // Asignar tareas a las columnas basándose en columnId
         this.columns = this.columns.map(col => ({
           ...col,
@@ -343,8 +368,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         assignees: task.assignees ? task.assignees.map(a => typeof a === 'object' ? a._id : a) : [],
         dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
         clientId: clientId,
-        agentId: task.agentId || '',
-        agentName: task.agentName || ''
+        agentIds: task.agentIds ? [...task.agentIds] : [],
+        agentNames: task.agentNames ? [...task.agentNames] : []
       };
       if (clientId) {
         this.selectedClient = this.clients.find(c => c._id === clientId) || null;
@@ -380,8 +405,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         assignees: [],
         dueDate: '',
         clientId: '',
-        agentId: '',
-        agentName: ''
+        agentIds: [],
+        agentNames: []
       };
       this.selectedClient = null;
       this.attachments = [];
@@ -421,8 +446,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         assignees: this.selectedTask.assignees ? this.selectedTask.assignees.map(a => typeof a === 'object' ? a._id : a) : [],
         dueDate: this.selectedTask.dueDate ? new Date(this.selectedTask.dueDate).toISOString().split('T')[0] : '',
         clientId: clientId,
-        agentId: this.selectedTask.agentId || '',
-        agentName: this.selectedTask.agentName || ''
+        agentIds: this.selectedTask.agentIds ? [...this.selectedTask.agentIds] : [],
+        agentNames: this.selectedTask.agentNames ? [...this.selectedTask.agentNames] : []
       };
       if (clientId) {
         this.selectedClient = this.clients.find(c => c._id === clientId) || null;
@@ -544,7 +569,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   }
 
   shouldShowAgent(): boolean {
-    if (!this.selectedTask?.clientId || !this.selectedTask?.agentName) {
+    if (!this.selectedTask?.clientId || !this.selectedTask?.agentNames || this.selectedTask.agentNames.length === 0) {
       return false;
     }
     if (typeof this.selectedTask.clientId === 'object') {
@@ -573,8 +598,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   }
 
   getTaskAgentName(task: Task): string {
-    if (task.agentName) {
-      return task.agentName;
+    if (task.agentNames && task.agentNames.length > 0) {
+      return task.agentNames.join(', ');
     }
     return '';
   }
@@ -653,6 +678,9 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     if (!target.closest('.assignee-dropdown-container')) {
       this.showAssigneeDropdown = false;
     }
+    if (!target.closest('.agent-dropdown-container')) {
+      this.showAgentDropdown = false;
+    }
   }
 
   ngOnDestroy(): void {
@@ -660,6 +688,14 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   }
 
   saveTask(): void {
+    // Validación: si es empresa, debe tener al menos un agente seleccionado
+    if (this.taskForm.clientId && this.selectedClient?.type === 'empresa') {
+      if (this.taskForm.agentIds.length === 0) {
+        alert('Debe seleccionar al menos un agente para clientes tipo empresa');
+        return;
+      }
+    }
+
     const columnId = this.columns[this.selectedColumnIndex]._id || this.columns[this.selectedColumnIndex].name;
     const taskData: any = {
       title: this.taskForm.title,
@@ -677,10 +713,10 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     if (this.taskForm.clientId) {
       taskData.clientId = this.taskForm.clientId;
       
-      // Si es empresa y hay agente seleccionado, agregar agente
-      if (this.selectedClient?.type === 'empresa' && this.taskForm.agentId) {
-        taskData.agentId = this.taskForm.agentId;
-        taskData.agentName = this.taskForm.agentName;
+      // Si es empresa y hay agentes seleccionados, agregar agentes
+      if (this.selectedClient?.type === 'empresa' && this.taskForm.agentIds.length > 0) {
+        taskData.agentIds = this.taskForm.agentIds;
+        taskData.agentNames = this.taskForm.agentNames;
       }
     }
 
@@ -714,18 +750,41 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       if (!this.isEditMode && this.selectedTask) {
         this.enableEditMode();
       }
-      Array.from(input.files).forEach(file => {
-        this.uploadFile(file);
-      });
+      // Procesar archivos uno por uno para pedir título
+      const files = Array.from(input.files);
+      if (files.length > 0) {
+        this.pendingFile = files[0];
+        this.attachmentTitle = '';
+        this.showAttachmentTitleModal = true;
+      }
       // Limpiar el input para permitir subir el mismo archivo de nuevo
       input.value = '';
     }
   }
 
-  uploadFile(file: File): void {
+  confirmAttachmentUpload(): void {
+    if (this.pendingFile && this.attachmentTitle.trim()) {
+      this.uploadFile(this.pendingFile, this.attachmentTitle.trim());
+      this.cancelAttachmentUpload();
+      
+      // Si hay más archivos pendientes, procesar el siguiente
+      // Por ahora solo procesamos uno a la vez
+    } else if (this.pendingFile) {
+      alert('Debe ingresar un título para el adjunto');
+    }
+  }
+
+  cancelAttachmentUpload(): void {
+    this.showAttachmentTitleModal = false;
+    this.pendingFile = null;
+    this.attachmentTitle = '';
+  }
+
+  uploadFile(file: File, title: string): void {
     this.uploadingFiles = true;
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('title', title);
 
     // Crear preview local mientras se sube
     const reader = new FileReader();
@@ -735,6 +794,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       const previewAttachment: Attachment = {
         url: e.target.result,
         name: file.name,
+        title: title,
         size: file.size,
         uploadedAt: new Date().toISOString(),
         _id: tempId
@@ -749,6 +809,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       const previewAttachment: Attachment = {
         url: '',
         name: file.name,
+        title: title,
         size: file.size,
         uploadedAt: new Date().toISOString(),
         _id: tempId
@@ -775,6 +836,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
           this.attachments[index] = {
             url: fullUrl,
             name: response.name || file.name,
+            title: response.title || title,
             size: response.size || file.size,
             uploadedAt: response.uploadedAt || new Date().toISOString()
           };
@@ -786,6 +848,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         // Remover el preview si falla la subida
         this.attachments = this.attachments.filter(a => a._id !== tempId);
         this.uploadingFiles = false;
+        alert('Error al subir el archivo. Por favor, intente nuevamente.');
       }
     });
   }

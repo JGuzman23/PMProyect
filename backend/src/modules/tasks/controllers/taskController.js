@@ -75,6 +75,7 @@ export const taskController = {
       res.json({
         url: fileUrl,
         name: req.file.originalname,
+        title: req.body.title || req.file.originalname,
         size: req.file.size,
         uploadedAt: new Date().toISOString()
       });

@@ -1,0 +1,61 @@
+<div class="relative language-selector-container">
+  <button
+    type="button"
+    (click)="toggleDropdown($event)"
+    class="flex items-center justify-center px-2 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors border border-gray-300 bg-white shadow-sm"
+    [attr.aria-expanded]="showDropdown"
+    aria-haspopup="true"
+    [title]="getCurrentLanguageName()"
+  >
+    <img 
+      [src]="getFlagUrl(getCurrentLanguageCountryCode())" 
+      [alt]="getCurrentLanguageName()"
+      [attr.data-country]="getCurrentLanguageCountryCode()"
+      class="w-6 h-4.5 object-cover rounded-sm border border-gray-200 shadow-sm"
+      (error)="handleImageError($event)"
+      loading="eager"
+    />
+    <svg 
+      [class.rotate-180]="showDropdown"
+      class="w-3.5 h-3.5 text-gray-500 transition-transform duration-200 flex-shrink-0 ml-1.5" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  <div
+    *ngIf="showDropdown"
+    class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-[100] border border-gray-200 overflow-hidden"
+  >
+    <div class="py-1">
+      <button
+        *ngFor="let lang of languages"
+        type="button"
+        (click)="selectLanguage(lang.code)"
+        [class.bg-indigo-50]="currentLanguage === lang.code"
+        [class.text-indigo-600]="currentLanguage === lang.code"
+        [class.font-medium]="currentLanguage === lang.code"
+        class="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3 transition-colors"
+      >
+        <img 
+          [src]="getFlagUrl(lang.countryCode)" 
+          [alt]="lang.name"
+          [attr.data-country]="lang.countryCode"
+          class="w-7 h-5 object-cover rounded-sm border border-gray-200 shadow-sm flex-shrink-0"
+          (error)="handleImageError($event)"
+          loading="eager"
+        />
+        <span class="flex-1">{{ lang.name }}</span>
+        <span *ngIf="currentLanguage === lang.code" class="ml-auto text-indigo-600">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+

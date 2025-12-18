@@ -176,23 +176,56 @@ export class ClientFormComponent implements OnInit {
   }
 
   saveClient(): void {
+    // Validación básica
+    if (!this.clientForm.name || this.clientForm.name.trim() === '') {
+      alert('El nombre es obligatorio');
+      return;
+    }
+
     // Preparar datos para enviar
-    const dataToSend = { ...this.clientForm };
+    const dataToSend: any = {
+      type: this.clientForm.type,
+      name: this.clientForm.name.trim(),
+      email: this.clientForm.email?.trim() || '',
+      phone: this.clientForm.phone?.trim() || '',
+      address: this.clientForm.address || {},
+      notes: this.clientForm.notes?.trim() || ''
+    };
     
-    // Si es tipo empresa, filtrar agentes sin nombre
-    if (dataToSend.type === 'empresa' && dataToSend.agents) {
-      dataToSend.agents = dataToSend.agents.filter((agent: Agent) => agent.name && agent.name.trim() !== '');
-    } else if (dataToSend.type === 'persona') {
-      // Si es persona, no enviar campos de empresa
-      delete dataToSend.agents;
-      delete dataToSend.company;
-      delete dataToSend.taxId;
-      delete dataToSend.website;
-    } else {
-      // Si es empresa, no enviar campos de persona
-      delete dataToSend.lastName;
-      delete dataToSend.documentType;
-      delete dataToSend.documentNumber;
+    // Si es tipo empresa
+    if (dataToSend.type === 'empresa') {
+      // Agregar campos específicos de empresa
+      if (this.clientForm.taxId) {
+        dataToSend.taxId = this.clientForm.taxId.trim();
+      }
+      if (this.clientForm.website) {
+        dataToSend.website = this.clientForm.website.trim();
+      }
+      
+      // Filtrar y agregar agentes válidos
+      if (this.clientForm.agents && Array.isArray(this.clientForm.agents)) {
+        dataToSend.agents = this.clientForm.agents
+          .filter((agent: Agent) => agent.name && agent.name.trim() !== '')
+          .map((agent: Agent) => ({
+            name: agent.name.trim(),
+            phone: agent.phone?.trim() || '',
+            email: agent.email?.trim() || ''
+          }));
+      } else {
+        dataToSend.agents = [];
+      }
+    } 
+    // Si es tipo persona
+    else if (dataToSend.type === 'persona') {
+      if (this.clientForm.lastName) {
+        dataToSend.lastName = this.clientForm.lastName.trim();
+      }
+      if (this.clientForm.documentType) {
+        dataToSend.documentType = this.clientForm.documentType;
+      }
+      if (this.clientForm.documentNumber) {
+        dataToSend.documentNumber = this.clientForm.documentNumber.trim();
+      }
     }
 
     this.loading = true;
@@ -200,21 +233,44 @@ export class ClientFormComponent implements OnInit {
     if (this.isEditMode && this.clientId) {
       this.http.put(`${this.apiUrl}/clients/${this.clientId}`, dataToSend).subscribe({
         next: () => {
+          alert('Cliente actualizado correctamente');
           this.router.navigate(['/clients']);
         },
         error: (err) => {
           console.error('Error updating client', err);
           this.loading = false;
+          const errorMessage = err.error?.message || err.error?.error || 'Error al actualizar el cliente';
+          alert(`Error: ${errorMessage}`);
         }
       });
     } else {
       this.http.post(`${this.apiUrl}/clients`, dataToSend).subscribe({
         next: () => {
+          alert('Cliente creado correctamente');
           this.router.navigate(['/clients']);
         },
         error: (err) => {
           console.error('Error creating client', err);
           this.loading = false;
+          let errorMessage = 'Error al crear el cliente';
+          
+          if (err.error) {
+            if (err.error.message) {
+              errorMessage = err.error.message;
+            } else if (err.error.error) {
+              errorMessage = err.error.error;
+            } else if (typeof err.error === 'string') {
+              errorMessage = err.error;
+            } else if (err.error.errors) {
+              // Errores de validación de Mongoose
+              const validationErrors = Object.values(err.error.errors)
+                .map((e: any) => e.message)
+                .join(', ');
+              errorMessage = `Errores de validación: ${validationErrors}`;
+            }
+          }
+          
+          alert(`Error: ${errorMessage}`);
         }
       });
     }

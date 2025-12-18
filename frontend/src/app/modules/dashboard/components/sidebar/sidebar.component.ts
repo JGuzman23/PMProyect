@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { TranslationService } from '../../../../core/services/translation.service';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, TranslatePipe],
   templateUrl: './sidebar.component.html'
 })
 export class SidebarComponent implements OnInit, OnDestroy {
@@ -16,7 +18,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
   adminExpanded = false;
   private routerSubscription?: Subscription;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    public translationService: TranslationService
+  ) {}
 
   ngOnInit(): void {
     // Verificar ruta inicial

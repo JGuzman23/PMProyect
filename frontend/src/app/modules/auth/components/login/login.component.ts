@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { TranslationService } from '../../../../core/services/translation.service';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { LanguageSelectorComponent } from '../../../../core/components/language-selector/language-selector.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe, LanguageSelectorComponent],
   templateUrl: './login.component.html'
 })
 export class LoginComponent {
@@ -18,7 +21,8 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    public translationService: TranslationService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -38,7 +42,7 @@ export class LoginComponent {
           this.router.navigate(['/']);
         },
         error: (err) => {
-          this.error = err.error?.error || 'Error al iniciar sesión';
+          this.error = err.error?.error || this.translationService.translate('auth.loginError');
           this.loading = false;
         }
       });

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { TranslationService } from './core/services/translation.service';
 
 @Component({
   selector: 'app-root',
@@ -8,7 +9,16 @@ import { CommonModule } from '@angular/common';
   imports: [RouterOutlet, CommonModule],
   templateUrl: './app.component.html'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'ProjectFlow';
+
+  constructor(private translationService: TranslationService) {}
+
+  ngOnInit(): void {
+    // Establecer el idioma del documento HTML basado en el idioma actual
+    this.translationService.getCurrentLanguage().subscribe(lang => {
+      document.documentElement.lang = lang;
+    });
+  }
 }
 

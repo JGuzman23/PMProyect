@@ -37,14 +37,14 @@ const taskSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Client'
   },
-  agentId: {
+  agentIds: [{
     type: String,
     trim: true
-  },
-  agentName: {
+  }],
+  agentNames: [{
     type: String,
     trim: true
-  },
+  }],
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -73,6 +73,7 @@ const taskSchema = new mongoose.Schema({
   attachments: [{
     url: String,
     name: String,
+    title: String,
     size: Number,
     uploadedAt: Date
   }],
