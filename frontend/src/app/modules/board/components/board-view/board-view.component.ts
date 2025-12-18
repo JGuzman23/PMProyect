@@ -38,6 +38,8 @@ interface Attachment {
   title?: string;
   size: number;
   uploadedAt?: string;
+  statusId?: string;
+  statusName?: string;
   _id?: string;
 }
 
@@ -126,7 +128,9 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     agentNames: [] as string[]
   };
   attachments: Attachment[] = [];
+  attachmentsByStatus: { [statusId: string]: Attachment[] } = {};
   uploadingFiles = false;
+  pendingStatusId: string | null = null;
   comments: Comment[] = [];
   newCommentText: string = '';
   selectedClient: Client | null = null;
@@ -376,7 +380,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       } else {
         this.selectedClient = null;
       }
-      // Normalizar URLs de attachments
+      // Normalizar URLs de attachments y agrupar por estado
       this.attachments = (task.attachments || []).map(att => {
         let url = att.url || '';
         // Si la URL no es completa, construirla
@@ -390,6 +394,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
           url: url
         };
       });
+      this.groupAttachmentsByStatus();
       // Cargar comentarios
       this.comments = (task.comments || []).map(comment => ({
         ...comment,
@@ -410,6 +415,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       };
       this.selectedClient = null;
       this.attachments = [];
+      this.attachmentsByStatus = {};
       this.comments = [];
       this.isEditMode = true; // Nueva tarea se abre en modo edición
     }
@@ -455,6 +461,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         this.selectedClient = null;
       }
       this.attachments = this.selectedTask.attachments || [];
+      this.groupAttachmentsByStatus();
       this.isEditMode = false;
     }
   }
@@ -472,6 +479,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.showTaskActionsDropdown = false;
     this.isEditMode = false;
     this.attachments = [];
+    this.attachmentsByStatus = {};
     this.comments = [];
     this.newCommentText = '';
   }
@@ -743,17 +751,34 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  onFileSelected(event: Event): void {
+  triggerFileInput(statusId: string): void {
+    const inputId = `fileInput-${statusId}`;
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    if (input) {
+      input.click();
+    }
+  }
+
+  triggerFileInputEdit(statusId: string): void {
+    const inputId = `fileInputEdit-${statusId}`;
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    if (input) {
+      input.click();
+    }
+  }
+
+  onFileSelected(event: Event, statusId?: string): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       // Si estamos en modo vista, activar modo edición para poder subir archivos
       if (!this.isEditMode && this.selectedTask) {
         this.enableEditMode();
       }
-      // Procesar archivos uno por uno para pedir título
+      // Procesar archivos uno por uno para pedir título y estado
       const files = Array.from(input.files);
       if (files.length > 0) {
         this.pendingFile = files[0];
+        this.pendingStatusId = statusId || null;
         this.attachmentTitle = '';
         this.showAttachmentTitleModal = true;
       }
@@ -763,12 +788,12 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   }
 
   confirmAttachmentUpload(): void {
-    if (this.pendingFile && this.attachmentTitle.trim()) {
-      this.uploadFile(this.pendingFile, this.attachmentTitle.trim());
+    if (this.pendingFile && this.attachmentTitle.trim() && this.pendingStatusId) {
+      const status = this.columns.find(c => c._id === this.pendingStatusId);
+      this.uploadFile(this.pendingFile, this.attachmentTitle.trim(), this.pendingStatusId, status?.name || '');
       this.cancelAttachmentUpload();
-      
-      // Si hay más archivos pendientes, procesar el siguiente
-      // Por ahora solo procesamos uno a la vez
+    } else if (this.pendingFile && !this.pendingStatusId) {
+      alert('Debe seleccionar un estado para el adjunto');
     } else if (this.pendingFile) {
       alert('Debe ingresar un título para el adjunto');
     }
@@ -777,14 +802,17 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   cancelAttachmentUpload(): void {
     this.showAttachmentTitleModal = false;
     this.pendingFile = null;
+    this.pendingStatusId = null;
     this.attachmentTitle = '';
   }
 
-  uploadFile(file: File, title: string): void {
+  uploadFile(file: File, title: string, statusId: string, statusName: string): void {
     this.uploadingFiles = true;
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', title);
+    formData.append('statusId', statusId);
+    formData.append('statusName', statusName);
 
     // Crear preview local mientras se sube
     const reader = new FileReader();
@@ -796,10 +824,13 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         name: file.name,
         title: title,
         size: file.size,
+        statusId: statusId,
+        statusName: statusName,
         uploadedAt: new Date().toISOString(),
         _id: tempId
       };
       this.attachments.push(previewAttachment);
+      this.groupAttachmentsByStatus();
     };
     
     if (file.type.startsWith('image/')) {
@@ -811,10 +842,13 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         name: file.name,
         title: title,
         size: file.size,
+        statusId: statusId,
+        statusName: statusName,
         uploadedAt: new Date().toISOString(),
         _id: tempId
       };
       this.attachments.push(previewAttachment);
+      this.groupAttachmentsByStatus();
     }
 
     // Subir archivo al servidor
@@ -838,8 +872,11 @@ export class BoardViewComponent implements OnInit, OnDestroy {
             name: response.name || file.name,
             title: response.title || title,
             size: response.size || file.size,
+            statusId: response.statusId || statusId,
+            statusName: response.statusName || statusName,
             uploadedAt: response.uploadedAt || new Date().toISOString()
           };
+          this.groupAttachmentsByStatus();
         }
         this.uploadingFiles = false;
       },
@@ -853,8 +890,31 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     });
   }
 
-  removeAttachment(index: number): void {
-    this.attachments.splice(index, 1);
+  removeAttachment(statusId: string, index: number): void {
+    const statusAttachments = this.attachmentsByStatus[statusId] || [];
+    const attachment = statusAttachments[index];
+    if (attachment) {
+      const globalIndex = this.attachments.findIndex(a => a._id === attachment._id);
+      if (globalIndex !== -1) {
+        this.attachments.splice(globalIndex, 1);
+        this.groupAttachmentsByStatus();
+      }
+    }
+  }
+
+  groupAttachmentsByStatus(): void {
+    this.attachmentsByStatus = {};
+    this.attachments.forEach(att => {
+      const statusId = att.statusId || 'no-status';
+      if (!this.attachmentsByStatus[statusId]) {
+        this.attachmentsByStatus[statusId] = [];
+      }
+      this.attachmentsByStatus[statusId].push(att);
+    });
+  }
+
+  getAttachmentsForStatus(statusId: string): Attachment[] {
+    return this.attachmentsByStatus[statusId] || [];
   }
 
   isImageFile(url: string, name: string): boolean {

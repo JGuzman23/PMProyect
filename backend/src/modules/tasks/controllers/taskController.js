@@ -76,6 +76,8 @@ export const taskController = {
         url: fileUrl,
         name: req.file.originalname,
         title: req.body.title || req.file.originalname,
+        statusId: req.body.statusId || '',
+        statusName: req.body.statusName || '',
         size: req.file.size,
         uploadedAt: new Date().toISOString()
       });

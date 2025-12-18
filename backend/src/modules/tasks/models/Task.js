@@ -75,6 +75,8 @@ const taskSchema = new mongoose.Schema({
     name: String,
     title: String,
     size: Number,
+    statusId: String,
+    statusName: String,
     uploadedAt: Date
   }],
   comments: [{
