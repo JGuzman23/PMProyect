@@ -19,7 +19,8 @@ export const taskRepository = {
       .populate('boardId', 'name')
       .populate('clientId', 'name type company lastName agents')
       .populate('labels')
-      .populate('comments.userId', 'firstName lastName email');
+      .populate('comments.userId', 'firstName lastName email')
+      .populate('activityLog.userId', 'firstName lastName email');
   },
 
   async findByBoard(boardId, companyId) {
@@ -38,13 +39,20 @@ export const taskRepository = {
   },
 
   async update(id, companyId, updateData) {
-    return await Task.findOneAndUpdate(
+    // Separar $push del resto de updateData
+    const pushData = updateData.$push;
+    delete updateData.$push;
+    
+    const task = await Task.findOneAndUpdate(
       { _id: id, companyId },
-      updateData,
+      { ...updateData, ...(pushData ? { $push: pushData } : {}) },
       { new: true }
     ).populate('assignees', 'firstName lastName email avatar')
      .populate('createdBy', 'firstName lastName email')
-     .populate('clientId', 'name type company lastName agents');
+     .populate('clientId', 'name type company lastName agents')
+     .populate('activityLog.userId', 'firstName lastName email');
+    
+    return task;
   },
 
   async delete(id, companyId) {

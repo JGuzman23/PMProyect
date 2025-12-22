@@ -163,12 +163,78 @@
           </button>
         </div>
       </div>
+
+      <!-- Información Superior: Cliente, Asignado a, Prioridad, Fecha de fin (solo en modo vista) -->
+      <div *ngIf="selectedTask && !isEditMode" class="mb-4 pb-3 border-b border-gray-200">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          <div>
+            <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Cliente</label>
+            <div 
+              class="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-xs cursor-pointer hover:bg-gray-100 transition-colors"
+              (click)="enableEditMode()"
+            >
+              <div *ngIf="!selectedTask?.clientId && !taskForm.clientId" class="text-gray-500 truncate">
+                Sin cliente asignado
+              </div>
+              <div *ngIf="selectedTask?.clientId || taskForm.clientId" class="text-gray-900 truncate">
+                {{ getClientName(selectedTask?.clientId || taskForm.clientId) }}
+                <span *ngIf="shouldShowAgent()" class="block text-[10px] text-gray-600 mt-0.5 truncate">
+                  Agente(s): {{ getTaskAgentName(selectedTask!) }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Asignado a</label>
+            <div 
+              class="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-xs cursor-pointer hover:bg-gray-100 transition-colors"
+              (click)="enableEditMode()"
+            >
+              <div *ngIf="getSelectedAssignees().length === 0" class="text-gray-500">
+                Sin asignar
+              </div>
+              <div *ngIf="getSelectedAssignees().length > 0" class="flex flex-wrap gap-0.5 items-center">
+                <div
+                  *ngFor="let user of getSelectedAssignees(); let last = last"
+                  class="flex items-center space-x-0.5"
+                >
+                  <div class="h-4 w-4 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center flex-shrink-0">
+                    {{ user.firstName[0] }}{{ user.lastName[0] }}
+                  </div>
+                  <span class="text-[10px] text-gray-900 truncate max-w-[60px]">{{ user.firstName }} {{ user.lastName }}</span>
+                  <span *ngIf="!last" class="text-gray-400">,</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Prioridad</label>
+            <div 
+              class="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-xs cursor-pointer hover:bg-gray-100 transition-colors"
+              (click)="enableEditMode()"
+            >
+              <span [class]="getPriorityClass(taskForm.priority)" class="px-1.5 py-0.5 rounded text-[10px] font-medium inline-block">
+                {{ getPriorityLabel(taskForm.priority) }}
+              </span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Fecha de fin</label>
+            <div 
+              class="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors"
+              (click)="enableEditMode()"
+            >
+              {{ taskForm.dueDate ? formatDate(taskForm.dueDate) : 'Sin fecha límite' }}
+            </div>
+          </div>
+        </div>
+      </div>
       
       <!-- Modo Vista (solo lectura) -->
-      <div *ngIf="selectedTask && !isEditMode" class="flex-1 overflow-hidden flex flex-col">
-        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 flex-1 min-h-0">
+      <div *ngIf="selectedTask && !isEditMode" class="flex-1 overflow-hidden flex flex-col min-h-0">
+        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 flex-1 min-h-0 overflow-y-auto">
           <!-- Columna Izquierda: Título y Descripción (70%) -->
-          <div class="space-y-4 lg:col-span-7 overflow-y-auto max-h-[calc(90vh-200px)] pr-2">
+          <div class="space-y-4 lg:col-span-7 pr-2">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
               <div 
@@ -273,219 +339,117 @@
             </div>
           </div>
 
-          <!-- Columna Derecha: Cliente, Agente, Asignar a, Prioridad, Fecha de fin (30%) -->
-          <div class="space-y-4 lg:col-span-3 overflow-y-auto max-h-[calc(90vh-200px)] pr-2">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
-              <div 
-                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
-                (click)="enableEditMode()"
-              >
-                <div *ngIf="!selectedTask?.clientId" class="text-gray-500 text-sm">
-                  Sin cliente asignado
-                </div>
-                <div *ngIf="selectedTask?.clientId" class="text-sm text-gray-900">
-                  {{ getClientName(selectedTask.clientId) }}
-                  <span *ngIf="shouldShowAgent()" class="block text-xs text-gray-600 mt-1">
-                    Agente(s): {{ getTaskAgentName(selectedTask!) }}
-                  </span>
-                </div>
+          <!-- Columna Derecha: Comentarios y Actividades (30%) -->
+          <div class="lg:col-span-3 flex flex-col h-full">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Comentarios y Actividades</label>
+            
+            <!-- Lista con scroll independiente -->
+            <div class="flex-1 overflow-y-auto pr-2 space-y-3 mb-4" style="max-height: calc(90vh - 400px);">
+              <div *ngIf="activityItems.length === 0" class="text-sm text-gray-500 text-center py-8">
+                No hay comentarios ni actividades aún
               </div>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Asignar a</label>
-              <div 
-                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
-                (click)="enableEditMode()"
-              >
-                <div *ngIf="getSelectedAssignees().length === 0" class="text-gray-500 text-sm">
-                  Sin asignar
-                </div>
-                <div *ngIf="getSelectedAssignees().length > 0" class="flex flex-wrap gap-2">
-                  <div
-                    *ngFor="let user of getSelectedAssignees()"
-                    class="flex items-center space-x-2"
-                  >
+              
+              <div *ngFor="let item of activityItems" class="flex space-x-3">
+                <!-- Comentario -->
+                <div *ngIf="item.type === 'comment'" class="flex space-x-3 p-3 bg-gray-50 rounded-lg w-full">
+                  <div class="flex-shrink-0">
                     <div class="h-8 w-8 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
-                      {{ user.firstName[0] }}{{ user.lastName[0] }}
+                      {{ getUserInitials(getCommentUserId(item)) }}
                     </div>
-                    <span class="text-sm text-gray-900">{{ user.firstName }} {{ user.lastName }}</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center space-x-2 mb-1">
+                      <span class="text-sm font-medium text-gray-900">{{ getUserName(getCommentUserId(item)) }}</span>
+                      <span class="text-xs text-gray-500">{{ formatCommentDate(getCommentCreatedAt(item)) }}</span>
+                    </div>
+                    <div class="text-sm text-gray-700 prose prose-sm max-w-none" [innerHTML]="getCommentText(item)"></div>
+                  </div>
+                </div>
+
+                <!-- Actividad -->
+                <div *ngIf="item.type === 'activity'" class="flex space-x-3 p-3 bg-blue-50 rounded-lg w-full border-l-2 border-blue-400">
+                  <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getActivityIconPath(item)" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center space-x-2 mb-1">
+                      <span class="text-sm font-medium text-gray-900">{{ getUserName(getActivityUserId(item)) }}</span>
+                      <span class="text-xs text-gray-500">{{ formatCommentDate(getActivityCreatedAt(item)) }}</span>
+                    </div>
+                    <div class="text-sm text-gray-700">
+                      {{ getActivityDescription(item) }}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad</label>
-              <div 
-                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
-                (click)="enableEditMode()"
-              >
-                <span [class]="getPriorityClass(taskForm.priority)" class="px-2 py-1 rounded text-sm font-medium">
-                  {{ getPriorityLabel(taskForm.priority) }}
-                </span>
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de fin</label>
-              <div 
-                class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors"
-                (click)="enableEditMode()"
-              >
-                {{ taskForm.dueDate ? formatDate(taskForm.dueDate) : 'Sin fecha límite' }}
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Comentarios</label>
-              <div class="space-y-4">
-                <!-- Lista de comentarios -->
-                <div *ngIf="comments.length > 0" class="space-y-3 max-h-64 overflow-y-auto">
-                  <div
-                    *ngFor="let comment of comments"
-                    class="flex space-x-3 p-3 bg-gray-50 rounded-lg"
+            
+            <!-- Editor de comentarios (fijo en la parte inferior) -->
+            <div class="border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+              <div class="flex flex-wrap border-b border-gray-200 bg-gray-50 px-2 py-1 rounded-t-md gap-1">
+                <!-- Formato de texto básico -->
+                <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
+                  <button
+                    type="button"
+                    (click)="formatCommentText('bold', $event)"
+                    class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                    title="Negrita"
                   >
-                    <div class="flex-shrink-0">
-                      <div class="h-8 w-8 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
-                        {{ getUserInitials(comment.userId) }}
-                      </div>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center space-x-2 mb-1">
-                        <span class="text-sm font-medium text-gray-900">{{ getUserName(comment.userId) }}</span>
-                        <span class="text-xs text-gray-500">{{ formatCommentDate(comment.createdAt || '') }}</span>
-                      </div>
-                      <div class="text-sm text-gray-700 prose prose-sm max-w-none" [innerHTML]="comment.text"></div>
-                    </div>
-                  </div>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="formatCommentText('italic', $event)"
+                    class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                    title="Cursiva"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="formatCommentText('underline', $event)"
+                    class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                    title="Subrayado"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14M5 5h14" />
+                    </svg>
+                  </button>
                 </div>
-                <div *ngIf="comments.length === 0" class="text-sm text-gray-500 text-center py-4">
-                  No hay comentarios aún
-                </div>
-                <!-- Editor de comentarios -->
-                <div class="border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
-                  <div class="flex flex-wrap border-b border-gray-200 bg-gray-50 px-2 py-1 rounded-t-md gap-1">
-                    <!-- Formato de texto básico -->
-                    <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
-                      <button
-                        type="button"
-                        (click)="formatCommentText('bold', $event)"
-                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
-                        title="Negrita"
-                      >
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        (click)="formatCommentText('italic', $event)"
-                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
-                        title="Cursiva"
-                      >
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        (click)="formatCommentText('underline', $event)"
-                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
-                        title="Subrayado"
-                      >
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14M5 5h14" />
-                        </svg>
-                      </button>
-                    </div>
-                    <!-- Encabezados -->
-                    <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
-                      <button
-                        type="button"
-                        (click)="formatCommentHeading('h1', $event)"
-                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold"
-                        title="Título 1"
-                      >
-                        H1
-                      </button>
-                      <button
-                        type="button"
-                        (click)="formatCommentHeading('h2', $event)"
-                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold"
-                        title="Título 2"
-                      >
-                        H2
-                      </button>
-                      <button
-                        type="button"
-                        (click)="formatCommentHeading('h3', $event)"
-                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700 text-xs font-bold"
-                        title="Título 3"
-                      >
-                        H3
-                      </button>
-                    </div>
-                    <!-- Listas -->
-                    <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
-                      <button
-                        type="button"
-                        (click)="formatCommentText('insertUnorderedList', $event)"
-                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
-                        title="Lista con viñetas"
-                      >
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        (click)="formatCommentText('insertOrderedList', $event)"
-                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
-                        title="Lista numerada"
-                      >
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                        </svg>
-                      </button>
-                    </div>
-                    <!-- Enlace -->
-                    <div class="flex items-center gap-1">
-                      <button
-                        type="button"
-                        (click)="insertCommentLink($event)"
-                        class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
-                        title="Insertar enlace"
-                      >
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div
-                    contenteditable="true"
-                    (input)="onCommentChange($event)"
-                    class="comment-editor min-h-[100px] px-3 py-2 focus:outline-none"
-                    style="white-space: pre-wrap; word-wrap: break-word; direction: ltr; text-align: left;"
-                    dir="ltr"
-                    [attr.placeholder]="newCommentText ? '' : 'Escribe un comentario...'"
-                  ></div>
-                </div>
-                <button
-                  type="button"
-                  (click)="addComment()"
-                  class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Agregar comentario
-                </button>
               </div>
+              <div
+                #commentEditor
+                contenteditable="true"
+                class="comment-editor min-h-[100px] p-3 text-sm text-gray-900 focus:outline-none prose prose-sm max-w-none"
+                [innerHTML]="newCommentText"
+                (input)="onCommentChange($event)"
+                placeholder="Escribe un comentario..."
+              ></div>
             </div>
+            <button
+              type="button"
+              (click)="addComment()"
+              [disabled]="!newCommentText.trim()"
+              class="w-full mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+            >
+              Agregar comentario
+            </button>
           </div>
         </div>
-        <div class="flex justify-end space-x-3 pt-4 border-t">
+        <div class="flex justify-end space-x-3 pt-4 pb-4 px-1 border-t border-gray-200 bg-white mt-auto flex-shrink-0 shadow-[0_-2px_4px_rgba(0,0,0,0.05)]">
           <button
             type="button"
             (click)="closeTaskModal()"
-            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium"
           >
             Cerrar
           </button>
@@ -493,10 +457,153 @@
       </div>
 
       <!-- Modo Edición -->
-      <form *ngIf="!selectedTask || isEditMode" (ngSubmit)="saveTask()" class="flex-1 overflow-hidden flex flex-col">
-        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 mb-4 flex-1 min-h-0">
+      <form *ngIf="!selectedTask || isEditMode" (ngSubmit)="saveTask()" class="flex-1 overflow-hidden flex flex-col min-h-0">
+        <!-- Información Superior: Cliente, Asignado a, Prioridad, Fecha de fin (solo en modo edición) -->
+        <div class="mb-4 pb-3 border-b border-gray-200 flex-shrink-0">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            <!-- Cliente -->
+            <div>
+              <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Cliente<span class="text-red-500"> *</span></label>
+              <select
+                [(ngModel)]="taskForm.clientId"
+                (change)="onClientChange()"
+                name="clientId"
+                required
+                class="w-full px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-xs"
+              >
+                <option value="">Seleccionar cliente...</option>
+                <option *ngFor="let client of clients" [value]="client._id">
+                  {{ client.name }}<span *ngIf="client.type === 'persona' && client.lastName"> {{ client.lastName }}</span>
+                  <span *ngIf="client.type === 'empresa'"> (Empresa)</span>
+                </option>
+              </select>
+              <div *ngIf="selectedClient && selectedClient.type === 'empresa'" class="mt-1.5">
+                <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">
+                  Agente(s) <span class="text-red-500">*</span>
+                </label>
+                <div class="relative agent-dropdown-container">
+                  <button
+                    type="button"
+                    (click)="showAgentDropdown = !showAgentDropdown"
+                    class="w-full px-2 py-1.5 text-left border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between text-xs"
+                    [class.border-red-300]="taskForm.agentIds.length === 0"
+                  >
+                    <span class="text-xs text-gray-700 truncate">
+                      <span *ngIf="taskForm.agentNames.length === 0">Seleccionar agente(s)...</span>
+                      <span *ngIf="taskForm.agentNames.length > 0" class="truncate">{{ taskForm.agentNames.join(', ') }}</span>
+                    </span>
+                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div
+                    *ngIf="showAgentDropdown"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    <div *ngIf="!selectedClient.agents || selectedClient.agents.length === 0" class="p-2 text-xs text-gray-500 text-center">
+                      No hay agentes disponibles para este cliente
+                    </div>
+                    <div *ngFor="let agent of selectedClient.agents; let i = index" class="px-2 py-1.5 hover:bg-gray-50 cursor-pointer">
+                      <label class="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          [checked]="taskForm.agentIds.includes(i.toString())"
+                          (change)="onAgentToggle(i)"
+                          (click)="$event.stopPropagation()"
+                          class="h-3.5 w-3.5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        />
+                        <div class="ml-2 flex-1 min-w-0">
+                          <div class="text-xs font-medium text-gray-900 truncate">{{ agent.name }}</div>
+                          <div *ngIf="agent.email || agent.phone" class="text-[10px] text-gray-500 truncate">
+                            <span *ngIf="agent.email">{{ agent.email }}</span>
+                            <span *ngIf="agent.email && agent.phone"> • </span>
+                            <span *ngIf="agent.phone">{{ agent.phone }}</span>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <p *ngIf="taskForm.agentIds.length === 0" class="mt-0.5 text-[10px] text-red-500">
+                  Debe seleccionar al menos un agente
+                </p>
+              </div>
+            </div>
+            <!-- Asignado a -->
+            <div>
+              <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Asignado a</label>
+              <div class="relative assignee-dropdown-container">
+                <button
+                  type="button"
+                  (click)="showAssigneeDropdown = !showAssigneeDropdown"
+                  class="w-full px-2 py-1.5 text-left border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between text-xs"
+                >
+                  <span class="text-xs text-gray-700 truncate">{{ getSelectedAssigneesNames() }}</span>
+                  <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div
+                  *ngIf="showAssigneeDropdown"
+                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                >
+                  <div *ngIf="loadingUsers" class="p-2 text-xs text-gray-500">Cargando usuarios...</div>
+                  <div *ngIf="!loadingUsers && users.length === 0" class="p-2 text-xs text-gray-500 text-center">
+                    No hay usuarios disponibles
+                  </div>
+                  <div *ngIf="!loadingUsers && users.length > 0">
+                    <div
+                      *ngFor="let user of users"
+                      (click)="toggleAssignee(user._id)"
+                      class="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        [checked]="isAssigneeSelected(user._id)"
+                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5"
+                        readonly
+                      />
+                      <div class="h-6 w-6 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center flex-shrink-0">
+                        {{ user.firstName[0] }}{{ user.lastName[0] }}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-xs font-medium text-gray-900 truncate">{{ user.firstName }} {{ user.lastName }}</div>
+                        <div class="text-[10px] text-gray-500 truncate">{{ user.email }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Prioridad -->
+            <div>
+              <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Prioridad</label>
+              <select
+                [(ngModel)]="taskForm.priority"
+                name="priority"
+                class="w-full px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-xs"
+              >
+                <option value="low">Baja</option>
+                <option value="medium">Media</option>
+                <option value="high">Alta</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </div>
+            <!-- Fecha de fin -->
+            <div>
+              <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Fecha de fin</label>
+              <input
+                type="date"
+                [(ngModel)]="taskForm.dueDate"
+                name="dueDate"
+                class="w-full px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-xs"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 flex-1 min-h-0 overflow-y-auto pb-4">
           <!-- Columna Izquierda: Título y Descripción (70%) -->
-          <div class="space-y-4 lg:col-span-7 overflow-y-auto max-h-[calc(90vh-200px)] pr-2">
+          <div class="space-y-4 lg:col-span-7 pr-2">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
               <input
@@ -812,158 +919,123 @@
             </div>
           </div>
 
-          <!-- Columna Derecha: Cliente, Agente, Asignar a, Prioridad, Fecha de fin (30%) -->
-          <div class="space-y-4 lg:col-span-3 overflow-y-auto max-h-[calc(90vh-200px)] pr-2">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Cliente *</label>
-              <select
-                [(ngModel)]="taskForm.clientId"
-                (change)="onClientChange()"
-                name="clientId"
-                required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="">Seleccionar cliente...</option>
-                <option *ngFor="let client of clients" [value]="client._id">
-                  {{ client.name }}<span *ngIf="client.type === 'persona' && client.lastName"> {{ client.lastName }}</span>
-                  <span *ngIf="client.type === 'empresa'"> (Empresa)</span>
-                </option>
-              </select>
-            </div>
-            <div *ngIf="selectedClient && selectedClient.type === 'empresa'">
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Agente(s) <span class="text-red-500">*</span>
-                <span *ngIf="taskForm.agentNames.length > 0" class="text-xs font-normal text-gray-500 ml-2">
-                  ({{ taskForm.agentNames.length }} seleccionado{{ taskForm.agentNames.length > 1 ? 's' : '' }})
-                </span>
-              </label>
-              <div class="relative agent-dropdown-container">
-                <button
-                  type="button"
-                  (click)="showAgentDropdown = !showAgentDropdown"
-                  class="w-full px-3 py-2 text-left border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between"
-                  [class.border-red-300]="taskForm.agentIds.length === 0"
-                >
-                  <span class="text-sm text-gray-700">
-                    <span *ngIf="taskForm.agentNames.length === 0">Seleccionar agente(s)...</span>
-                    <span *ngIf="taskForm.agentNames.length > 0">{{ taskForm.agentNames.join(', ') }}</span>
-                  </span>
-                  <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <div
-                  *ngIf="showAgentDropdown"
-                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                >
-                  <div *ngIf="!selectedClient.agents || selectedClient.agents.length === 0" class="p-3 text-sm text-gray-500 text-center">
-                    No hay agentes disponibles para este cliente
+          <!-- Columna Derecha: Comentarios y Actividades (30%) -->
+          <div class="lg:col-span-3 flex flex-col h-full">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Comentarios y Actividades</label>
+            
+            <!-- Lista con scroll independiente -->
+            <div class="flex-1 overflow-y-auto pr-2 space-y-3 mb-4" style="max-height: calc(90vh - 400px);">
+              <div *ngIf="activityItems.length === 0" class="text-sm text-gray-500 text-center py-8">
+                No hay comentarios ni actividades aún
+              </div>
+              
+              <div *ngFor="let item of activityItems" class="flex space-x-3">
+                <!-- Comentario -->
+                <div *ngIf="item.type === 'comment'" class="flex space-x-3 p-3 bg-gray-50 rounded-lg w-full">
+                  <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
+                      {{ getUserInitials(getCommentUserId(item)) }}
+                    </div>
                   </div>
-                  <div *ngFor="let agent of selectedClient.agents; let i = index" class="px-3 py-2 hover:bg-gray-50 cursor-pointer">
-                    <label class="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        [checked]="taskForm.agentIds.includes(i.toString())"
-                        (change)="onAgentToggle(i)"
-                        (click)="$event.stopPropagation()"
-                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                      />
-                      <div class="ml-3 flex-1">
-                        <div class="text-sm font-medium text-gray-900">{{ agent.name }}</div>
-                        <div *ngIf="agent.email || agent.phone" class="text-xs text-gray-500">
-                          <span *ngIf="agent.email">{{ agent.email }}</span>
-                          <span *ngIf="agent.email && agent.phone"> • </span>
-                          <span *ngIf="agent.phone">{{ agent.phone }}</span>
-                        </div>
-                      </div>
-                    </label>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center space-x-2 mb-1">
+                      <span class="text-sm font-medium text-gray-900">{{ getUserName(getCommentUserId(item)) }}</span>
+                      <span class="text-xs text-gray-500">{{ formatCommentDate(getCommentCreatedAt(item)) }}</span>
+                    </div>
+                    <div class="text-sm text-gray-700 prose prose-sm max-w-none" [innerHTML]="getCommentText(item)"></div>
                   </div>
                 </div>
-              </div>
-              <p *ngIf="taskForm.agentIds.length === 0" class="mt-1 text-xs text-red-500">
-                Debe seleccionar al menos un agente
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Asignar a</label>
-              <div class="relative assignee-dropdown-container">
-                <button
-                  type="button"
-                  (click)="showAssigneeDropdown = !showAssigneeDropdown"
-                  class="w-full px-3 py-2 text-left border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between"
-                >
-                  <span class="text-sm text-gray-700">{{ getSelectedAssigneesNames() }}</span>
-                  <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <div
-                  *ngIf="showAssigneeDropdown"
-                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                >
-                  <div *ngIf="loadingUsers" class="p-3 text-sm text-gray-500">Cargando usuarios...</div>
-                  <div *ngIf="!loadingUsers && users.length === 0" class="p-3 text-sm text-gray-500 text-center">
-                    No hay usuarios disponibles
+
+                <!-- Actividad -->
+                <div *ngIf="item.type === 'activity'" class="flex space-x-3 p-3 bg-blue-50 rounded-lg w-full border-l-2 border-blue-400">
+                  <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getActivityIconPath(item)" />
+                      </svg>
+                    </div>
                   </div>
-                  <div *ngIf="!loadingUsers && users.length > 0">
-                    <div
-                      *ngFor="let user of users"
-                      (click)="toggleAssignee(user._id)"
-                      class="flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        [checked]="isAssigneeSelected(user._id)"
-                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        readonly
-                      />
-                      <div class="h-8 w-8 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center flex-shrink-0">
-                        {{ user.firstName[0] }}{{ user.lastName[0] }}
-                      </div>
-                      <div class="flex-1">
-                        <div class="text-sm font-medium text-gray-900">{{ user.firstName }} {{ user.lastName }}</div>
-                        <div class="text-xs text-gray-500">{{ user.email }}</div>
-                      </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center space-x-2 mb-1">
+                      <span class="text-sm font-medium text-gray-900">{{ getUserName(getActivityUserId(item)) }}</span>
+                      <span class="text-xs text-gray-500">{{ formatCommentDate(getActivityCreatedAt(item)) }}</span>
+                    </div>
+                    <div class="text-sm text-gray-700">
+                      {{ getActivityDescription(item) }}
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad</label>
-              <select
-                [(ngModel)]="taskForm.priority"
-                name="priority"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="low">Baja</option>
-                <option value="medium">Media</option>
-                <option value="high">Alta</option>
-                <option value="urgent">Urgente</option>
-              </select>
+            
+            <!-- Editor de comentarios (fijo en la parte inferior) -->
+            <div class="border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+              <div class="flex flex-wrap border-b border-gray-200 bg-gray-50 px-2 py-1 rounded-t-md gap-1">
+                <!-- Formato de texto básico -->
+                <div class="flex items-center gap-1 border-r border-gray-300 pr-1">
+                  <button
+                    type="button"
+                    (click)="formatCommentText('bold', $event)"
+                    class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                    title="Negrita (Ctrl+B)"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="formatCommentText('italic', $event)"
+                    class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                    title="Cursiva (Ctrl+I)"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="formatCommentText('underline', $event)"
+                    class="p-1.5 hover:bg-gray-200 rounded text-gray-700"
+                    title="Subrayado (Ctrl+U)"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14M5 5h14" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div
+                #commentEditor
+                contenteditable="true"
+                class="comment-editor min-h-[100px] p-3 text-sm text-gray-900 focus:outline-none prose prose-sm max-w-none"
+                [innerHTML]="newCommentText"
+                (input)="onCommentChange($event)"
+                placeholder="Escribe un comentario..."
+              ></div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de fin</label>
-              <input
-                type="date"
-                [(ngModel)]="taskForm.dueDate"
-                name="dueDate"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
+            <button
+              type="button"
+              (click)="addComment()"
+              [disabled]="!newCommentText.trim()"
+              class="w-full mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+            >
+              Agregar comentario
+            </button>
           </div>
         </div>
-        <div class="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-3 sm:gap-0 pt-4 border-t">
+        <div class="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-3 sm:gap-0 pt-4 pb-4 px-1 border-t border-gray-200 bg-white mt-auto flex-shrink-0 shadow-[0_-2px_4px_rgba(0,0,0,0.05)]">
           <button
             type="button"
             (click)="selectedTask ? cancelEdit() : closeTaskModal()"
-            class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium"
           >
             {{ selectedTask ? 'Cancelar' : 'Cerrar' }}
           </button>
           <button
             type="submit"
-            class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium"
           >
             Guardar
           </button>

@@ -50,6 +50,22 @@ interface Comment {
   createdAt?: string;
 }
 
+interface ActivityLog {
+  _id?: string;
+  type: 'created' | 'status_changed' | 'priority_changed' | 'assignees_changed' | 'client_changed' | 'due_date_changed' | 'title_changed' | 'description_changed' | 'comment_added' | 'attachment_added' | 'attachment_removed';
+  userId: User | string;
+  oldValue?: any;
+  newValue?: any;
+  description?: string;
+  createdAt?: string;
+}
+
+interface ActivityItem {
+  type: 'comment' | 'activity';
+  data: Comment | ActivityLog;
+  timestamp: Date;
+}
+
 interface Label {
   _id: string;
   name: string;
@@ -67,6 +83,7 @@ interface Task {
   columnId?: string;
   attachments?: Attachment[];
   comments?: Comment[];
+  activityLog?: ActivityLog[];
   labels?: Label[];
   clientId?: string | Client;
   agentIds?: string[];
@@ -132,6 +149,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   uploadingFiles = false;
   pendingStatusId: string | null = null;
   comments: Comment[] = [];
+  activityLog: ActivityLog[] = [];
+  activityItems: ActivityItem[] = [];
   newCommentText: string = '';
   selectedClient: Client | null = null;
 
@@ -400,6 +419,15 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         ...comment,
         userId: typeof comment.userId === 'object' ? comment.userId : this.users.find(u => u._id === comment.userId) || comment.userId
       }));
+
+      // Cargar historial de actividades
+      this.activityLog = (task.activityLog || []).map(activity => ({
+        ...activity,
+        userId: typeof activity.userId === 'object' ? activity.userId : this.users.find(u => u._id === activity.userId) || activity.userId
+      }));
+
+      // Combinar comentarios y actividades ordenados por fecha
+      this.combineActivitiesAndComments();
       this.isEditMode = false; // Abrir en modo vista
     } else {
       this.selectedTask = null;
@@ -417,6 +445,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       this.attachments = [];
       this.attachmentsByStatus = {};
       this.comments = [];
+      this.activityLog = [];
+      this.activityItems = [];
       this.isEditMode = true; // Nueva tarea se abre en modo edición
     }
     this.newCommentText = '';
@@ -481,6 +511,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.attachments = [];
     this.attachmentsByStatus = {};
     this.comments = [];
+    this.activityLog = [];
+    this.activityItems = [];
     this.newCommentText = '';
   }
 
@@ -704,39 +736,105 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       }
     }
 
-    const columnId = this.columns[this.selectedColumnIndex]._id || this.columns[this.selectedColumnIndex].name;
-    const taskData: any = {
-      title: this.taskForm.title,
-      description: this.taskForm.description,
-      priority: this.taskForm.priority,
-      assignees: this.taskForm.assignees,
-      dueDate: this.taskForm.dueDate || undefined,
-      attachments: this.attachments,
-      boardId: this.boardId,
-      projectId: this.board!.projectId._id,
-      columnId
-    };
+    const taskData: any = {};
 
-    // Agregar cliente si está seleccionado
-    if (this.taskForm.clientId) {
-      taskData.clientId = this.taskForm.clientId;
+    // Solo enviar los campos que realmente cambiaron o son necesarios para nueva tarea
+    if (this.selectedTask) {
+      // Para tareas existentes, solo enviar lo que cambió
+      const oldTask = this.selectedTask;
       
-      // Si es empresa y hay agentes seleccionados, agregar agentes
-      if (this.selectedClient?.type === 'empresa' && this.taskForm.agentIds.length > 0) {
-        taskData.agentIds = this.taskForm.agentIds;
-        taskData.agentNames = this.taskForm.agentNames;
+      // Título
+      if (this.taskForm.title !== oldTask.title) {
+        taskData.title = this.taskForm.title;
+      }
+      
+      // Descripción
+      if (this.taskForm.description !== (oldTask.description || '')) {
+        taskData.description = this.taskForm.description;
+      }
+      
+      // Prioridad
+      if (this.taskForm.priority !== oldTask.priority) {
+        taskData.priority = this.taskForm.priority;
+      }
+      
+      // Asignados - comparar arrays
+      const oldAssignees = (oldTask.assignees || []).map(a => typeof a === 'object' ? a._id : a).sort();
+      const newAssignees = (this.taskForm.assignees || []).sort();
+      if (JSON.stringify(oldAssignees) !== JSON.stringify(newAssignees)) {
+        taskData.assignees = this.taskForm.assignees;
+      }
+      
+      // Fecha de fin
+      const oldDueDate = oldTask.dueDate ? new Date(oldTask.dueDate).toISOString().split('T')[0] : '';
+      const newDueDate = this.taskForm.dueDate || '';
+      if (oldDueDate !== newDueDate) {
+        taskData.dueDate = this.taskForm.dueDate || undefined;
+      }
+      
+      // Cliente
+      const oldClientId = typeof oldTask.clientId === 'object' ? oldTask.clientId._id : oldTask.clientId || '';
+      if (this.taskForm.clientId !== oldClientId) {
+        taskData.clientId = this.taskForm.clientId || undefined;
+      }
+      
+      // Agentes (solo si el cliente es empresa)
+      if (this.selectedClient?.type === 'empresa') {
+        const oldAgentIds = (oldTask.agentIds || []).sort();
+        const newAgentIds = (this.taskForm.agentIds || []).sort();
+        if (JSON.stringify(oldAgentIds) !== JSON.stringify(newAgentIds)) {
+          taskData.agentIds = this.taskForm.agentIds;
+          taskData.agentNames = this.taskForm.agentNames;
+        }
+      }
+      
+      // Adjuntos
+      taskData.attachments = this.attachments;
+      
+      // NO enviar columnId a menos que se esté moviendo la tarea (eso se hace con drag & drop)
+      // El columnId solo debe cambiar cuando se arrastra la tarea, no cuando se edita
+    } else {
+      // Para nueva tarea, enviar todos los campos necesarios
+      const columnId = this.columns[this.selectedColumnIndex]._id || this.columns[this.selectedColumnIndex].name;
+      taskData.title = this.taskForm.title;
+      taskData.description = this.taskForm.description;
+      taskData.priority = this.taskForm.priority;
+      taskData.assignees = this.taskForm.assignees;
+      taskData.dueDate = this.taskForm.dueDate || undefined;
+      taskData.attachments = this.attachments;
+      taskData.boardId = this.boardId;
+      taskData.projectId = this.board!.projectId._id;
+      taskData.columnId = columnId;
+      
+      // Agregar cliente si está seleccionado
+      if (this.taskForm.clientId) {
+        taskData.clientId = this.taskForm.clientId;
+        
+        // Si es empresa y hay agentes seleccionados, agregar agentes
+        if (this.selectedClient?.type === 'empresa' && this.taskForm.agentIds.length > 0) {
+          taskData.agentIds = this.taskForm.agentIds;
+          taskData.agentNames = this.taskForm.agentNames;
+        }
       }
     }
 
     if (this.selectedTask) {
-      this.http.put(`${this.apiUrl}/tasks/${this.selectedTask._id}`, taskData).subscribe({
-        next: () => {
+      this.http.put<Task>(`${this.apiUrl}/tasks/${this.selectedTask._id}`, taskData).subscribe({
+        next: (updatedTask) => {
+          // Actualizar la tarea seleccionada con el historial
+          this.selectedTask = updatedTask;
+          // Actualizar comentarios y actividades
+          this.comments = (updatedTask.comments || []).map(comment => ({
+            ...comment,
+            userId: typeof comment.userId === 'object' ? comment.userId : this.users.find(u => u._id === comment.userId) || comment.userId
+          }));
+          this.activityLog = (updatedTask.activityLog || []).map(activity => ({
+            ...activity,
+            userId: typeof activity.userId === 'object' ? activity.userId : this.users.find(u => u._id === activity.userId) || activity.userId
+          }));
+          this.combineActivitiesAndComments();
           this.loadTasks();
           this.isEditMode = false; // Volver a modo vista después de guardar
-          // Recargar la tarea actualizada
-          setTimeout(() => {
-            this.loadTasks();
-          }, 100);
         },
         error: (err) => console.error('Error updating task', err)
       });
@@ -1073,6 +1171,15 @@ export class BoardViewComponent implements OnInit, OnDestroy {
               ...comment,
               userId: typeof comment.userId === 'object' ? comment.userId : this.users.find(u => u._id === comment.userId) || comment.userId
             }));
+
+            // Actualizar historial de actividades
+            this.activityLog = (updatedTask.activityLog || []).map(activity => ({
+              ...activity,
+              userId: typeof activity.userId === 'object' ? activity.userId : this.users.find(u => u._id === activity.userId) || activity.userId
+            }));
+
+            // Combinar comentarios y actividades ordenados por fecha
+            this.combineActivitiesAndComments();
             // Recargar todas las tareas del tablero
             this.loadTasks();
           },
@@ -1187,6 +1294,141 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       return `${user.firstName[0]}${user.lastName[0]}`;
     }
     return '??';
+  }
+
+  getCommentUserId(item: ActivityItem): User | string {
+    if (item.type === 'comment') {
+      return (item.data as Comment).userId;
+    }
+    return 'Usuario desconocido';
+  }
+
+  getActivityUserId(item: ActivityItem): User | string {
+    if (item.type === 'activity') {
+      return (item.data as ActivityLog).userId;
+    }
+    return 'Usuario desconocido';
+  }
+
+  getCommentText(item: ActivityItem): string {
+    if (item.type === 'comment') {
+      return (item.data as Comment).text;
+    }
+    return '';
+  }
+
+  getCommentCreatedAt(item: ActivityItem): string {
+    if (item.type === 'comment') {
+      return (item.data as Comment).createdAt || '';
+    }
+    return '';
+  }
+
+  getActivityCreatedAt(item: ActivityItem): string {
+    if (item.type === 'activity') {
+      return (item.data as ActivityLog).createdAt || '';
+    }
+    return '';
+  }
+
+  combineActivitiesAndComments(): void {
+    const items: ActivityItem[] = [];
+
+    // Agregar comentarios
+    this.comments.forEach(comment => {
+      items.push({
+        type: 'comment',
+        data: comment,
+        timestamp: comment.createdAt ? new Date(comment.createdAt) : new Date()
+      });
+    });
+
+    // Agregar actividades
+    this.activityLog.forEach(activity => {
+      items.push({
+        type: 'activity',
+        data: activity,
+        timestamp: activity.createdAt ? new Date(activity.createdAt) : new Date()
+      });
+    });
+
+    // Ordenar por fecha (más reciente primero)
+    this.activityItems = items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }
+
+  getActivityDescription(item: ActivityItem): string {
+    if (item.type !== 'activity') return '';
+    const activity = item.data as ActivityLog;
+    if (activity && activity.description) {
+      return activity.description;
+    }
+
+    if (!activity) return '';
+    switch (activity.type) {
+      case 'created':
+        return 'Tarea creada';
+      case 'status_changed':
+        return `Estado cambiado`;
+      case 'priority_changed':
+        const priorityMap: { [key: string]: string } = {
+          'low': 'Baja',
+          'medium': 'Media',
+          'high': 'Alta',
+          'urgent': 'Urgente'
+        };
+        const oldPriority = priorityMap[activity.oldValue] || activity.oldValue;
+        const newPriority = priorityMap[activity.newValue] || activity.newValue;
+        return `Prioridad cambiada de ${oldPriority} a ${newPriority}`;
+      case 'assignees_changed':
+        return 'Asignados modificados';
+      case 'client_changed':
+        return 'Cliente modificado';
+      case 'due_date_changed':
+        return 'Fecha de fin modificada';
+      case 'title_changed':
+        return `Título cambiado de "${activity.oldValue}" a "${activity.newValue}"`;
+      case 'description_changed':
+        return 'Descripción modificada';
+      case 'comment_added':
+        return 'Comentario agregado';
+      case 'attachment_added':
+        return 'Archivo adjunto agregado';
+      case 'attachment_removed':
+        return 'Archivo adjunto eliminado';
+      default:
+        return 'Cambio realizado';
+    }
+  }
+
+  getActivityIconPath(item: ActivityItem): string {
+    if (item.type !== 'activity') return '';
+    const activity = item.data as ActivityLog;
+    switch (activity.type) {
+      case 'created':
+        return 'M12 4v16m8-8H4';
+      case 'status_changed':
+        return 'M8 7l4-4 4 4m0 6l-4 4-4-4';
+      case 'priority_changed':
+        return 'M5 10l7-7m0 0l7 7m-7-7v18';
+      case 'assignees_changed':
+        return 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z';
+      case 'client_changed':
+        return 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z';
+      case 'due_date_changed':
+        return 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z';
+      case 'title_changed':
+        return 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z';
+      case 'description_changed':
+        return 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z';
+      case 'comment_added':
+        return 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z';
+      case 'attachment_added':
+        return 'M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13';
+      case 'attachment_removed':
+        return 'M6 18L18 6M6 6l12 12';
+      default:
+        return 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+    }
   }
 
   formatCommentDate(dateString: string): string {

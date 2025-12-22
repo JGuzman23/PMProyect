@@ -19,14 +19,124 @@ export const taskService = {
   },
 
   async create(data, companyId, userId) {
-    return await taskRepository.create({
+    const task = await taskRepository.create({
       ...data,
       companyId,
-      createdBy: userId
+      createdBy: userId,
+      activityLog: [{
+        type: 'created',
+        userId,
+        description: 'Tarea creada',
+        createdAt: new Date()
+      }]
     });
+    return task;
   },
 
-  async update(id, companyId, updateData) {
+  async update(id, companyId, updateData, userId) {
+    // Obtener la tarea actual antes de actualizar
+    const oldTask = await Task.findOne({ _id: id, companyId });
+    if (!oldTask) {
+      throw new Error('Task not found');
+    }
+
+    // Preparar el historial de cambios
+    const activityLog = [];
+    
+    // Detectar cambios
+    // Solo registrar cambio de estado si columnId está presente y es diferente
+    if (updateData.columnId !== undefined && updateData.columnId !== oldTask.columnId) {
+      activityLog.push({
+        type: 'status_changed',
+        userId,
+        oldValue: oldTask.columnId,
+        newValue: updateData.columnId,
+        description: `Estado cambiado`,
+        createdAt: new Date()
+      });
+    }
+    
+    if (updateData.priority !== undefined && updateData.priority !== oldTask.priority) {
+      activityLog.push({
+        type: 'priority_changed',
+        userId,
+        oldValue: oldTask.priority,
+        newValue: updateData.priority,
+        description: `Prioridad cambiada de ${oldTask.priority} a ${updateData.priority}`,
+        createdAt: new Date()
+      });
+    }
+    
+    if (updateData.assignees !== undefined) {
+      // Comparar arrays de asignados normalizados
+      const oldAssignees = (oldTask.assignees || []).map(a => a.toString()).sort();
+      const newAssignees = (updateData.assignees || []).map(a => a.toString()).sort();
+      if (JSON.stringify(oldAssignees) !== JSON.stringify(newAssignees)) {
+        activityLog.push({
+          type: 'assignees_changed',
+          userId,
+          oldValue: oldTask.assignees,
+          newValue: updateData.assignees,
+          description: 'Asignados modificados',
+          createdAt: new Date()
+        });
+      }
+    }
+    
+    if (updateData.clientId !== undefined && updateData.clientId?.toString() !== oldTask.clientId?.toString()) {
+      activityLog.push({
+        type: 'client_changed',
+        userId,
+        oldValue: oldTask.clientId,
+        newValue: updateData.clientId,
+        description: 'Cliente modificado',
+        createdAt: new Date()
+      });
+    }
+    
+    if (updateData.dueDate !== undefined) {
+      // Comparar fechas normalizadas (solo fecha, sin hora)
+      const oldDate = oldTask.dueDate ? new Date(oldTask.dueDate).toISOString().split('T')[0] : null;
+      const newDate = updateData.dueDate ? new Date(updateData.dueDate).toISOString().split('T')[0] : null;
+      if (oldDate !== newDate) {
+        activityLog.push({
+          type: 'due_date_changed',
+          userId,
+          oldValue: oldTask.dueDate,
+          newValue: updateData.dueDate,
+          description: 'Fecha de fin modificada',
+          createdAt: new Date()
+        });
+      }
+    }
+    
+    if (updateData.title !== undefined && updateData.title !== oldTask.title) {
+      activityLog.push({
+        type: 'title_changed',
+        userId,
+        oldValue: oldTask.title,
+        newValue: updateData.title,
+        description: `Título cambiado de "${oldTask.title}" a "${updateData.title}"`,
+        createdAt: new Date()
+      });
+    }
+    
+    if (updateData.description !== undefined && updateData.description !== oldTask.description) {
+      activityLog.push({
+        type: 'description_changed',
+        userId,
+        oldValue: oldTask.description,
+        newValue: updateData.description,
+        description: 'Descripción modificada',
+        createdAt: new Date()
+      });
+    }
+
+    // Agregar el historial al updateData
+    if (activityLog.length > 0) {
+      updateData.$push = { activityLog: { $each: activityLog } };
+    }
+
     const task = await taskRepository.update(id, companyId, updateData);
     if (!task) {
       throw new Error('Task not found');
@@ -72,10 +182,19 @@ export const taskService = {
       createdAt: new Date()
     });
 
+    // Agregar al historial
+    task.activityLog.push({
+      type: 'comment_added',
+      userId,
+      description: 'Comentario agregado',
+      createdAt: new Date()
+    });
+
     await task.save();
     // Obtener la tarea actualizada con el usuario populado
     const updatedTask = await Task.findOne({ _id: taskId, companyId })
-      .populate('comments.userId', 'firstName lastName email');
+      .populate('comments.userId', 'firstName lastName email')
+      .populate('activityLog.userId', 'firstName lastName email');
     
     return updatedTask;
   }

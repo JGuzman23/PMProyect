@@ -39,7 +39,7 @@ export const taskController = {
 
   async update(req, res, next) {
     try {
-      const task = await taskService.update(req.params.id, req.companyId, req.body);
+      const task = await taskService.update(req.params.id, req.companyId, req.body, req.userId);
       res.json(task);
     } catch (error) {
       next(error);

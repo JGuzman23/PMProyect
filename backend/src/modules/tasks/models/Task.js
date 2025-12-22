@@ -86,6 +86,24 @@ const taskSchema = new mongoose.Schema({
     },
     text: String,
     createdAt: Date
+  }],
+  activityLog: [{
+    type: {
+      type: String,
+      enum: ['created', 'status_changed', 'priority_changed', 'assignees_changed', 'client_changed', 'due_date_changed', 'title_changed', 'description_changed', 'comment_added', 'attachment_added', 'attachment_removed'],
+      required: true
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    oldValue: mongoose.Schema.Types.Mixed,
+    newValue: mongoose.Schema.Types.Mixed,
+    description: String,
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
   }]
 }, {
   timestamps: true
