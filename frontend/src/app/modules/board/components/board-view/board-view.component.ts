@@ -457,6 +457,11 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       if (editor && !editor.innerHTML) {
         editor.innerHTML = this.taskForm.description || '';
       }
+      // Inicializar el editor de comentarios
+      const commentEditor = document.querySelector('.comment-editor') as HTMLElement;
+      if (commentEditor && !commentEditor.innerHTML && !this.newCommentText) {
+        commentEditor.innerHTML = '';
+      }
     }, 0);
   }
 
@@ -1210,12 +1215,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
 
   onCommentChange(event: Event): void {
     const target = event.target as HTMLElement;
-    const text = target.innerText || target.textContent || '';
+    // Solo actualizar la variable, no forzar actualización del DOM
     this.newCommentText = target.innerHTML || '';
-    // Actualizar también el innerHTML si solo hay texto plano
-    if (text.trim() && !target.innerHTML.trim()) {
-      this.newCommentText = text;
-    }
   }
 
   formatCommentText(command: string, event?: Event, value?: string): void {
