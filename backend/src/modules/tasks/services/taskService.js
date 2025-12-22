@@ -183,12 +183,12 @@ export const taskService = {
     });
 
     // Agregar al historial
-    task.activityLog.push({
-      type: 'comment_added',
-      userId,
-      description: 'Comentario agregado',
-      createdAt: new Date()
-    });
+    // task.activityLog.push({
+    //   type: 'comment_added',
+    //   userId,
+    //   description: 'Comentario agregado',
+    //   createdAt: new Date()
+    // });
 
     await task.save();
     // Obtener la tarea actualizada con el usuario populado

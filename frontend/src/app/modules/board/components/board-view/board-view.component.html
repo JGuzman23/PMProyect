@@ -372,37 +372,26 @@
                 No hay comentarios ni actividades aún
               </div>
               
-              <div *ngFor="let item of activityItems" class="flex space-x-3">
+              <div *ngFor="let item of activityItems" class="py-2 border-b border-gray-100 last:border-0">
                 <!-- Comentario -->
-                <div *ngIf="item.type === 'comment'" class="flex space-x-3 p-3 bg-gray-50 rounded-lg w-full">
-                  <div class="flex-shrink-0">
-                    <div class="h-8 w-8 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
-                      {{ getUserInitials(getCommentUserId(item)) }}
-                    </div>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center space-x-2 mb-1">
-                      <span class="text-sm font-medium text-gray-900">{{ getUserName(getCommentUserId(item)) }}</span>
-                      <span class="text-xs text-gray-500">{{ formatCommentDate(getCommentCreatedAt(item)) }}</span>
-                    </div>
-                    <div class="text-sm text-gray-700 prose prose-sm max-w-none" [innerHTML]="getCommentText(item)"></div>
+                <div *ngIf="item.type === 'comment'" class="w-full bg-gray-100 rounded-lg p-3">
+                  <div class="text-sm text-gray-700 prose prose-sm max-w-none mb-1" [innerHTML]="getCommentText(item)"></div>
+                  <div class="flex items-center gap-2 text-xs text-gray-500">
+                    <span>{{ getUserName(getCommentUserId(item)) }}</span>
+                    <span>•</span>
+                    <span>{{ formatCommentDate(getCommentCreatedAt(item)) }}</span>
                   </div>
                 </div>
 
                 <!-- Actividad -->
-                <div *ngIf="item.type === 'activity'" class="flex items-start gap-3 py-2 w-full">
-                  <div class="flex-shrink-0 mt-1.5">
-                    <div class="w-1.5 h-1.5 rounded-full bg-gray-600"></div>
-                    </div>
-                  <div class="flex-1 min-w-0 flex items-start justify-between gap-3">
-                  <div class="flex-1 min-w-0">
-                      <div class="text-sm text-gray-900">
-                      {{ getActivityDescription(item) }}
-                      </div>
-                    </div>
-                    <div class="flex-shrink-0 text-xs text-gray-500 whitespace-nowrap">
-                      {{ formatCommentDate(getActivityCreatedAt(item)) }}
-                    </div>
+                <div *ngIf="item.type === 'activity'" class="w-full">
+                  <div class="text-sm text-gray-900 mb-1">
+                    {{ getActivityDescription(item) }}
+                  </div>
+                  <div class="flex items-center gap-2 text-xs text-gray-500">
+                    <span>{{ getUserName(getActivityUserId(item)) }}</span>
+                    <span>•</span>
+                    <span>{{ formatCommentDate(getActivityCreatedAt(item)) }}</span>
                   </div>
                 </div>
               </div>
@@ -1057,37 +1046,26 @@
                 No hay comentarios ni actividades aún
               </div>
               
-              <div *ngFor="let item of activityItems" class="flex space-x-3">
+              <div *ngFor="let item of activityItems" class="py-2 border-b border-gray-100 last:border-0">
                 <!-- Comentario -->
-                <div *ngIf="item.type === 'comment'" class="flex space-x-3 p-3 bg-gray-50 rounded-lg w-full">
-                  <div class="flex-shrink-0">
-                    <div class="h-8 w-8 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
-                      {{ getUserInitials(getCommentUserId(item)) }}
-                    </div>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center space-x-2 mb-1">
-                      <span class="text-sm font-medium text-gray-900">{{ getUserName(getCommentUserId(item)) }}</span>
-                      <span class="text-xs text-gray-500">{{ formatCommentDate(getCommentCreatedAt(item)) }}</span>
-                    </div>
-                    <div class="text-sm text-gray-700 prose prose-sm max-w-none" [innerHTML]="getCommentText(item)"></div>
+                <div *ngIf="item.type === 'comment'" class="w-full bg-gray-100 rounded-lg p-3">
+                  <div class="text-sm text-gray-700 prose prose-sm max-w-none mb-1" [innerHTML]="getCommentText(item)"></div>
+                  <div class="flex items-center gap-2 text-xs text-gray-500">
+                    <span>{{ getUserName(getCommentUserId(item)) }}</span>
+                    <span>•</span>
+                    <span>{{ formatCommentDate(getCommentCreatedAt(item)) }}</span>
                   </div>
                 </div>
 
                 <!-- Actividad -->
-                <div *ngIf="item.type === 'activity'" class="flex items-start gap-3 py-2 w-full">
-                  <div class="flex-shrink-0 mt-1.5">
-                    <div class="w-1.5 h-1.5 rounded-full bg-gray-600"></div>
-                    </div>
-                  <div class="flex-1 min-w-0 flex items-start justify-between gap-3">
-                  <div class="flex-1 min-w-0">
-                      <div class="text-sm text-gray-900">
-                      {{ getActivityDescription(item) }}
-                      </div>
-                    </div>
-                    <div class="flex-shrink-0 text-xs text-gray-500 whitespace-nowrap">
-                      {{ formatCommentDate(getActivityCreatedAt(item)) }}
-                    </div>
+                <div *ngIf="item.type === 'activity'" class="w-full">
+                  <div class="text-sm text-gray-900 mb-1">
+                    {{ getActivityDescription(item) }}
+                  </div>
+                  <div class="flex items-center gap-2 text-xs text-gray-500">
+                    <span>{{ getUserName(getActivityUserId(item)) }}</span>
+                    <span>•</span>
+                    <span>{{ formatCommentDate(getActivityCreatedAt(item)) }}</span>
                   </div>
                 </div>
               </div>

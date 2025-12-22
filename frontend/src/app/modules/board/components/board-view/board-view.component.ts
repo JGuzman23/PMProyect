@@ -1446,8 +1446,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       });
     });
 
-    // Ordenar por fecha (más reciente primero)
-    this.activityItems = items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    // Ordenar por fecha (más antiguo primero, más reciente debajo)
+    this.activityItems = items.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
   }
 
   getActivityDescription(item: ActivityItem): string {
