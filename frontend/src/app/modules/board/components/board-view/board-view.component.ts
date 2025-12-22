@@ -129,7 +129,17 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   isDragging = false;
   showAssigneeDropdown = false;
   showAgentDropdown = false;
+  showClientDropdown = false;
+  showPriorityDropdown = false;
   showTaskActionsDropdown = false;
+  clientSearchTerm = '';
+  agentSearchTerm = '';
+  assigneeSearchTerm = '';
+  prioritySearchTerm = '';
+  filteredClients: Client[] = [];
+  filteredAgents: Agent[] = [];
+  filteredUsers: User[] = [];
+  filteredPriorities: { value: string; label: string }[] = [];
   showAttachmentTitleModal = false;
   pendingFile: File | null = null;
   attachmentTitle = '';
@@ -169,6 +179,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.loadBoard();
     this.loadUsers();
     this.loadClients();
+    // Inicializar listas filtradas
+    this.updateFilteredPriorities();
   }
 
   loadUsers(): void {
@@ -176,6 +188,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.http.get<User[]>(`${this.apiUrl}/users`).subscribe({
       next: (users) => {
         this.users = users;
+        this.updateFilteredUsers();
         this.loadingUsers = false;
       },
       error: (err) => {
@@ -190,6 +203,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.http.get<Client[]>(`${this.apiUrl}/clients`).subscribe({
       next: (clients) => {
         this.clients = clients.filter(c => c.isActive);
+        this.updateFilteredClients();
         this.loadingClients = false;
       },
       error: (err) => {
@@ -205,10 +219,14 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       // Si cambia el cliente, limpiar agentes seleccionados
       this.taskForm.agentIds = [];
       this.taskForm.agentNames = [];
+      this.agentSearchTerm = '';
+      this.updateFilteredAgents();
     } else {
       this.selectedClient = null;
       this.taskForm.agentIds = [];
       this.taskForm.agentNames = [];
+      this.agentSearchTerm = '';
+      this.filteredAgents = [];
     }
   }
 
@@ -604,6 +622,71 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     return this.users.filter(u => this.taskForm.assignees.includes(u._id));
   }
 
+  updateFilteredClients(): void {
+    if (!this.clientSearchTerm.trim()) {
+      this.filteredClients = this.clients;
+      return;
+    }
+    const search = this.clientSearchTerm.toLowerCase();
+    this.filteredClients = this.clients.filter(client => {
+      const name = client.name.toLowerCase();
+      const lastName = client.lastName?.toLowerCase() || '';
+      return name.includes(search) || lastName.includes(search);
+    });
+  }
+
+  updateFilteredAgents(): void {
+    if (!this.selectedClient?.agents) {
+      this.filteredAgents = [];
+      return;
+    }
+    if (!this.agentSearchTerm.trim()) {
+      this.filteredAgents = this.selectedClient.agents;
+      return;
+    }
+    const search = this.agentSearchTerm.toLowerCase();
+    this.filteredAgents = this.selectedClient.agents.filter(agent => {
+      const name = agent.name.toLowerCase();
+      const email = agent.email?.toLowerCase() || '';
+      const phone = agent.phone?.toLowerCase() || '';
+      return name.includes(search) || email.includes(search) || phone.includes(search);
+    });
+  }
+
+  getAgentIndex(agent: Agent): number {
+    if (!this.selectedClient?.agents) return -1;
+    return this.selectedClient.agents.findIndex(a => a.name === agent.name && a.email === agent.email);
+  }
+
+  updateFilteredUsers(): void {
+    if (!this.assigneeSearchTerm.trim()) {
+      this.filteredUsers = this.users;
+      return;
+    }
+    const search = this.assigneeSearchTerm.toLowerCase();
+    this.filteredUsers = this.users.filter(user => {
+      const firstName = user.firstName.toLowerCase();
+      const lastName = user.lastName.toLowerCase();
+      const email = user.email.toLowerCase();
+      return firstName.includes(search) || lastName.includes(search) || email.includes(search);
+    });
+  }
+
+  updateFilteredPriorities(): void {
+    const priorities = [
+      { value: 'low', label: 'Baja' },
+      { value: 'medium', label: 'Media' },
+      { value: 'high', label: 'Alta' },
+      { value: 'urgent', label: 'Urgente' }
+    ];
+    if (!this.prioritySearchTerm.trim()) {
+      this.filteredPriorities = priorities;
+      return;
+    }
+    const search = this.prioritySearchTerm.toLowerCase();
+    this.filteredPriorities = priorities.filter(p => p.label.toLowerCase().includes(search));
+  }
+
   getClientName(clientId: string | Client | undefined): string {
     if (!clientId) return '';
     if (typeof clientId === 'object') {
@@ -722,9 +805,19 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLElement;
     if (!target.closest('.assignee-dropdown-container')) {
       this.showAssigneeDropdown = false;
+      this.assigneeSearchTerm = '';
     }
     if (!target.closest('.agent-dropdown-container')) {
       this.showAgentDropdown = false;
+      this.agentSearchTerm = '';
+    }
+    if (!target.closest('.client-dropdown-container')) {
+      this.showClientDropdown = false;
+      this.clientSearchTerm = '';
+    }
+    if (!target.closest('.priority-dropdown-container')) {
+      this.showPriorityDropdown = false;
+      this.prioritySearchTerm = '';
     }
   }
 
