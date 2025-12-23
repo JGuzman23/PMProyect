@@ -1,19 +1,37 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { LanguageSelectorComponent } from '../../../../core/components/language-selector/language-selector.component';
 import { TranslationService } from '../../../../core/services/translation.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+
+interface Task {
+  _id: string;
+  title: string;
+  boardId?: string | { _id: string; name: string };
+  columnId?: string;
+}
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, LanguageSelectorComponent],
+  imports: [CommonModule, LanguageSelectorComponent, FormsModule],
   templateUrl: './navbar.component.html'
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
   currentUser = this.authService.currentUser;
+  searchTerm = '';
+  searchResults: Task[] = [];
+  showSearchResults = false;
+  searching = false;
+  preventBlur = false;
+  private searchSubject = new Subject<string>();
+  private apiUrl = environment.apiUrl;
 
   get userInitials(): string {
     if (this.currentUser) {
@@ -25,10 +43,100 @@ export class NavbarComponent {
   constructor(
     private authService: AuthService,
     private router: Router,
-    public translationService: TranslationService
+    public translationService: TranslationService,
+    private http: HttpClient
   ) {
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
+    });
+  }
+
+  ngOnInit(): void {
+    // Configurar debounce para la búsqueda
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(searchTerm => {
+      if (searchTerm && searchTerm.trim().length >= 2) {
+        this.performSearch(searchTerm.trim());
+      } else {
+        this.searchResults = [];
+        this.searching = false;
+      }
+    });
+  }
+
+  onSearch(): void {
+    this.searching = true;
+    this.searchSubject.next(this.searchTerm);
+  }
+
+  performSearch(term: string): void {
+    // Buscar tareas por título usando el endpoint de tasks
+    this.http.get<Task[]>(`${this.apiUrl}/tasks`, {
+      params: { title: term }
+    }).subscribe({
+      next: (tasks) => {
+        this.searchResults = tasks.slice(0, 10); // Limitar a 10 resultados
+        this.searching = false;
+      },
+      error: (err) => {
+        console.error('Error searching tasks', err);
+        this.searchResults = [];
+        this.searching = false;
+      }
+    });
+  }
+
+  onSearchBlur(): void {
+    // Delay para permitir clicks en los resultados
+    setTimeout(() => {
+      if (!this.preventBlur) {
+        this.showSearchResults = false;
+      }
+    }, 200);
+  }
+
+  getBoardName(boardId: string | { _id: string; name: string }): string {
+    if (typeof boardId === 'object' && boardId.name) {
+      return boardId.name;
+    }
+    return typeof boardId === 'string' ? boardId : '';
+  }
+
+  navigateToTask(task: Task): void {
+    // Obtener el boardId de la tarea
+    let boardId = typeof task.boardId === 'object' ? task.boardId._id : task.boardId;
+    
+    if (!boardId) {
+      // Si no tiene boardId, buscar el board desde la tarea completa
+      this.http.get<any>(`${this.apiUrl}/tasks/${task._id}`).subscribe({
+        next: (fullTask) => {
+          boardId = typeof fullTask.boardId === 'object' 
+            ? fullTask.boardId._id 
+            : fullTask.boardId;
+          if (boardId) {
+            this.navigateToBoardWithTask(boardId, task._id);
+          }
+        },
+        error: (err) => {
+          console.error('Error loading task', err);
+        }
+      });
+    } else {
+      this.navigateToBoardWithTask(boardId, task._id);
+    }
+  }
+
+  private navigateToBoardWithTask(boardId: string, taskId: string): void {
+    // Navegar al tablero con el taskId en query params
+    this.router.navigate(['/board', boardId], { 
+      queryParams: { taskId: taskId } 
+    }).then(() => {
+      // Limpiar el buscador después de navegar
+      this.searchTerm = '';
+      this.searchResults = [];
+      this.showSearchResults = false;
     });
   }
 

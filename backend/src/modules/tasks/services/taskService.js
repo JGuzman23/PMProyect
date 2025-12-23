@@ -3,6 +3,10 @@ import { Task } from '../models/Task.js';
 
 export const taskService = {
   async getAll(companyId, filters = {}) {
+    // Si hay un filtro de título, usar búsqueda por regex (case-insensitive)
+    if (filters.title) {
+      filters.title = { $regex: filters.title, $options: 'i' };
+    }
     return await taskRepository.findAll(companyId, filters);
   },
 

@@ -183,6 +183,83 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.loadClients();
     // Inicializar listas filtradas
     this.updateFilteredPriorities();
+    
+    // Suscribirse a cambios en los query params para abrir el modal cuando se navega desde el buscador
+    this.route.queryParams.subscribe(params => {
+      if (params['taskId']) {
+        console.log('Query param taskId detected:', params['taskId'], 'Loading:', this.loading);
+        // Si ya se cargaron las tareas, abrir el modal inmediatamente
+        if (!this.loading && this.columns.length > 0) {
+          console.log('Tasks already loaded, opening modal immediately');
+          this.checkAndOpenTaskModal(params['taskId']);
+        } else {
+          console.log('Waiting for tasks to load...');
+          // Si aún se están cargando, esperar a que terminen usando un intervalo
+          const checkInterval = setInterval(() => {
+            if (!this.loading && this.columns.length > 0) {
+              console.log('Tasks loaded, opening modal');
+              clearInterval(checkInterval);
+              this.checkAndOpenTaskModal(params['taskId']);
+            }
+          }, 100);
+          // Timeout de seguridad después de 5 segundos
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            if (params['taskId']) {
+              console.log('Timeout reached, attempting to open modal');
+              this.checkAndOpenTaskModal(params['taskId']);
+            }
+          }, 5000);
+        }
+      }
+    });
+  }
+
+  checkAndOpenTaskModal(taskId?: string): void {
+    // Verificar si hay un taskId en los query params para abrir el modal
+    const targetTaskId = taskId || this.route.snapshot.queryParams['taskId'];
+    console.log('checkAndOpenTaskModal called with taskId:', targetTaskId);
+    
+    if (targetTaskId) {
+      // Buscar la tarea en las columnas cargadas
+      const allTasks = this.columns.flatMap(col => col.tasks);
+      console.log('Total tasks in columns:', allTasks.length);
+      const task = allTasks.find(t => t._id === targetTaskId);
+      
+      if (task) {
+        console.log('Task found in columns, opening modal');
+        // Usar openTaskModal para inicializar correctamente el modal
+        this.openTaskModal(task);
+        // Limpiar el query param después de abrir el modal
+        setTimeout(() => {
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: {},
+            replaceUrl: true
+          });
+        }, 100);
+      } else {
+        console.log('Task not found in columns, loading from API');
+        // Si no se encuentra la tarea, intentar cargarla directamente desde el API
+        this.http.get<Task>(`${this.apiUrl}/tasks/${targetTaskId}`).subscribe({
+          next: (task) => {
+            console.log('Task loaded from API, opening modal');
+            this.openTaskModal(task);
+            // Limpiar el query param después de abrir el modal
+            setTimeout(() => {
+              this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: {},
+                replaceUrl: true
+              });
+            }, 100);
+          },
+          error: (err) => {
+            console.error('Error loading task', err);
+          }
+        });
+      }
+    }
   }
 
   loadUsers(): void {
@@ -356,6 +433,9 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         });
         console.log('Columns after assignment:', this.columns);
         this.loading = false;
+        
+        // Verificar si hay un taskId en los query params para abrir el modal después de cargar las tareas
+        this.checkAndOpenTaskModal();
       },
       error: (err) => {
         console.error('Error loading tasks', err);
