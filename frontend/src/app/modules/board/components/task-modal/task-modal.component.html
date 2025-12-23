@@ -6,7 +6,7 @@
     <div class="relative mx-auto p-2 sm:p-4 md:p-6 border w-full sm:w-[95vw] md:w-[90vw] lg:w-[90vw] max-w-7xl shadow-lg rounded-md bg-white my-auto max-h-[98vh] sm:max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col" (click)="$event.stopPropagation()">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-2 sm:mb-4">
         <h3 class="text-sm sm:text-base md:text-lg font-bold text-gray-900 truncate pr-2">
-          {{ task ? (isEditMode ? 'Editar Tarea' : 'Detalles de la Tarea') : 'Nueva Tarea' }}
+          {{ task ? (isEditMode ? ('tasks.editTask' | translate) : ('tasks.taskDetails' | translate)) : ('tasks.newTask' | translate) }}
         </h3>
         <div class="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto flex-shrink-0">
           <!-- Botones de acción (solo en modo edición) -->
@@ -16,14 +16,14 @@
               (click)="task ? cancelEdit() : closeModal()"
               class="flex-1 sm:flex-none px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium text-[11px] sm:text-xs md:text-sm whitespace-nowrap"
             >
-              {{ task ? 'Cancelar' : 'Cerrar' }}
+              {{ task ? ('tasks.cancel' | translate) : ('tasks.close' | translate) }}
             </button>
             <button
               type="submit"
               form="taskForm"
               class="flex-1 sm:flex-none px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium text-[11px] sm:text-xs md:text-sm whitespace-nowrap"
             >
-              Guardar
+              {{ 'tasks.save' | translate }}
             </button>
           </div>
           <div class="relative task-actions-dropdown-container" *ngIf="task">
@@ -50,7 +50,7 @@
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
-                  <span>Eliminar tarea</span>
+                  <span>{{ 'tasks.deleteTask' | translate }}</span>
                 </button>
               </div>
             </div>
@@ -59,7 +59,7 @@
             type="button"
             (click)="closeModal()"
             class="p-1 sm:p-1.5 md:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors flex-shrink-0"
-            title="Cerrar"
+            [title]="'tasks.close' | translate"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -79,13 +79,13 @@
             <div *ngIf="task && !isEditMode" class="mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200 flex-shrink-0">
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
           <div>
-                  <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Cliente</label>
+                  <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">{{ 'tasks.client' | translate }}</label>
             <div 
                     class="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-xs cursor-pointer hover:bg-gray-100 transition-colors"
               (click)="enableEditMode()"
             >
                     <div *ngIf="!task?.clientId && !taskForm.clientId" class="text-gray-500 truncate">
-                Sin cliente asignado
+                {{ 'tasks.noClient' | translate }}
               </div>
                     <div *ngIf="task?.clientId || taskForm.clientId" class="text-gray-900 truncate">
                       <ng-container *ngIf="task?.clientId; else useFormClient">
@@ -95,19 +95,19 @@
                         {{ getClientName(taskForm.clientId) }}
                       </ng-template>
                       <span *ngIf="shouldShowAgent()" class="block text-[10px] text-gray-600 mt-0.5 truncate">
-                  Agente(s): {{ getTaskAgentName(task!) }}
+                  {{ 'tasks.agentLabel' | translate }}: {{ getTaskAgentName(task!) }}
                 </span>
               </div>
             </div>
           </div>
           <div>
-                  <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Asignado a</label>
+                  <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">{{ 'tasks.assignedTo' | translate }}</label>
             <div 
                     class="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-xs cursor-pointer hover:bg-gray-100 transition-colors"
               (click)="enableEditMode()"
             >
               <div *ngIf="getSelectedAssignees().length === 0" class="text-gray-500">
-                Sin asignar
+                {{ 'tasks.noAssignee' | translate }}
               </div>
                     <div *ngIf="getSelectedAssignees().length > 0" class="flex flex-wrap gap-0.5 items-center">
                 <div
@@ -124,7 +124,7 @@
             </div>
           </div>
           <div>
-                  <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Prioridad</label>
+                  <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">{{ 'tasks.priority' | translate }}</label>
             <div 
                     class="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-xs cursor-pointer hover:bg-gray-100 transition-colors"
               (click)="enableEditMode()"
@@ -135,18 +135,18 @@
             </div>
           </div>
           <div>
-                  <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">Fecha de fin</label>
+                  <label class="block text-[10px] sm:text-xs font-medium text-gray-500 mb-0.5">{{ 'tasks.dueDate' | translate }}</label>
             <div 
                     class="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors"
               (click)="enableEditMode()"
             >
-              {{ taskForm.dueDate ? formatDate(taskForm.dueDate) : 'Sin fecha límite' }}
+              {{ taskForm.dueDate ? formatDate(taskForm.dueDate) : ('tasks.noDueDate' | translate) }}
             </div>
           </div>
         </div>
       </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'tasks.title' | translate }}</label>
               <div 
                 class="px-3 py-2 text-gray-900 cursor-pointer hover:bg-gray-50 transition-colors rounded"
                 (click)="enableEditMode()"
@@ -155,15 +155,15 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'tasks.description' | translate }}</label>
               <div 
                 class="px-3 py-2 min-h-[200px] prose prose-sm max-w-none cursor-pointer hover:bg-gray-50 transition-colors rounded"
-                [innerHTML]="taskForm.description || 'Sin descripción'"
+                [innerHTML]="taskForm.description || ('tasks.noDescription' | translate)"
                 (click)="enableEditMode()"
               ></div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-4">Adjuntos por Estado</label>
+              <label class="block text-sm font-medium text-gray-700 mb-4">{{ 'tasks.attachmentsByStatus' | translate }}</label>
               <div class="space-y-4 pr-2">
                 <div *ngFor="let column of columns" class="border border-gray-300 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
                   <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
@@ -191,10 +191,10 @@
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    <span>Subir archivo para {{ column.name }}</span>
+                    <span>{{ 'tasks.uploadFileFor' | translate }} {{ column.name }}</span>
                   </button>
                   <div *ngIf="getAttachmentsForStatus(column._id || '').length === 0" class="text-gray-500 text-xs text-center py-2">
-                    Sin adjuntos
+                    {{ 'tasks.noAttachments' | translate }}
                   </div>
                   <div *ngIf="getAttachmentsForStatus(column._id || '').length > 0" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                     <div
@@ -222,7 +222,7 @@
                           type="button"
                           (click)="downloadAttachment(attachment)"
                           class="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600"
-                          title="Descargar"
+                          [title]="'tasks.download' | translate"
                         >
                           <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -232,7 +232,7 @@
                           type="button"
                           (click)="enableEditMode(); removeAttachment(column._id || '', i)"
                           class="bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                          title="Eliminar"
+                          [title]="'tasks.remove' | translate"
                         >
                           <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -251,12 +251,12 @@
 
           <!-- Columna Derecha: Comentarios y Actividades (30%) -->
           <div class="lg:col-span-3 flex flex-col h-full min-h-0 mt-4 lg:mt-0">
-            <label class="block text-sm font-medium text-gray-700 mb-2 flex-shrink-0">Comentarios y Actividades</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2 flex-shrink-0">{{ 'tasks.commentsAndActivities' | translate }}</label>
             
             <!-- Lista con scroll independiente -->
             <div class="flex-1 overflow-y-auto pr-0 sm:pr-2 space-y-3 mb-4 min-h-0">
               <div *ngIf="activityItems.length === 0" class="text-sm text-gray-500 text-center py-8">
-                No hay comentarios ni actividades aún
+                {{ 'tasks.noCommentsOrActivities' | translate }}
               </div>
               
               <div *ngFor="let item of activityItems" class="py-2 border-b border-gray-100 last:border-0">
@@ -291,7 +291,7 @@
                 contenteditable="true"
                 class="comment-editor min-h-[60px] px-3 py-2 text-sm text-gray-900 focus:outline-none prose prose-sm max-w-none"
                 (input)="onCommentChange($event)"
-                data-placeholder="Deja tu comentario aquí..."
+                [attr.data-placeholder]="'tasks.leaveCommentHere' | translate"
               ></div>
               <div class="flex items-center gap-1 px-2 py-1.5 border-t border-gray-200">
                 <!-- Grupo izquierdo de iconos -->
@@ -377,7 +377,7 @@
                   [class.border-red-300]="!taskForm.clientId"
                 >
                   <span class="text-xs text-gray-700 truncate">
-                    <span *ngIf="!taskForm.clientId">Seleccionar cliente...</span>
+                    <span *ngIf="!taskForm.clientId">{{ 'tasks.selectClient' | translate }}</span>
                     <span *ngIf="taskForm.clientId">{{ getClientName(taskForm.clientId) }}</span>
                   </span>
                   <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -431,7 +431,7 @@
                     [class.border-red-300]="taskForm.agentIds.length === 0"
                   >
                     <span class="text-xs text-gray-700 truncate">
-                      <span *ngIf="taskForm.agentNames.length === 0">Seleccionar agente(s)...</span>
+                      <span *ngIf="taskForm.agentNames.length === 0">{{ 'tasks.selectAgent' | translate }}</span>
                       <span *ngIf="taskForm.agentNames.length > 0" class="truncate">{{ taskForm.agentNames.join(', ') }}</span>
                     </span>
                     <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -862,10 +862,10 @@
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    <span>Subir archivo para {{ column.name }}</span>
+                    <span>{{ 'tasks.uploadFileFor' | translate }} {{ column.name }}</span>
                   </button>
                   <div *ngIf="getAttachmentsForStatus(column._id || '').length === 0" class="text-gray-500 text-xs text-center py-2">
-                    Sin adjuntos
+                    {{ 'tasks.noAttachments' | translate }}
                   </div>
                   <div *ngIf="getAttachmentsForStatus(column._id || '').length > 0" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
                     <div
@@ -893,7 +893,7 @@
                           type="button"
                           (click)="downloadAttachment(attachment)"
                           class="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600"
-                          title="Descargar"
+                          [title]="'tasks.download' | translate"
                         >
                           <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -903,7 +903,7 @@
                           type="button"
                           (click)="removeAttachment(column._id || '', i)"
                           class="bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                          title="Eliminar"
+                          [title]="'tasks.remove' | translate"
                         >
                           <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -925,12 +925,12 @@
 
           <!-- Columna Derecha: Comentarios y Actividades (30%) -->
           <div class="lg:col-span-3 flex flex-col h-full min-h-0 mt-4 lg:mt-0">
-            <label class="block text-sm font-medium text-gray-700 mb-2 flex-shrink-0">Comentarios y Actividades</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2 flex-shrink-0">{{ 'tasks.commentsAndActivities' | translate }}</label>
             
             <!-- Lista con scroll independiente -->
             <div class="flex-1 overflow-y-auto pr-0 sm:pr-2 space-y-3 mb-4 min-h-0">
               <div *ngIf="activityItems.length === 0" class="text-sm text-gray-500 text-center py-8">
-                No hay comentarios ni actividades aún
+                {{ 'tasks.noCommentsOrActivities' | translate }}
               </div>
               
               <div *ngFor="let item of activityItems" class="py-2 border-b border-gray-100 last:border-0">
@@ -1096,7 +1096,7 @@
   >
     <div class="relative mx-auto p-6 border w-full max-w-md shadow-lg rounded-md bg-white" (click)="$event.stopPropagation()">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-bold text-gray-900">Título del Adjunto</h3>
+        <h3 class="text-lg font-bold text-gray-900">{{ 'tasks.attachmentTitle' | translate }}</h3>
         <button
           type="button"
           (click)="cancelAttachmentUpload()"
@@ -1109,26 +1109,26 @@
       </div>
       <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700 mb-2">
-          Estado <span class="text-red-500">*</span>
+          {{ 'admin.statusName' | translate }} <span class="text-red-500">*</span>
         </label>
         <select
           [(ngModel)]="pendingStatusId"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-3"
           required
         >
-          <option value="">Seleccionar estado...</option>
+          <option value="">{{ 'tasks.selectStatus' | translate }}...</option>
           <option *ngFor="let column of columns" [value]="column._id">
             {{ column.name }}
           </option>
         </select>
         <label class="block text-sm font-medium text-gray-700 mb-2">
-          Título <span class="text-red-500">*</span>
+          {{ 'tasks.title' | translate }} <span class="text-red-500">*</span>
         </label>
         <input
           type="text"
           [(ngModel)]="attachmentTitle"
           (keyup.enter)="confirmAttachmentUpload()"
-          placeholder="Ingrese un título para el adjunto"
+          [placeholder]="'tasks.attachmentTitle' | translate"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
         />
         <p *ngIf="pendingFile" class="mt-2 text-xs text-gray-500">
@@ -1141,7 +1141,7 @@
           (click)="cancelAttachmentUpload()"
           class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
         >
-          Cancelar
+          {{ 'tasks.cancel' | translate }}
         </button>
         <button
           type="button"
@@ -1149,7 +1149,7 @@
           [disabled]="!attachmentTitle.trim() || !pendingStatusId"
           class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          Subir
+          {{ 'tasks.upload' | translate }}
         </button>
       </div>
     </div>

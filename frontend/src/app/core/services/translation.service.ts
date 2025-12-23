@@ -227,9 +227,15 @@ export class TranslationService {
         mustEnterTitle: 'Debe ingresar un título para el adjunto',
         errorAddingComment: 'Error al agregar el comentario. Por favor, intenta de nuevo.',
         errorDeletingFile: 'Error al eliminar el archivo. Por favor, intente nuevamente.',
+        errorUploadingFile: 'Error al subir el archivo. Por favor, intente nuevamente.',
         confirmDeleteTask: '¿Estás seguro de eliminar esta tarea?',
         mustSelectAgent: 'Debe seleccionar al menos un agente para clientes tipo empresa',
-        usersSelected: 'usuarios seleccionados'
+        usersSelected: 'usuarios seleccionados',
+        from: 'de',
+        to: 'a',
+        titleChanged: 'Título cambiado',
+        uploadFileFor: 'Subir archivo para',
+        leaveCommentHere: 'Deja tu comentario aquí...'
       },
       boards: {
         newBoard: 'Nuevo Tablero',
@@ -416,7 +422,12 @@ export class TranslationService {
         errorDeletingFile: 'Error deleting file. Please try again.',
         confirmDeleteTask: 'Are you sure you want to delete this task?',
         mustSelectAgent: 'You must select at least one agent for company type clients',
-        usersSelected: 'users selected'
+        usersSelected: 'users selected',
+        from: 'from',
+        to: 'to',
+        titleChanged: 'Title changed',
+        uploadFileFor: 'Upload file for',
+        leaveCommentHere: 'Leave your comment here...'
       },
       boards: {
         newBoard: 'New Board',

@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { TranslationService } from '../../../../core/services/translation.service';
 
 interface User {
   _id: string;
@@ -93,7 +95,7 @@ interface Column {
 @Component({
   selector: 'app-task-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './task-modal.component.html'
 })
 export class TaskModalComponent implements OnInit, OnChanges {
@@ -154,7 +156,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private translationService: TranslationService
   ) {}
 
   ngOnInit(): void {
@@ -274,7 +277,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
   getSelectedAssigneesNames(): string {
     if (this.taskForm.assignees.length === 0) {
-      return 'Sin asignar';
+      return this.translationService.translate('tasks.noAssignee');
     }
     const names = this.taskForm.assignees
       .map(id => {
@@ -282,7 +285,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
         return user ? `${user.firstName} ${user.lastName}` : '';
       })
       .filter(name => name);
-    return names.length > 0 ? names.join(', ') : 'Sin asignar';
+    return names.length > 0 ? names.join(', ') : this.translationService.translate('tasks.noAssignee');
   }
 
   getPriorityLabel(priority: string): string {
@@ -521,10 +524,19 @@ export class TaskModalComponent implements OnInit, OnChanges {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Ahora';
-    if (diffMins < 60) return `Hace ${diffMins} min`;
-    if (diffHours < 24) return `Hace ${diffHours} h`;
-    if (diffDays < 7) return `Hace ${diffDays} d`;
+    if (diffMins < 1) return this.translationService.translate('tasks.moment');
+    if (diffMins < 60) {
+      const minutes = diffMins === 1 ? this.translationService.translate('tasks.minutes') : this.translationService.translate('tasks.minutesPlural');
+      return `${this.translationService.translate('tasks.ago')} ${diffMins} ${minutes}`;
+    }
+    if (diffHours < 24) {
+      const hours = diffHours === 1 ? this.translationService.translate('tasks.hours') : this.translationService.translate('tasks.hoursPlural');
+      return `${this.translationService.translate('tasks.ago')} ${diffHours} ${hours}`;
+    }
+    if (diffDays < 7) {
+      const days = diffDays === 1 ? this.translationService.translate('tasks.days') : this.translationService.translate('tasks.daysPlural');
+      return `${this.translationService.translate('tasks.ago')} ${diffDays} ${days}`;
+    }
     return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
@@ -538,35 +550,35 @@ export class TaskModalComponent implements OnInit, OnChanges {
     if (!activity) return '';
     switch (activity.type) {
       case 'created':
-        return 'Tarea creada';
+        return this.translationService.translate('tasks.taskCreated');
       case 'status_changed':
-        return `Estado cambiado`;
+        return this.translationService.translate('tasks.statusChanged');
       case 'priority_changed':
         const priorityMap: { [key: string]: string } = {
-          'low': 'Baja',
-          'medium': 'Media',
-          'high': 'Alta',
-          'urgent': 'Urgente'
+          'low': this.translationService.translate('tasks.low'),
+          'medium': this.translationService.translate('tasks.medium'),
+          'high': this.translationService.translate('tasks.high'),
+          'urgent': this.translationService.translate('tasks.urgent')
         };
         const oldPriority = priorityMap[activity.oldValue] || activity.oldValue;
         const newPriority = priorityMap[activity.newValue] || activity.newValue;
-        return `Prioridad cambiada de ${oldPriority} a ${newPriority}`;
+        return `${this.translationService.translate('tasks.priorityChanged')} ${this.translationService.translate('tasks.from')} ${oldPriority} ${this.translationService.translate('tasks.to')} ${newPriority}`;
       case 'assignees_changed':
-        return 'Asignados modificados';
+        return this.translationService.translate('tasks.assigneesModified');
       case 'client_changed':
-        return 'Cliente modificado';
+        return this.translationService.translate('tasks.clientModified');
       case 'due_date_changed':
-        return 'Fecha de fin modificada';
+        return this.translationService.translate('tasks.dueDateModified');
       case 'title_changed':
-        return `Título cambiado de "${activity.oldValue}" a "${activity.newValue}"`;
+        return `${this.translationService.translate('tasks.titleChanged')} ${this.translationService.translate('tasks.from')} "${activity.oldValue}" ${this.translationService.translate('tasks.to')} "${activity.newValue}"`;
       case 'description_changed':
-        return 'Descripción modificada';
+        return this.translationService.translate('tasks.descriptionModified');
       case 'comment_added':
-        return 'Comentario agregado';
+        return this.translationService.translate('tasks.commentAdded');
       case 'attachment_added':
-        return 'Archivo adjunto agregado';
+        return this.translationService.translate('tasks.attachmentAdded');
       case 'attachment_removed':
-        return 'Archivo adjunto eliminado';
+        return this.translationService.translate('tasks.attachmentRemoved');
       default:
         return 'Cambio realizado';
     }
@@ -649,7 +661,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
       },
       error: (err) => {
         console.error('Error adding comment', err);
-        alert('Error al agregar el comentario. Por favor, intenta de nuevo.');
+        alert(this.translationService.translate('tasks.errorAddingComment'));
       }
     });
   }
@@ -697,9 +709,9 @@ export class TaskModalComponent implements OnInit, OnChanges {
       this.uploadFile(this.pendingFile, this.attachmentTitle.trim(), this.pendingStatusId, status?.name || '');
       this.cancelAttachmentUpload();
     } else if (this.pendingFile && !this.pendingStatusId) {
-      alert('Debe seleccionar un estado para el adjunto');
+      alert(this.translationService.translate('tasks.mustSelectStatus'));
     } else if (this.pendingFile) {
-      alert('Debe ingresar un título para el adjunto');
+      alert(this.translationService.translate('tasks.mustEnterTitle'));
     }
   }
 
@@ -802,7 +814,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
         console.error('Error uploading file', err);
         this.attachments = this.attachments.filter(a => a._id !== tempId);
         this.uploadingFiles = false;
-        alert('Error al subir el archivo. Por favor, intente nuevamente.');
+        alert(this.translationService.translate('tasks.errorUploadingFile'));
       }
     });
   }
@@ -862,7 +874,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
           },
           error: (err) => {
             console.error('Error deleting attachment', err);
-            alert('Error al eliminar el archivo. Por favor, intente nuevamente.');
+            alert(this.translationService.translate('tasks.errorDeletingFile'));
           }
         });
       } else {
