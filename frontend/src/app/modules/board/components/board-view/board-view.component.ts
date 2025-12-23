@@ -6,6 +6,7 @@ import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from 
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
+import { TaskModalComponent } from '../task-modal/task-modal.component';
 
 interface User {
   _id: string;
@@ -112,7 +113,7 @@ interface Board {
 @Component({
   selector: 'app-board-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, FormsModule],
+  imports: [CommonModule, DragDropModule, FormsModule, TaskModalComponent],
   templateUrl: './board-view.component.html'
 })
 export class BoardViewComponent implements OnInit, OnDestroy {
@@ -251,8 +252,14 @@ export class BoardViewComponent implements OnInit, OnDestroy {
 
   loadBoard(): void {
     this.loading = true;
+    if (!this.boardId) {
+      console.error('No board ID provided');
+      this.loading = false;
+      return;
+    }
     this.http.get<Board>(`${this.apiUrl}/boards/${this.boardId}`).subscribe({
       next: (board) => {
+        console.log('Board loaded:', board);
         this.board = board;
         this.loadStatuses();
       },
@@ -266,6 +273,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   loadStatuses(): void {
     if (!this.board?.projectId?._id) {
       // Si no hay proyecto, usar las columnas del board
+      console.log('No project ID, using board columns:', this.board!.columns);
       this.columns = this.board!.columns.map(col => ({ ...col, tasks: [] }));
       this.loadTasks();
       return;
@@ -274,6 +282,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     // Cargar estados del proyecto
     this.http.get<any[]>(`${this.apiUrl}/admin/statuses?projectId=${this.board.projectId._id}`).subscribe({
       next: (statuses) => {
+        console.log('Statuses loaded:', statuses);
         if (statuses.length > 0) {
           // Usar los estados como columnas
           this.columns = statuses.map(status => ({
@@ -285,6 +294,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
           })).sort((a, b) => a.order - b.order);
         } else {
           // Si no hay estados, usar las columnas del board
+          console.log('No statuses, using board columns:', this.board!.columns);
           this.columns = this.board!.columns.map(col => ({ ...col, tasks: [] }));
         }
         this.loadTasks();
@@ -301,6 +311,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   loadTasks(): void {
     this.http.get<Task[]>(`${this.apiUrl}/tasks/board/${this.boardId}`).subscribe({
       next: (tasks) => {
+        console.log('Tasks loaded:', tasks);
+        console.log('Columns before assignment:', this.columns);
         // Normalizar URLs de attachments y migrar campos antiguos de agentes
         tasks = tasks.map(task => {
           // Migración: si tiene agentId/agentName antiguos, convertir a arrays
@@ -329,14 +341,19 @@ export class BoardViewComponent implements OnInit, OnDestroy {
           };
         });
         // Asignar tareas a las columnas basándose en columnId
-        this.columns = this.columns.map(col => ({
-          ...col,
-          tasks: tasks.filter(t => {
+        this.columns = this.columns.map(col => {
+          const columnTasks = tasks.filter(t => {
             // Buscar por _id o por name
             return t.columnId === col._id || t.columnId === col.name || 
                    (typeof t.columnId === 'object' && t.columnId === col._id);
-          }).sort((a, b) => (a.order || 0) - (b.order || 0))
-        }));
+          }).sort((a, b) => (a.order || 0) - (b.order || 0));
+          console.log(`Column ${col.name} (${col._id}): ${columnTasks.length} tasks`);
+          return {
+            ...col,
+            tasks: columnTasks
+          };
+        });
+        console.log('Columns after assignment:', this.columns);
         this.loading = false;
       },
       error: (err) => {
@@ -528,15 +545,47 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.showTaskModal = false;
     this.selectedTask = null;
     this.selectedClient = null;
-    this.showAssigneeDropdown = false;
-    this.showTaskActionsDropdown = false;
-    this.isEditMode = false;
-    this.attachments = [];
-    this.attachmentsByStatus = {};
-    this.comments = [];
-    this.activityLog = [];
-    this.activityItems = [];
-    this.newCommentText = '';
+  }
+
+  onTaskModalSave(taskFormData: any): void {
+    // Actualizar taskForm con los datos del componente hijo
+    this.taskForm = { ...taskFormData };
+    
+    // Actualizar selectedClient si hay clientId
+    if (this.taskForm.clientId) {
+      this.selectedClient = this.clients.find(c => c._id === this.taskForm.clientId) || null;
+    } else {
+      this.selectedClient = null;
+    }
+    
+    // Los archivos adjuntos se manejan directamente en el componente task-modal,
+    // así que no necesitamos incluirlos aquí. Llamar al método saveTask existente.
+    this.saveTask();
+  }
+
+  onTaskModalDelete(taskId: string): void {
+    // Llamar al método deleteTask existente
+    this.deleteTask();
+  }
+
+  onTaskUpdated(updatedTask: Task): void {
+    // Actualizar la tarea en el board
+    this.selectedTask = updatedTask;
+    
+    // Actualizar la tarea en la columna correspondiente
+    const column = this.columns.find(col => 
+      col.tasks.some(t => t._id === updatedTask._id)
+    );
+    
+    if (column) {
+      const taskIndex = column.tasks.findIndex(t => t._id === updatedTask._id);
+      if (taskIndex !== -1) {
+        column.tasks[taskIndex] = updatedTask;
+      }
+    }
+    
+    // Recargar el board para obtener los datos actualizados
+    this.loadBoard();
   }
 
   onDescriptionChange(event: Event): void {
@@ -886,8 +935,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         }
       }
       
-      // Adjuntos
-      taskData.attachments = this.attachments;
+      // Adjuntos - se manejan directamente en el componente task-modal
+      // No incluirlos aquí para evitar sobrescribir los adjuntos existentes
       
       // NO enviar columnId a menos que se esté moviendo la tarea (eso se hace con drag & drop)
       // El columnId solo debe cambiar cuando se arrastra la tarea, no cuando se edita
@@ -899,7 +948,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       taskData.priority = this.taskForm.priority;
       taskData.assignees = this.taskForm.assignees;
       taskData.dueDate = this.taskForm.dueDate || undefined;
-      taskData.attachments = this.attachments;
+      // Adjuntos - se manejan directamente en el componente task-modal
       taskData.boardId = this.boardId;
       taskData.projectId = this.board!.projectId._id;
       taskData.columnId = columnId;

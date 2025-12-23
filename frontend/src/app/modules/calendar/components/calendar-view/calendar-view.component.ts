@@ -2,10 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { TaskModalComponent } from '../../../board/components/task-modal/task-modal.component';
 
 interface Attachment {
   url: string;
   name: string;
+  title?: string;
+  size: number;
+  uploadedAt?: string;
+  statusId?: string;
+  statusName?: string;
+  _id?: string;
 }
 
 interface BoardStatus {
@@ -15,22 +22,56 @@ interface BoardStatus {
   projectId: string;
 }
 
+interface User {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+interface Client {
+  _id: string;
+  type: 'empresa' | 'persona';
+  name: string;
+  email: string;
+  phone: string;
+  company?: string;
+  agents?: any[];
+  lastName?: string;
+  isActive: boolean;
+}
+
+interface Column {
+  _id?: string;
+  name: string;
+  order: number;
+  color: string;
+  tasks: Task[];
+}
+
 interface Task {
   _id: string;
   title: string;
   description: string;
   dueDate: string;
   priority: string;
-  assignees: any[];
+  assignees: User[];
   attachments?: Attachment[];
   columnId?: string;
   projectId?: string | { _id: string };
+  clientId?: string | Client;
+  agentIds?: string[];
+  agentNames?: string[];
+  labels?: any[];
+  comments?: any[];
+  activityLog?: any[];
+  order: number;
 }
 
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, TaskModalComponent],
   templateUrl: './calendar-view.component.html'
 })
 export class CalendarViewComponent implements OnInit {
@@ -42,6 +83,9 @@ export class CalendarViewComponent implements OnInit {
   selectedTask: Task | null = null;
   showTaskModal = false;
   statuses: BoardStatus[] = [];
+  columns: Column[] = [];
+  users: User[] = [];
+  clients: Client[] = [];
   private apiUrl = environment.apiUrl;
   staticFilesUrl = environment.apiUrl.replace('/api', '');
 
@@ -107,6 +151,9 @@ export class CalendarViewComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadStatuses();
+    this.loadUsers();
+    this.loadClients();
+    // Cargar tareas después de usuarios para poder normalizar assignees
     this.loadTasks();
   }
 
@@ -115,6 +162,14 @@ export class CalendarViewComponent implements OnInit {
     this.http.get<BoardStatus[]>(`${this.apiUrl}/admin/statuses`).subscribe({
       next: (statuses) => {
         this.statuses = statuses;
+        // Convertir statuses a columns para el modal
+        this.columns = statuses.map(status => ({
+          _id: status._id,
+          name: status.name,
+          order: 0,
+          color: status.color,
+          tasks: []
+        })).sort((a, b) => a.order - b.order);
       },
       error: (err) => {
         console.error('Error loading statuses', err);
@@ -122,19 +177,58 @@ export class CalendarViewComponent implements OnInit {
     });
   }
 
+  loadUsers(): void {
+    this.http.get<User[]>(`${this.apiUrl}/users`).subscribe({
+      next: (users) => {
+        this.users = users;
+        // Recargar tareas para normalizar assignees ahora que tenemos los usuarios
+        if (this.tasks.length > 0) {
+          this.loadTasks();
+        }
+      },
+      error: (err) => {
+        console.error('Error loading users', err);
+      }
+    });
+  }
+
+  loadClients(): void {
+    this.http.get<Client[]>(`${this.apiUrl}/clients`).subscribe({
+      next: (clients) => {
+        this.clients = clients.filter(c => c.isActive);
+      },
+      error: (err) => {
+        console.error('Error loading clients', err);
+      }
+    });
+  }
+
   loadTasks(): void {
     this.http.get<Task[]>(`${this.apiUrl}/tasks`).subscribe({
       next: (tasks) => {
-        // Normalizar URLs de attachments
-        this.tasks = tasks.filter(t => t.dueDate).map(task => ({
-          ...task,
-          attachments: (task.attachments || []).map(att => ({
-            ...att,
-            url: att.url && !att.url.startsWith('http') && !att.url.startsWith('data:') && att.url.startsWith('/')
-              ? `${this.staticFilesUrl}${att.url}`
-              : att.url || ''
-          }))
-        }));
+        // Normalizar URLs de attachments y convertir assignees de strings a objetos User
+        this.tasks = tasks.filter(t => t.dueDate).map(task => {
+          // Convertir assignees de strings a objetos User si es necesario
+          const normalizedAssignees = (task.assignees || []).map(assignee => {
+            if (typeof assignee === 'string') {
+              return this.users.find(u => u._id === assignee) || assignee;
+            }
+            return assignee;
+          }).filter(a => a !== undefined) as User[];
+
+          return {
+            ...task,
+            order: task.order || 0,
+            assignees: normalizedAssignees,
+            attachments: (task.attachments || []).map(att => ({
+              ...att,
+              size: att.size || 0,
+              url: att.url && !att.url.startsWith('http') && !att.url.startsWith('data:') && att.url.startsWith('/')
+                ? `${this.staticFilesUrl}${att.url}`
+                : att.url || ''
+            }))
+          };
+        });
       },
       error: (err) => {
         console.error('Error loading tasks', err);
@@ -174,13 +268,79 @@ export class CalendarViewComponent implements OnInit {
   }
 
   openTaskModal(task: Task): void {
-    this.selectedTask = task;
+    // Asegurarse de que la tarea tenga el formato correcto para el modal
+    // Normalizar assignees si es necesario y asegurar que order existe
+    const normalizedTask: Task = {
+      ...task,
+      order: task.order || 0,
+      assignees: task.assignees.map(assignee => {
+        if (typeof assignee === 'string') {
+          return this.users.find(u => u._id === assignee) || { _id: assignee, firstName: '', lastName: '', email: '' };
+        }
+        return assignee;
+      }).filter(a => a !== undefined) as User[]
+    };
+    this.selectedTask = normalizedTask;
     this.showTaskModal = true;
   }
 
   closeTaskModal(): void {
     this.showTaskModal = false;
     this.selectedTask = null;
+  }
+
+  onTaskModalSave(taskFormData: any): void {
+    // El modal maneja el guardado internamente
+    this.loadTasks(); // Recargar tareas después de guardar
+  }
+
+  onTaskModalDelete(taskId: string): void {
+    this.http.delete(`${this.apiUrl}/tasks/${taskId}`).subscribe({
+      next: () => {
+        this.loadTasks(); // Recargar tareas después de eliminar
+        this.closeTaskModal();
+      },
+      error: (err) => {
+        console.error('Error deleting task', err);
+      }
+    });
+  }
+
+  onTaskUpdated(updatedTask: any): void {
+    // Normalizar la tarea actualizada para que coincida con nuestro tipo Task
+    const normalizedTask: Task = {
+      _id: updatedTask._id,
+      title: updatedTask.title || '',
+      description: updatedTask.description || '',
+      dueDate: updatedTask.dueDate || '',
+      priority: updatedTask.priority || 'medium',
+      order: updatedTask.order || 0,
+      assignees: (updatedTask.assignees || []).map((assignee: any) => {
+        if (typeof assignee === 'string') {
+          return this.users.find(u => u._id === assignee) || { _id: assignee, firstName: '', lastName: '', email: '' };
+        }
+        return assignee;
+      }).filter((a: any) => a !== undefined) as User[],
+      attachments: (updatedTask.attachments || []).map((att: any) => ({
+        ...att,
+        size: att.size || 0
+      })),
+      columnId: updatedTask.columnId,
+      projectId: updatedTask.projectId,
+      clientId: updatedTask.clientId,
+      agentIds: updatedTask.agentIds,
+      agentNames: updatedTask.agentNames,
+      labels: updatedTask.labels,
+      comments: updatedTask.comments,
+      activityLog: updatedTask.activityLog
+    };
+    
+    // Actualizar la tarea en la lista local
+    const index = this.tasks.findIndex(t => t._id === normalizedTask._id);
+    if (index !== -1) {
+      this.tasks[index] = normalizedTask;
+    }
+    this.selectedTask = normalizedTask;
   }
 
   getTaskPreview(task: Task): string {
