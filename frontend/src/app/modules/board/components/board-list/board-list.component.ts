@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
 interface Board {
   _id: string;
@@ -25,7 +26,7 @@ interface Project {
 @Component({
   selector: 'app-board-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, TranslatePipe],
   templateUrl: './board-list.component.html'
 })
 export class BoardListComponent implements OnInit {
@@ -100,11 +101,13 @@ export class BoardListComponent implements OnInit {
 
   createBoard(): void {
     if (!this.newBoard.name) {
+      // Error message will be translated in the template
       this.error = 'El nombre del tablero es requerido';
       return;
     }
 
     if (!this.newBoard.projectId) {
+      // Error message will be translated in the template
       this.error = 'Debes seleccionar un proyecto';
       return;
     }

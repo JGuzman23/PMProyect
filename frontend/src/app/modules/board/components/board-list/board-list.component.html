@@ -1,6 +1,6 @@
 <div class="max-w-7xl mx-auto px-2 sm:px-4">
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
-    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Tableros</h2>
+    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ 'sidebar.boards' | translate }}</h2>
     <button
       (click)="openCreateModal()"
       class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
@@ -8,7 +8,7 @@
       <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
       </svg>
-      Nuevo Tablero
+      {{ 'boards.newBoard' | translate }}
     </button>
   </div>
 
@@ -17,12 +17,12 @@
   </div>
 
   <div *ngIf="!loading && boards.length === 0" class="text-center py-12">
-    <p class="text-gray-500 mb-4">No hay tableros creados aún</p>
+    <p class="text-gray-500 mb-4">{{ 'boards.noBoardsYet' | translate }}</p>
     <button
       (click)="openCreateModal()"
       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
     >
-      Crear tu primer tablero
+      {{ 'boards.createFirstBoard' | translate }}
     </button>
   </div>
 
@@ -33,14 +33,14 @@
       class="bg-white rounded-lg shadow p-4 sm:p-6 hover:shadow-lg transition-shadow cursor-pointer"
     >
       <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ board.name }}</h3>
-      <p class="text-gray-600 text-sm mb-4">{{ board.description || 'Sin descripción' }}</p>
+      <p class="text-gray-600 text-sm mb-4">{{ board.description || ('boards.noDescription' | translate) }}</p>
       <div class="flex items-center justify-between">
         <span class="text-sm text-gray-500">{{ board.projectId?.name }}</span>
         <span
           [class]="board.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
           class="px-2 py-1 rounded-full text-xs font-medium"
         >
-          {{ board.status === 'active' ? 'Activo' : 'Archivado' }}
+          {{ board.status === 'active' ? ('boards.active' | translate) : ('boards.archived' | translate) }}
         </span>
       </div>
     </div>
@@ -53,13 +53,13 @@
     (click)="closeCreateModal()"
   >
     <div class="relative mx-auto p-4 sm:p-5 border w-full max-w-md sm:w-96 shadow-lg rounded-md bg-white my-auto max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
-      <h3 class="text-lg font-bold text-gray-900 mb-4">Crear Nuevo Tablero</h3>
+      <h3 class="text-lg font-bold text-gray-900 mb-4">{{ 'boards.createNewBoard' | translate }}</h3>
       <form (ngSubmit)="createBoard()">
         <div *ngIf="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           {{ error }}
         </div>
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Proyecto <span class="text-red-500">*</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'boards.project' | translate }} <span class="text-red-500">*</span></label>
           <select
             [(ngModel)]="newBoard.projectId"
             name="projectId"
@@ -67,35 +67,35 @@
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             [disabled]="loadingProjects"
           >
-            <option value="">Selecciona un proyecto</option>
+            <option value="">{{ 'boards.selectProject' | translate }}</option>
             <option *ngFor="let project of projects" [value]="project._id">{{ project.name }}</option>
           </select>
           <p *ngIf="projects.length === 0 && !loadingProjects" class="mt-1 text-xs text-gray-500">
-            No hay proyectos disponibles. Crea un proyecto primero.
+            {{ 'boards.noProjectsAvailable' | translate }}
           </p>
           <p *ngIf="loadingProjects" class="mt-1 text-xs text-gray-500">
-            Cargando proyectos...
+            {{ 'boards.loadingProjects' | translate }}
           </p>
         </div>
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Nombre <span class="text-red-500">*</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'boards.name' | translate }} <span class="text-red-500">*</span></label>
           <input
             type="text"
             [(ngModel)]="newBoard.name"
             name="name"
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Nombre del tablero"
+            [placeholder]="'boards.boardNamePlaceholder' | translate"
           />
         </div>
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'boards.description' | translate }}</label>
           <textarea
             [(ngModel)]="newBoard.description"
             name="description"
             rows="3"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Descripción del tablero"
+            [placeholder]="'boards.boardDescriptionPlaceholder' | translate"
           ></textarea>
         </div>
         <div class="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-3 sm:gap-0">
@@ -104,14 +104,14 @@
             (click)="closeCreateModal()"
             class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
           >
-            Cancelar
+            {{ 'boards.cancel' | translate }}
           </button>
           <button
             type="submit"
             [disabled]="!newBoard.name || !newBoard.projectId || loadingProjects"
             class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Crear
+            {{ 'boards.create' | translate }}
           </button>
         </div>
       </form>

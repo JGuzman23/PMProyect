@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
 import { TaskModalComponent } from '../task-modal/task-modal.component';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
 interface User {
   _id: string;
@@ -113,7 +114,7 @@ interface Board {
 @Component({
   selector: 'app-board-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, FormsModule, TaskModalComponent],
+  imports: [CommonModule, DragDropModule, FormsModule, TaskModalComponent, TranslatePipe],
   templateUrl: './board-view.component.html'
 })
 export class BoardViewComponent implements OnInit, OnDestroy {
