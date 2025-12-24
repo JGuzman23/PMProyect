@@ -3,15 +3,19 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { NavbarComponent } from '../navbar/navbar.component';
+import { TranslationService } from '../../../../core/services/translation.service';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SidebarComponent, NavbarComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SidebarComponent, NavbarComponent, TranslatePipe],
   templateUrl: './dashboard-layout.component.html'
 })
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
   sidebarOpen = true; // Abierto por defecto en desktop
+
+  constructor(public translationService: TranslationService) {}
 
   ngOnInit(): void {
     // Restaurar el estado del sidebar desde localStorage

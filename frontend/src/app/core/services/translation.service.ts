@@ -108,7 +108,12 @@ export class TranslationService {
         confirm: 'Confirmar',
         all: 'Todos',
         clear: 'Limpiar',
-        menu: 'Menú'
+        menu: 'Menú',
+        noResults: 'No se encontraron resultados'
+      },
+      footer: {
+        createdBy: 'Creado por',
+        rightsReserved: 'Derechos reservados a'
       },
       auth: {
         login: 'Iniciar sesión',
@@ -304,6 +309,10 @@ export class TranslationService {
         no: 'No',
         confirm: 'Confirm'
       },
+      footer: {
+        createdBy: 'Created by',
+        rightsReserved: 'All rights reserved to'
+      },
       auth: {
         login: 'Sign in',
         logout: 'Sign out',
@@ -497,6 +506,10 @@ export class TranslationService {
         no: 'Non',
         confirm: 'Confirmer'
       },
+      footer: {
+        createdBy: 'Créé par',
+        rightsReserved: 'Tous droits réservés à'
+      },
       auth: {
         login: 'Se connecter',
         logout: 'Se déconnecter',
@@ -614,6 +627,10 @@ export class TranslationService {
         yes: 'Ja',
         no: 'Nein',
         confirm: 'Bestätigen'
+      },
+      footer: {
+        createdBy: 'Erstellt von',
+        rightsReserved: 'Alle Rechte vorbehalten an'
       },
       auth: {
         login: 'Anmelden',
@@ -733,6 +750,10 @@ export class TranslationService {
         no: 'Não',
         confirm: 'Confirmar'
       },
+      footer: {
+        createdBy: 'Criado por',
+        rightsReserved: 'Todos os direitos reservados a'
+      },
       auth: {
         login: 'Entrar',
         logout: 'Sair',
@@ -850,6 +871,10 @@ export class TranslationService {
         yes: 'Sì',
         no: 'No',
         confirm: 'Conferma'
+      },
+      footer: {
+        createdBy: 'Creato da',
+        rightsReserved: 'Tutti i diritti riservati a'
       },
       auth: {
         login: 'Accedi',

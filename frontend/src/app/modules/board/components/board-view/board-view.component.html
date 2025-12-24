@@ -15,12 +15,18 @@
           <button
             type="button"
             (click)="openFilterClientDropdown(); $event.stopPropagation()"
-            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            [class.bg-indigo-50]="hasFilterClients()"
+            [class.border-indigo-500]="hasFilterClients()"
+            [class.text-indigo-700]="hasFilterClients()"
+            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 relative"
           >
             <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
             {{ 'tasks.client' | translate }}
+            <span *ngIf="hasFilterClients()" class="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full">
+              {{ getFilterClientCount() }}
+            </span>
             <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
@@ -62,12 +68,18 @@
           <button
             type="button"
             (click)="openFilterAssigneeDropdown(); $event.stopPropagation()"
-            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            [class.bg-indigo-50]="hasFilterAssignees()"
+            [class.border-indigo-500]="hasFilterAssignees()"
+            [class.text-indigo-700]="hasFilterAssignees()"
+            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 relative"
           >
             <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             {{ 'tasks.assignedTo' | translate }}
+            <span *ngIf="hasFilterAssignees()" class="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full">
+              {{ getFilterAssigneeCount() }}
+            </span>
             <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
@@ -109,12 +121,18 @@
           <button
             type="button"
             (click)="openFilterStatusDropdown(); $event.stopPropagation()"
-            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            [class.bg-indigo-50]="hasFilterStatuses()"
+            [class.border-indigo-500]="hasFilterStatuses()"
+            [class.text-indigo-700]="hasFilterStatuses()"
+            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 relative"
           >
             <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             {{ 'admin.statusName' | translate }}
+            <span *ngIf="hasFilterStatuses()" class="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full">
+              {{ getFilterStatusCount() }}
+            </span>
             <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
@@ -155,12 +173,18 @@
           <button
             type="button"
             (click)="openFilterPriorityDropdown(); $event.stopPropagation()"
-            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            [class.bg-indigo-50]="hasFilterPriorities()"
+            [class.border-indigo-500]="hasFilterPriorities()"
+            [class.text-indigo-700]="hasFilterPriorities()"
+            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 relative"
           >
             <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             {{ 'tasks.priority' | translate }}
+            <span *ngIf="hasFilterPriorities()" class="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full">
+              {{ getFilterPriorityCount() }}
+            </span>
             <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>

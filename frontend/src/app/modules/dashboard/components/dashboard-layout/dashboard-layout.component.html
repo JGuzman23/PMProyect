@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-gray-50 flex flex-col">
   <app-navbar (toggleSidebar)="toggleSidebar()"></app-navbar>
   
   <!-- Mobile sidebar overlay -->
@@ -8,16 +8,37 @@
     (click)="closeSidebar()"
   ></div>
   
-  <div class="flex pt-16 h-[calc(100vh-4rem)]">
+  <div class="flex flex-1 pt-16">
     <!-- Sidebar - Fixed on desktop, hidden on mobile when closed -->
     <app-sidebar [isOpen]="sidebarOpen" [sidebarOpen]="sidebarOpen" (closeSidebar)="closeSidebar()"></app-sidebar>
     
-    <!-- Main content -->
-    <main class="flex-1 overflow-y-auto pt-2 pb-4">
-      <div class="w-[90%] max-w-full pl-4 sm:pl-6">
-        <router-outlet></router-outlet>
-      </div>
-    </main>
+    <!-- Main content area with footer -->
+    <div class="flex flex-col flex-1 min-h-[calc(100vh-4rem)]">
+      <!-- Main content -->
+      <main class="flex-1 overflow-y-auto pt-2 pb-4">
+        <div class="w-[90%] max-w-full pl-4 sm:pl-6">
+          <router-outlet></router-outlet>
+        </div>
+      </main>
+      
+      <!-- Footer -->
+      <footer class="bg-white border-t border-gray-200 py-4 px-4 sm:px-6 mt-auto">
+        <div class="max-w-7xl mx-auto text-center text-xs sm:text-sm text-gray-600">
+          <p>
+            {{ 'footer.createdBy' | translate }} 
+            <a 
+              href="https://countechrd.com/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              Countech Solutions
+            </a>. 
+            {{ 'footer.rightsReserved' | translate }} <span class="font-semibold text-gray-700">SignOps</span>
+          </p>
+        </div>
+      </footer>
+    </div>
   </div>
 </div>
 

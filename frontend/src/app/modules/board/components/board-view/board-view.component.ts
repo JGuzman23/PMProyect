@@ -1897,5 +1897,37 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.showFilterStatusDropdown = false;
     this.showFilterPriorityDropdown = false;
   }
+
+  getFilterClientCount(): number {
+    return this.selectedFilterClients.length;
+  }
+
+  getFilterAssigneeCount(): number {
+    return this.selectedFilterAssignees.length;
+  }
+
+  getFilterStatusCount(): number {
+    return this.selectedFilterStatuses.length;
+  }
+
+  getFilterPriorityCount(): number {
+    return this.selectedFilterPriorities.length;
+  }
+
+  hasFilterClients(): boolean {
+    return this.selectedFilterClients.length > 0;
+  }
+
+  hasFilterAssignees(): boolean {
+    return this.selectedFilterAssignees.length > 0;
+  }
+
+  hasFilterStatuses(): boolean {
+    return this.selectedFilterStatuses.length > 0;
+  }
+
+  hasFilterPriorities(): boolean {
+    return this.selectedFilterPriorities.length > 0;
+  }
 }
 
