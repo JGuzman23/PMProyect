@@ -22,9 +22,31 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+// Configurar CORS con orígenes permitidos desde variables de entorno
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : [
+      'https://signops.pro',
+      'https://www.signops.pro',
+      'http://localhost:4200',
+      'http://localhost:80',
+      'http://localhost'
+    ];
+
 app.use(cors({
-  origin: true,
-  credentials: true
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (como mobile apps o Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Id']
 }));
 app.use(express.json());
 app.use(cookieParser());
