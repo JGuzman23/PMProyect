@@ -12,12 +12,22 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const companyId = authService.companyId;
 
   let clonedReq = req;
+  const headers: { [key: string]: string } = {};
 
+  // Agregar token si existe
   if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  // Agregar X-Tenant-Id siempre que exista companyId (incluso en login/register)
+  if (companyId) {
+    headers['X-Tenant-Id'] = companyId;
+  }
+
+  // Solo clonar la request si hay headers para agregar
+  if (Object.keys(headers).length > 0) {
     clonedReq = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
+      setHeaders: headers
     });
   }
 
@@ -29,11 +39,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         if (refreshToken) {
           return authService.refreshAccessToken().pipe(
             switchMap((response) => {
+              const headers: { [key: string]: string } = {
+                Authorization: `Bearer ${response.accessToken}`
+              };
+              
+              if (companyId) {
+                headers['X-Tenant-Id'] = companyId;
+              }
+              
               const newReq = req.clone({
-                setHeaders: {
-                  Authorization: `Bearer ${response.accessToken}`,
-                  'X-Tenant-Id': companyId || ''
-                }
+                setHeaders: headers
               });
               return next(newReq);
             }),

@@ -50,19 +50,7 @@ export class AuthService {
   }
 
   get companyId(): string | null {
-    return localStorage.getItem('companyId') || this.extractCompanyIdFromHost();
-  }
-
-  private extractCompanyIdFromHost(): string | null {
-    const host = window.location.hostname;
-    const parts = host.split('.');
-    
-    // Si tiene más de 2 partes (ej: empresa1.projectflow.com) o es subdomain.localhost
-    if (parts.length > 2 || (parts.length === 2 && parts[1] === 'localhost')) {
-      return parts[0];
-    }
-    
-    return null;
+    return localStorage.getItem('companyId');
   }
 
   login(email: string, password: string): Observable<AuthResponse> {
@@ -82,7 +70,6 @@ export class AuthService {
     firstName: string;
     lastName: string;
     companyName: string;
-    subdomain: string;
   }): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, data).pipe(
       tap(response => {

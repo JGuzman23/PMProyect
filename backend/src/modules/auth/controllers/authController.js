@@ -14,11 +14,8 @@ export const authController = {
   async login(req, res, next) {
     try {
       const { email, password } = req.body;
-      const companyId = req.companyId;
-
-      if (!companyId) {
-        return res.status(400).json({ error: 'Company ID is required' });
-      }
+      // Obtener companyId del header si está disponible, sino será null y se buscará por email
+      const companyId = req.companyId || null;
 
       const result = await authService.login(email, password, companyId);
       res.json(result);

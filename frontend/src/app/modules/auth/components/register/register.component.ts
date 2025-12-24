@@ -25,8 +25,7 @@ export class RegisterComponent {
       lastName: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      companyName: ['', [Validators.required]],
-      subdomain: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]]
+      companyName: ['', [Validators.required]]
     });
   }
 
