@@ -8,6 +8,7 @@ import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
 import { TaskModalComponent } from '../task-modal/task-modal.component';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { TranslationService } from '../../../../core/services/translation.service';
 
 interface User {
   _id: string;
@@ -82,7 +83,7 @@ interface Task {
   priority: string;
   dueDate?: string;
   order: number;
-  columnId?: string;
+  columnId?: string | { _id: string; name?: string };
   attachments?: Attachment[];
   comments?: Comment[];
   activityLog?: ActivityLog[];
@@ -90,6 +91,7 @@ interface Task {
   clientId?: string | Client;
   agentIds?: string[];
   agentNames?: string[];
+  boardId?: string | { _id: string; name?: string };
 }
 
 interface Column {
@@ -142,6 +144,20 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   filteredAgents: Agent[] = [];
   filteredUsers: User[] = [];
   filteredPriorities: { value: string; label: string }[] = [];
+  
+  // Filter properties
+  showFilterClientDropdown = false;
+  showFilterAssigneeDropdown = false;
+  showFilterStatusDropdown = false;
+  showFilterPriorityDropdown = false;
+  filterClientSearchTerm = '';
+  filterAssigneeSearchTerm = '';
+  selectedFilterClient: string | null = null;
+  selectedFilterAssignee: string | null = null;
+  selectedFilterStatus: string | null = null;
+  selectedFilterPriority: string | null = null;
+  allTasks: Task[] = []; // Store all tasks before filtering
+  filteredColumns: Column[] = []; // Store filtered columns
   showAttachmentTitleModal = false;
   pendingFile: File | null = null;
   attachmentTitle = '';
@@ -173,7 +189,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    public translationService: TranslationService
   ) {}
 
   ngOnInit(): void {
@@ -283,6 +300,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       next: (clients) => {
         this.clients = clients.filter(c => c.isActive);
         this.updateFilteredClients();
+        // Actualizar también los filtros de búsqueda
+        this.filteredClients = this.clients;
         this.loadingClients = false;
       },
       error: (err) => {
@@ -418,12 +437,16 @@ export class BoardViewComponent implements OnInit, OnDestroy {
             }) || []
           };
         });
+        // Guardar todas las tareas antes de filtrar
+        this.allTasks = [...tasks];
+        
         // Asignar tareas a las columnas basándose en columnId
         this.columns = this.columns.map(col => {
           const columnTasks = tasks.filter(t => {
+            if (!t.columnId) return false;
             // Buscar por _id o por name
-            return t.columnId === col._id || t.columnId === col.name || 
-                   (typeof t.columnId === 'object' && t.columnId === col._id);
+            const taskColumnId = typeof t.columnId === 'object' ? t.columnId._id : t.columnId;
+            return taskColumnId === col._id || taskColumnId === col.name;
           }).sort((a, b) => (a.order || 0) - (b.order || 0));
           console.log(`Column ${col.name} (${col._id}): ${columnTasks.length} tasks`);
           return {
@@ -432,6 +455,12 @@ export class BoardViewComponent implements OnInit, OnDestroy {
           };
         });
         console.log('Columns after assignment:', this.columns);
+        
+        // Aplicar filtros si hay alguno activo
+        if (this.hasActiveFilters()) {
+          this.applyFilters();
+        }
+        
         this.loading = false;
         
         // Verificar si hay un taskId en los query params para abrir el modal después de cargar las tareas
@@ -789,11 +818,13 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   }
 
   updateFilteredUsers(): void {
-    if (!this.assigneeSearchTerm.trim()) {
+    // Usar el término de búsqueda del filtro si está disponible, sino el del formulario
+    const searchTerm = this.filterAssigneeSearchTerm || this.assigneeSearchTerm;
+    if (!searchTerm.trim()) {
       this.filteredUsers = this.users;
       return;
     }
-    const search = this.assigneeSearchTerm.toLowerCase();
+    const search = searchTerm.toLowerCase();
     this.filteredUsers = this.users.filter(user => {
       const firstName = user.firstName.toLowerCase();
       const lastName = user.lastName.toLowerCase();
@@ -944,6 +975,25 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     if (!target.closest('.client-dropdown-container')) {
       this.showClientDropdown = false;
       this.clientSearchTerm = '';
+    }
+    if (!target.closest('.priority-dropdown-container')) {
+      this.showPriorityDropdown = false;
+      this.prioritySearchTerm = '';
+    }
+    // Close filter dropdowns
+    if (!target.closest('.filter-client-dropdown')) {
+      this.showFilterClientDropdown = false;
+      this.filterClientSearchTerm = '';
+    }
+    if (!target.closest('.filter-assignee-dropdown')) {
+      this.showFilterAssigneeDropdown = false;
+      this.filterAssigneeSearchTerm = '';
+    }
+    if (!target.closest('.filter-status-dropdown')) {
+      this.showFilterStatusDropdown = false;
+    }
+    if (!target.closest('.filter-priority-dropdown')) {
+      this.showFilterPriorityDropdown = false;
     }
     if (!target.closest('.priority-dropdown-container')) {
       this.showPriorityDropdown = false;
@@ -1669,6 +1719,97 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
     if (diffDays < 7) return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
     return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Filter methods
+  applyFilters(): void {
+    if (this.allTasks.length === 0) {
+      // Si aún no se han cargado todas las tareas, no aplicar filtros
+      return;
+    }
+
+    // Filtrar todas las tareas según los filtros activos
+    let filteredTasks = [...this.allTasks];
+
+    // Filtrar por cliente
+    if (this.selectedFilterClient) {
+      filteredTasks = filteredTasks.filter(task => {
+        const taskClientId = typeof task.clientId === 'object' ? task.clientId._id : task.clientId;
+        return taskClientId === this.selectedFilterClient;
+      });
+    }
+
+    // Filtrar por usuario asignado
+    if (this.selectedFilterAssignee) {
+      filteredTasks = filteredTasks.filter(task => {
+        return task.assignees && task.assignees.some(assignee => {
+          const assigneeId = typeof assignee === 'object' ? assignee._id : assignee;
+          return assigneeId === this.selectedFilterAssignee;
+        });
+      });
+    }
+
+    // Filtrar por estado
+    if (this.selectedFilterStatus) {
+      filteredTasks = filteredTasks.filter(task => {
+        if (!task.columnId) return false;
+        const taskColumnId = typeof task.columnId === 'object' ? task.columnId._id : task.columnId;
+        return taskColumnId === this.selectedFilterStatus;
+      });
+    }
+
+    // Filtrar por prioridad
+    if (this.selectedFilterPriority) {
+      filteredTasks = filteredTasks.filter(task => task.priority === this.selectedFilterPriority);
+    }
+
+    // Asignar tareas filtradas a las columnas
+    this.columns = this.columns.map(col => {
+      const columnTasks = filteredTasks.filter(t => {
+        if (!t.columnId) return false;
+        const taskColumnId = typeof t.columnId === 'object' ? t.columnId._id : t.columnId;
+        return taskColumnId === col._id || taskColumnId === col.name;
+      }).sort((a, b) => (a.order || 0) - (b.order || 0));
+      
+      return {
+        ...col,
+        tasks: columnTasks
+      };
+    });
+  }
+
+  hasActiveFilters(): boolean {
+    return !!(
+      this.selectedFilterClient ||
+      this.selectedFilterAssignee ||
+      this.selectedFilterStatus ||
+      this.selectedFilterPriority
+    );
+  }
+
+  clearFilters(): void {
+    this.selectedFilterClient = null;
+    this.selectedFilterAssignee = null;
+    this.selectedFilterStatus = null;
+    this.selectedFilterPriority = null;
+    this.filterClientSearchTerm = '';
+    this.filterAssigneeSearchTerm = '';
+    
+    // Restaurar todas las tareas sin filtros
+    if (this.allTasks.length > 0) {
+      this.columns = this.columns.map(col => {
+        const columnTasks = this.allTasks.filter(t => {
+          if (!t.columnId) return false;
+          const taskColumnId = typeof t.columnId === 'object' ? t.columnId._id : t.columnId;
+          return taskColumnId === col._id || taskColumnId === col.name;
+        }).sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        return {
+          ...col,
+          tasks: columnTasks
+        };
+      });
+    }
   }
 }
 

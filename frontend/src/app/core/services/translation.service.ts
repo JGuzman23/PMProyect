@@ -105,7 +105,10 @@ export class TranslationService {
         inactive: 'Inactivo',
         yes: 'Sí',
         no: 'No',
-        confirm: 'Confirmar'
+        confirm: 'Confirmar',
+        all: 'Todos',
+        clear: 'Limpiar',
+        menu: 'Menú'
       },
       auth: {
         login: 'Iniciar sesión',

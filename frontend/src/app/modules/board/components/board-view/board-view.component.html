@@ -1,11 +1,256 @@
 <div class="max-w-7xl mx-auto px-1 sm:px-2 md:px-4">
   <div class="mb-3 sm:mb-4 md:mb-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-2 sm:mb-4">
     <button
       (click)="goBack()"
-      class="mb-2 sm:mb-4 text-xs sm:text-sm md:text-base text-indigo-600 hover:text-indigo-800"
-    >
-      ← {{ 'boards.backToBoards' | translate }}
+        class="text-xs sm:text-sm md:text-base text-indigo-600 hover:text-indigo-800"
+      >
+        ← {{ 'boards.backToBoards' | translate }}
+      </button>
+      
+      <!-- Filter Options -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Filter by Client -->
+        <div class="relative" *ngIf="clients.length > 0">
+          <button
+            type="button"
+            (click)="showFilterClientDropdown = !showFilterClientDropdown"
+            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            {{ 'tasks.client' | translate }}
+            <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div
+            *ngIf="showFilterClientDropdown"
+            class="filter-client-dropdown absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-60 overflow-y-auto"
+          >
+            <div class="p-2">
+              <input
+                type="text"
+                [(ngModel)]="filterClientSearchTerm"
+                (ngModelChange)="updateFilteredClients()"
+                [ngModelOptions]="{standalone: true}"
+                [placeholder]="translationService.translate('common.search') + ' ' + translationService.translate('tasks.client')"
+                class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-2"
+              />
+              <div class="space-y-1">
+                <label class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer">
+                  <input
+                    type="radio"
+                    [(ngModel)]="selectedFilterClient"
+                    [value]="null"
+                    (change)="applyFilters()"
+                    [ngModelOptions]="{standalone: true}"
+                    class="mr-2"
+                  />
+                  <span class="text-xs text-gray-700">{{ 'common.all' | translate }}</span>
+                </label>
+                <label
+                  *ngFor="let client of filteredClients"
+                  class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    [(ngModel)]="selectedFilterClient"
+                    [value]="client._id"
+                    (change)="applyFilters()"
+                    [ngModelOptions]="{standalone: true}"
+                    class="mr-2"
+                  />
+                  <span class="text-xs text-gray-700">{{ client.name }}{{ client.type === 'persona' && client.lastName ? ' ' + client.lastName : '' }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter by Assignee -->
+        <div class="relative" *ngIf="users.length > 0">
+          <button
+            type="button"
+            (click)="showFilterAssigneeDropdown = !showFilterAssigneeDropdown"
+            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            {{ 'tasks.assignedTo' | translate }}
+            <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div
+            *ngIf="showFilterAssigneeDropdown"
+            class="filter-assignee-dropdown absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-60 overflow-y-auto"
+          >
+            <div class="p-2">
+              <input
+                type="text"
+                [(ngModel)]="filterAssigneeSearchTerm"
+                (ngModelChange)="updateFilteredUsers()"
+                [ngModelOptions]="{standalone: true}"
+                [placeholder]="translationService.translate('common.search') + ' ' + translationService.translate('tasks.assignedTo')"
+                class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-2"
+              />
+              <div class="space-y-1">
+                <label class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer">
+                  <input
+                    type="radio"
+                    [(ngModel)]="selectedFilterAssignee"
+                    [value]="null"
+                    (change)="applyFilters()"
+                    [ngModelOptions]="{standalone: true}"
+                    class="mr-2"
+                  />
+                  <span class="text-xs text-gray-700">{{ 'common.all' | translate }}</span>
+                </label>
+                <label
+                  *ngFor="let user of filteredUsers"
+                  class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    [(ngModel)]="selectedFilterAssignee"
+                    [value]="user._id"
+                    (change)="applyFilters()"
+                    [ngModelOptions]="{standalone: true}"
+                    class="mr-2"
+                  />
+                  <span class="text-xs text-gray-700">{{ user.firstName }} {{ user.lastName }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter by Status -->
+        <div class="relative" *ngIf="columns.length > 0">
+          <button
+            type="button"
+            (click)="showFilterStatusDropdown = !showFilterStatusDropdown"
+            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            {{ 'admin.statusName' | translate }}
+            <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div
+            *ngIf="showFilterStatusDropdown"
+            class="filter-status-dropdown absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-60 overflow-y-auto"
+          >
+            <div class="p-2">
+              <div class="space-y-1">
+                <label class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer">
+                  <input
+                    type="radio"
+                    [(ngModel)]="selectedFilterStatus"
+                    [value]="null"
+                    (change)="applyFilters()"
+                    [ngModelOptions]="{standalone: true}"
+                    class="mr-2"
+                  />
+                  <span class="text-xs text-gray-700">{{ 'common.all' | translate }}</span>
+                </label>
+                <label
+                  *ngFor="let column of columns"
+                  class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    [(ngModel)]="selectedFilterStatus"
+                    [value]="column._id || column.name"
+                    (change)="applyFilters()"
+                    [ngModelOptions]="{standalone: true}"
+                    class="mr-2"
+                  />
+                  <div class="flex items-center space-x-2">
+                    <div
+                      *ngIf="column.color"
+                      class="w-3 h-3 rounded-full"
+                      [style.background-color]="column.color"
+                    ></div>
+                    <span class="text-xs text-gray-700">{{ column.name }}</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter by Priority -->
+        <div class="relative">
+          <button
+            type="button"
+            (click)="showFilterPriorityDropdown = !showFilterPriorityDropdown"
+            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            {{ 'tasks.priority' | translate }}
+            <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div
+            *ngIf="showFilterPriorityDropdown"
+            class="filter-priority-dropdown absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200"
+          >
+            <div class="p-2">
+              <div class="space-y-1">
+                <label class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer">
+                  <input
+                    type="radio"
+                    [(ngModel)]="selectedFilterPriority"
+                    [value]="null"
+                    (change)="applyFilters()"
+                    [ngModelOptions]="{standalone: true}"
+                    class="mr-2"
+                  />
+                  <span class="text-xs text-gray-700">{{ 'common.all' | translate }}</span>
+                </label>
+                <label
+                  *ngFor="let priority of filteredPriorities"
+                  class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    [(ngModel)]="selectedFilterPriority"
+                    [value]="priority.value"
+                    (change)="applyFilters()"
+                    [ngModelOptions]="{standalone: true}"
+                    class="mr-2"
+                  />
+                  <span class="text-xs text-gray-700">{{ priority.label }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clear Filters Button -->
+        <button
+          *ngIf="hasActiveFilters()"
+          type="button"
+          (click)="clearFilters()"
+          class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          {{ 'common.clear' | translate }}
     </button>
+      </div>
+    </div>
     <h2 class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900">{{ board?.name }}</h2>
     <p class="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2">{{ board?.description }}</p>
   </div>

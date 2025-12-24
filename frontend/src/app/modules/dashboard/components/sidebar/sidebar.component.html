@@ -1,12 +1,11 @@
 <aside
   [class]="isOpen ? 'translate-x-0' : '-translate-x-full'"
-  class="fixed top-0 left-0 z-50 w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto transform transition-transform duration-300 ease-in-out lg:translate-x-0"
+  class="fixed top-0 left-0 z-50 w-64 bg-white border-r border-gray-200 h-full overflow-y-auto transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative lg:z-auto lg:h-full lg:flex-shrink-0"
+  [class.lg:hidden]="!sidebarOpen"
 >
   <nav class="px-4 py-4">
-    <!-- Logo -->
-    <div class="mb-6 pb-4 border-b border-gray-200">
-      <h1 class="text-xl font-bold text-indigo-600">ProjectFlow</h1>
-    </div>
+    <!-- Logo y Botón Cerrar -->
+    
     <div class="space-y-1">
       <a
         routerLink="/board"

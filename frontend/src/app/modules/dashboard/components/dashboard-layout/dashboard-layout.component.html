@@ -8,12 +8,12 @@
     (click)="closeSidebar()"
   ></div>
   
-  <div class="flex pt-16">
+  <div class="flex pt-16 h-[calc(100vh-4rem)]">
     <!-- Sidebar - Fixed on desktop, hidden on mobile when closed -->
-    <app-sidebar [isOpen]="sidebarOpen" (closeSidebar)="closeSidebar()"></app-sidebar>
+    <app-sidebar [isOpen]="sidebarOpen" [sidebarOpen]="sidebarOpen" (closeSidebar)="closeSidebar()"></app-sidebar>
     
     <!-- Main content -->
-    <main class="flex-1 p-4 sm:p-6 lg:ml-64">
+    <main class="flex-1 p-4 sm:p-6 overflow-y-auto">
       <router-outlet></router-outlet>
     </main>
   </div>

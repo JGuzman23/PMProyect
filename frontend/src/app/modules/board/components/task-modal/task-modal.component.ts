@@ -74,7 +74,7 @@ interface Task {
   priority: string;
   dueDate?: string;
   order: number;
-  columnId?: string;
+  columnId?: string | { _id: string; name?: string };
   attachments?: Attachment[];
   comments?: Comment[];
   activityLog?: ActivityLog[];
@@ -82,6 +82,7 @@ interface Task {
   clientId?: string | Client;
   agentIds?: string[];
   agentNames?: string[];
+  boardId?: string | { _id: string; name?: string };
 }
 
 interface Column {

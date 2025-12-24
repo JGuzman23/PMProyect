@@ -14,6 +14,7 @@ import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   @Input() isOpen = false;
+  @Input() sidebarOpen = false; // Para controlar visibilidad en desktop
   @Output() closeSidebar = new EventEmitter<void>();
   adminExpanded = false;
   private routerSubscription?: Subscription;
@@ -53,7 +54,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   onLinkClick() {
-    this.closeSidebar.emit();
+    // Solo cerrar el sidebar en mobile/tablet, no en desktop
+    if (window.innerWidth < 1024) {
+      this.closeSidebar.emit();
+    }
   }
 
   isAdminRouteActive(): boolean {
