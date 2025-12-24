@@ -6,7 +6,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: projectflow-backend
+    container_name: singops-backend
     restart: unless-stopped
     ports:
       - "3001:3000"
@@ -24,26 +24,26 @@ services:
       # Volumen para datos (si el backend necesita almacenar datos localmente)
       - backend_data:/app/data
     networks:
-      - projectflow-network
+      - singops-network
 
   # Frontend Service
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: projectflow-frontend
+    container_name: singops-frontend
     restart: unless-stopped
     ports:
       - "4202:80"
     depends_on:
       - backend
     networks:
-      - projectflow-network
+      - singops-network
     # Nota: La URL de la API debe configurarse en environment.prod.ts antes del build
     # o usar un proxy de nginx para redirigir las peticiones al backend
 
 networks:
-  projectflow-network:
+  singops-network:
     driver: bridge
 
 volumes:
