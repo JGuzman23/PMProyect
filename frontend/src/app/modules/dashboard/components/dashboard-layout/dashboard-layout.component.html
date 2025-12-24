@@ -13,8 +13,10 @@
     <app-sidebar [isOpen]="sidebarOpen" [sidebarOpen]="sidebarOpen" (closeSidebar)="closeSidebar()"></app-sidebar>
     
     <!-- Main content -->
-    <main class="flex-1 p-4 sm:p-6 overflow-y-auto">
-      <router-outlet></router-outlet>
+    <main class="flex-1 overflow-y-auto pt-2 pb-4">
+      <div class="w-[90%] max-w-full pl-4 sm:pl-6">
+        <router-outlet></router-outlet>
+      </div>
     </main>
   </div>
 </div>
