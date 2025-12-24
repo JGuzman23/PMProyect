@@ -965,7 +965,7 @@
                 contenteditable="true"
                 class="comment-editor min-h-[60px] px-3 py-2 text-sm text-gray-900 focus:outline-none prose prose-sm max-w-none"
                 (input)="onCommentChange($event)"
-                data-placeholder="Menciona @Brain para crear, encontrar y preguntar lo que quieras..."
+                [attr.data-placeholder]="'tasks.leaveCommentHere' | translate"
               ></div>
               <div class="flex items-center gap-1 px-2 py-1.5 border-t border-gray-200">
                 <!-- Grupo izquierdo de iconos -->
