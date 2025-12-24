@@ -11,10 +11,10 @@
       <!-- Filter Options -->
       <div class="flex items-center gap-2 flex-wrap">
         <!-- Filter by Client -->
-        <div class="relative" *ngIf="clients.length > 0">
+        <div class="relative filter-client-dropdown" *ngIf="clients.length > 0">
           <button
             type="button"
-            (click)="showFilterClientDropdown = !showFilterClientDropdown"
+            (click)="openFilterClientDropdown(); $event.stopPropagation()"
             class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -28,6 +28,7 @@
           <div
             *ngIf="showFilterClientDropdown"
             class="filter-client-dropdown absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-60 overflow-y-auto"
+            (click)="$event.stopPropagation()"
           >
             <div class="p-2">
               <input
@@ -39,27 +40,14 @@
                 class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-2"
               />
               <div class="space-y-1">
-                <label class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="radio"
-                    [(ngModel)]="selectedFilterClient"
-                    [value]="null"
-                    (change)="applyFilters()"
-                    [ngModelOptions]="{standalone: true}"
-                    class="mr-2"
-                  />
-                  <span class="text-xs text-gray-700">{{ 'common.all' | translate }}</span>
-                </label>
                 <label
                   *ngFor="let client of filteredClients"
                   class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
                 >
                   <input
-                    type="radio"
-                    [(ngModel)]="selectedFilterClient"
-                    [value]="client._id"
-                    (change)="applyFilters()"
-                    [ngModelOptions]="{standalone: true}"
+                    type="checkbox"
+                    [checked]="isFilterClientSelected(client._id)"
+                    (change)="toggleFilterClient(client._id)"
                     class="mr-2"
                   />
                   <span class="text-xs text-gray-700">{{ client.name }}{{ client.type === 'persona' && client.lastName ? ' ' + client.lastName : '' }}</span>
@@ -70,10 +58,10 @@
         </div>
 
         <!-- Filter by Assignee -->
-        <div class="relative" *ngIf="users.length > 0">
+        <div class="relative filter-assignee-dropdown" *ngIf="users.length > 0">
           <button
             type="button"
-            (click)="showFilterAssigneeDropdown = !showFilterAssigneeDropdown"
+            (click)="openFilterAssigneeDropdown(); $event.stopPropagation()"
             class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -87,6 +75,7 @@
           <div
             *ngIf="showFilterAssigneeDropdown"
             class="filter-assignee-dropdown absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-60 overflow-y-auto"
+            (click)="$event.stopPropagation()"
           >
             <div class="p-2">
               <input
@@ -98,27 +87,14 @@
                 class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-2"
               />
               <div class="space-y-1">
-                <label class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="radio"
-                    [(ngModel)]="selectedFilterAssignee"
-                    [value]="null"
-                    (change)="applyFilters()"
-                    [ngModelOptions]="{standalone: true}"
-                    class="mr-2"
-                  />
-                  <span class="text-xs text-gray-700">{{ 'common.all' | translate }}</span>
-                </label>
                 <label
                   *ngFor="let user of filteredUsers"
                   class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
                 >
                   <input
-                    type="radio"
-                    [(ngModel)]="selectedFilterAssignee"
-                    [value]="user._id"
-                    (change)="applyFilters()"
-                    [ngModelOptions]="{standalone: true}"
+                    type="checkbox"
+                    [checked]="isFilterAssigneeSelected(user._id)"
+                    (change)="toggleFilterAssignee(user._id)"
                     class="mr-2"
                   />
                   <span class="text-xs text-gray-700">{{ user.firstName }} {{ user.lastName }}</span>
@@ -129,10 +105,10 @@
         </div>
 
         <!-- Filter by Status -->
-        <div class="relative" *ngIf="columns.length > 0">
+        <div class="relative filter-status-dropdown" *ngIf="columns.length > 0">
           <button
             type="button"
-            (click)="showFilterStatusDropdown = !showFilterStatusDropdown"
+            (click)="openFilterStatusDropdown(); $event.stopPropagation()"
             class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -146,30 +122,18 @@
           <div
             *ngIf="showFilterStatusDropdown"
             class="filter-status-dropdown absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-60 overflow-y-auto"
+            (click)="$event.stopPropagation()"
           >
             <div class="p-2">
               <div class="space-y-1">
-                <label class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="radio"
-                    [(ngModel)]="selectedFilterStatus"
-                    [value]="null"
-                    (change)="applyFilters()"
-                    [ngModelOptions]="{standalone: true}"
-                    class="mr-2"
-                  />
-                  <span class="text-xs text-gray-700">{{ 'common.all' | translate }}</span>
-                </label>
                 <label
                   *ngFor="let column of columns"
                   class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
                 >
                   <input
-                    type="radio"
-                    [(ngModel)]="selectedFilterStatus"
-                    [value]="column._id || column.name"
-                    (change)="applyFilters()"
-                    [ngModelOptions]="{standalone: true}"
+                    type="checkbox"
+                    [checked]="isFilterStatusSelected(column._id || column.name)"
+                    (change)="toggleFilterStatus(column._id || column.name)"
                     class="mr-2"
                   />
                   <div class="flex items-center space-x-2">
@@ -187,10 +151,10 @@
         </div>
 
         <!-- Filter by Priority -->
-        <div class="relative">
+        <div class="relative filter-priority-dropdown">
           <button
             type="button"
-            (click)="showFilterPriorityDropdown = !showFilterPriorityDropdown"
+            (click)="openFilterPriorityDropdown(); $event.stopPropagation()"
             class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -204,30 +168,18 @@
           <div
             *ngIf="showFilterPriorityDropdown"
             class="filter-priority-dropdown absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200"
+            (click)="$event.stopPropagation()"
           >
             <div class="p-2">
               <div class="space-y-1">
-                <label class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="radio"
-                    [(ngModel)]="selectedFilterPriority"
-                    [value]="null"
-                    (change)="applyFilters()"
-                    [ngModelOptions]="{standalone: true}"
-                    class="mr-2"
-                  />
-                  <span class="text-xs text-gray-700">{{ 'common.all' | translate }}</span>
-                </label>
                 <label
                   *ngFor="let priority of filteredPriorities"
                   class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
                 >
                   <input
-                    type="radio"
-                    [(ngModel)]="selectedFilterPriority"
-                    [value]="priority.value"
-                    (change)="applyFilters()"
-                    [ngModelOptions]="{standalone: true}"
+                    type="checkbox"
+                    [checked]="isFilterPrioritySelected(priority.value)"
+                    (change)="toggleFilterPriority(priority.value)"
                     class="mr-2"
                   />
                   <span class="text-xs text-gray-700">{{ priority.label }}</span>

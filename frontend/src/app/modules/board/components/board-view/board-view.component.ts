@@ -152,10 +152,10 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   showFilterPriorityDropdown = false;
   filterClientSearchTerm = '';
   filterAssigneeSearchTerm = '';
-  selectedFilterClient: string | null = null;
-  selectedFilterAssignee: string | null = null;
-  selectedFilterStatus: string | null = null;
-  selectedFilterPriority: string | null = null;
+  selectedFilterClients: string[] = [];
+  selectedFilterAssignees: string[] = [];
+  selectedFilterStatuses: string[] = [];
+  selectedFilterPriorities: string[] = [];
   allTasks: Task[] = []; // Store all tasks before filtering
   filteredColumns: Column[] = []; // Store filtered columns
   showAttachmentTitleModal = false;
@@ -782,11 +782,13 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   }
 
   updateFilteredClients(): void {
-    if (!this.clientSearchTerm.trim()) {
+    // Usar el término de búsqueda del filtro si está disponible, sino el del formulario
+    const searchTerm = this.filterClientSearchTerm || this.clientSearchTerm;
+    if (!searchTerm.trim()) {
       this.filteredClients = this.clients;
       return;
     }
-    const search = this.clientSearchTerm.toLowerCase();
+    const search = searchTerm.toLowerCase();
     this.filteredClients = this.clients.filter(client => {
       const name = client.name.toLowerCase();
       const lastName = client.lastName?.toLowerCase() || '';
@@ -1732,35 +1734,36 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     let filteredTasks = [...this.allTasks];
 
     // Filtrar por cliente
-    if (this.selectedFilterClient) {
+    if (this.selectedFilterClients.length > 0) {
       filteredTasks = filteredTasks.filter(task => {
         const taskClientId = typeof task.clientId === 'object' ? task.clientId._id : task.clientId;
-        return taskClientId === this.selectedFilterClient;
+        return taskClientId && this.selectedFilterClients.includes(taskClientId);
       });
     }
 
     // Filtrar por usuario asignado
-    if (this.selectedFilterAssignee) {
+    if (this.selectedFilterAssignees.length > 0) {
       filteredTasks = filteredTasks.filter(task => {
         return task.assignees && task.assignees.some(assignee => {
           const assigneeId = typeof assignee === 'object' ? assignee._id : assignee;
-          return assigneeId === this.selectedFilterAssignee;
+          return this.selectedFilterAssignees.includes(assigneeId);
         });
       });
     }
 
     // Filtrar por estado
-    if (this.selectedFilterStatus) {
+    if (this.selectedFilterStatuses.length > 0) {
       filteredTasks = filteredTasks.filter(task => {
         if (!task.columnId) return false;
         const taskColumnId = typeof task.columnId === 'object' ? task.columnId._id : task.columnId;
-        return taskColumnId === this.selectedFilterStatus;
+        const taskColumnName = typeof task.columnId === 'object' ? task.columnId.name : null;
+        return this.selectedFilterStatuses.includes(taskColumnId) || (taskColumnName && this.selectedFilterStatuses.includes(taskColumnName));
       });
     }
 
     // Filtrar por prioridad
-    if (this.selectedFilterPriority) {
-      filteredTasks = filteredTasks.filter(task => task.priority === this.selectedFilterPriority);
+    if (this.selectedFilterPriorities.length > 0) {
+      filteredTasks = filteredTasks.filter(task => this.selectedFilterPriorities.includes(task.priority));
     }
 
     // Asignar tareas filtradas a las columnas
@@ -1780,18 +1783,18 @@ export class BoardViewComponent implements OnInit, OnDestroy {
 
   hasActiveFilters(): boolean {
     return !!(
-      this.selectedFilterClient ||
-      this.selectedFilterAssignee ||
-      this.selectedFilterStatus ||
-      this.selectedFilterPriority
+      this.selectedFilterClients.length > 0 ||
+      this.selectedFilterAssignees.length > 0 ||
+      this.selectedFilterStatuses.length > 0 ||
+      this.selectedFilterPriorities.length > 0
     );
   }
 
   clearFilters(): void {
-    this.selectedFilterClient = null;
-    this.selectedFilterAssignee = null;
-    this.selectedFilterStatus = null;
-    this.selectedFilterPriority = null;
+    this.selectedFilterClients = [];
+    this.selectedFilterAssignees = [];
+    this.selectedFilterStatuses = [];
+    this.selectedFilterPriorities = [];
     this.filterClientSearchTerm = '';
     this.filterAssigneeSearchTerm = '';
     
@@ -1810,6 +1813,89 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         };
       });
     }
+  }
+
+  toggleFilterClient(clientId: string): void {
+    const index = this.selectedFilterClients.indexOf(clientId);
+    if (index > -1) {
+      this.selectedFilterClients.splice(index, 1);
+    } else {
+      this.selectedFilterClients.push(clientId);
+    }
+    this.applyFilters();
+  }
+
+  isFilterClientSelected(clientId: string): boolean {
+    return this.selectedFilterClients.includes(clientId);
+  }
+
+  toggleFilterAssignee(userId: string): void {
+    const index = this.selectedFilterAssignees.indexOf(userId);
+    if (index > -1) {
+      this.selectedFilterAssignees.splice(index, 1);
+    } else {
+      this.selectedFilterAssignees.push(userId);
+    }
+    this.applyFilters();
+  }
+
+  isFilterAssigneeSelected(userId: string): boolean {
+    return this.selectedFilterAssignees.includes(userId);
+  }
+
+  toggleFilterStatus(statusId: string): void {
+    const index = this.selectedFilterStatuses.indexOf(statusId);
+    if (index > -1) {
+      this.selectedFilterStatuses.splice(index, 1);
+    } else {
+      this.selectedFilterStatuses.push(statusId);
+    }
+    this.applyFilters();
+  }
+
+  isFilterStatusSelected(statusId: string): boolean {
+    return this.selectedFilterStatuses.includes(statusId);
+  }
+
+  toggleFilterPriority(priority: string): void {
+    const index = this.selectedFilterPriorities.indexOf(priority);
+    if (index > -1) {
+      this.selectedFilterPriorities.splice(index, 1);
+    } else {
+      this.selectedFilterPriorities.push(priority);
+    }
+    this.applyFilters();
+  }
+
+  isFilterPrioritySelected(priority: string): boolean {
+    return this.selectedFilterPriorities.includes(priority);
+  }
+
+  openFilterClientDropdown(): void {
+    this.closeAllFilterDropdowns();
+    this.showFilterClientDropdown = !this.showFilterClientDropdown;
+  }
+
+  openFilterAssigneeDropdown(): void {
+    this.closeAllFilterDropdowns();
+    this.showFilterAssigneeDropdown = !this.showFilterAssigneeDropdown;
+  }
+
+  openFilterStatusDropdown(): void {
+    this.closeAllFilterDropdowns();
+    this.showFilterStatusDropdown = !this.showFilterStatusDropdown;
+  }
+
+  openFilterPriorityDropdown(): void {
+    this.closeAllFilterDropdowns();
+    this.showFilterPriorityDropdown = !this.showFilterPriorityDropdown;
+  }
+
+  private closeAllFilterDropdowns(): void {
+    this.showFilterClientDropdown = false;
+    this.showFilterAssigneeDropdown = false;
+    this.showFilterStatusDropdown = false;
+    this.showFilterPriorityDropdown = false;
   }
 }
 
