@@ -5,10 +5,11 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copiar archivos de dependencias
-COPY package*.json ./
+COPY package.json ./
 
-# Instalar dependencias
-RUN npm ci --only=production
+# Instalar dependencias de producción
+# npm install generará package-lock.json automáticamente si no existe
+RUN npm install --omit=dev
 
 # Copiar el resto de los archivos de la aplicación
 COPY . .
