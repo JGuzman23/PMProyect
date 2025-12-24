@@ -4,14 +4,12 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Argumento para la URL de la API
-ARG API_URL=http://localhost:3000/api
-
 # Copiar archivos de dependencias
-COPY package*.json ./
+COPY package.json ./
 
 # Instalar dependencias
-RUN npm ci
+# npm install generará package-lock.json automáticamente si no existe
+RUN npm install
 
 # Copiar el resto de los archivos
 COPY . .
