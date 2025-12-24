@@ -80,7 +80,8 @@ app.use(errorHandler);
 // Connect to database and start server
 connectDB()
   .then(() => {
-    app.listen(PORT, () => {
+    // Escuchar en 0.0.0.0 para que sea accesible desde fuera del contenedor Docker
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
   })
