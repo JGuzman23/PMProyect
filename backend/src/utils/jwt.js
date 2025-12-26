@@ -35,6 +35,16 @@ export const generateTokens = (userId) => {
     );
     
     console.log('accessToken generated successfully, length:', accessToken ? accessToken.length : 0);
+    console.log('Step 1: AccessToken completed');
+
+    // Verificar que tenemos todo lo necesario antes de continuar
+    if (!config.jwt.refreshSecret) {
+      throw new Error('JWT_REFRESH_SECRET is not configured');
+    }
+    if (!config.jwt.refreshExpiresIn) {
+      throw new Error('JWT_REFRESH_EXPIRES_IN is not configured');
+    }
+    console.log('Step 2: Refresh secret and expiresIn validated');
 
     console.log('About to generate refreshToken with:', {
       userId,
@@ -44,16 +54,29 @@ export const generateTokens = (userId) => {
       expiresIn: config.jwt.refreshExpiresIn,
       expiresInType: typeof config.jwt.refreshExpiresIn
     });
+    console.log('Step 3: About to call jwt.sign for refreshToken');
 
     let refreshToken;
     try {
-      console.log('Calling jwt.sign for refreshToken...');
+      console.log('Step 4: Calling jwt.sign for refreshToken...');
+      console.log('Step 4.1: Creating payload object...');
+      const payload = { userId, type: 'refresh' };
+      console.log('Step 4.2: Payload created:', JSON.stringify(payload));
+      
+      console.log('Step 4.3: Calling jwt.sign with:', {
+        payloadKeys: Object.keys(payload),
+        secretType: typeof config.jwt.refreshSecret,
+        secretLength: config.jwt.refreshSecret.length,
+        expiresIn: config.jwt.refreshExpiresIn
+      });
+      
       refreshToken = jwt.sign(
-        { userId, type: 'refresh' },
+        payload,
         config.jwt.refreshSecret,
         { expiresIn: config.jwt.refreshExpiresIn }
       );
-      console.log('jwt.sign for refreshToken completed successfully');
+      
+      console.log('Step 5: jwt.sign for refreshToken completed successfully');
     } catch (signError) {
       console.error('ERROR in jwt.sign for refreshToken:', signError);
       console.error('Error name:', signError.name);
