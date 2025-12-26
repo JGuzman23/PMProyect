@@ -22,26 +22,41 @@ export const generateTokens = (userId) => {
   }
 
   try {
+    console.log('About to generate accessToken with:', {
+      userId,
+      secretLength: config.jwt.secret ? config.jwt.secret.length : 0,
+      expiresIn: config.jwt.expiresIn
+    });
+
     const accessToken = jwt.sign(
       { userId },
       config.jwt.secret,
       { expiresIn: config.jwt.expiresIn }
     );
-    console.log('accessToken', accessToken);
+    
+    console.log('accessToken generated successfully, length:', accessToken ? accessToken.length : 0);
 
-
+    console.log('About to generate refreshToken with:', {
+      userId,
+      refreshSecretLength: config.jwt.refreshSecret ? config.jwt.refreshSecret.length : 0,
+      expiresIn: config.jwt.refreshExpiresIn
+    });
 
     const refreshToken = jwt.sign(
       { userId, type: 'refresh' },
       config.jwt.refreshSecret,
       { expiresIn: config.jwt.refreshExpiresIn }
     );
-    console.log('refreshToken', refreshToken);
+    
+    console.log('refreshToken generated successfully, length:', refreshToken ? refreshToken.length : 0);
 
     return { accessToken, refreshToken };
   } catch (error) {
     console.error('Error generating JWT tokens:', error);
-    throw new Error('Failed to generate authentication tokens');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    throw new Error('Failed to generate authentication tokens: ' + error.message);
   }
 };
 
