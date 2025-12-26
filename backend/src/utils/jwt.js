@@ -99,34 +99,18 @@ export const generateTokens = (userId) => {
           throw new Error('Invalid refreshExpiresIn for jwt.sign');
         }
         
-        console.log('Step 4.5.5: All parameters validated, calling jwt.sign now...');
-        
-        // TEMPORAL: Usar el mismo secreto que accessToken para debug
-        // Si esto funciona, el problema está en el refreshSecret
-        console.log('Step 4.5.6: Attempting jwt.sign with refreshSecret...');
-        console.log('Step 4.5.7: Secret bytes:', Array.from(Buffer.from(config.jwt.refreshSecret, 'utf8')).slice(0, 10));
-        
-        // Llamar a jwt.sign de forma síncrona
-        // Intentar primero con el secreto normal
-        try {
-          refreshToken = jwt.sign(
-            payload,
-            config.jwt.refreshSecret,
-            { expiresIn: config.jwt.refreshExpiresIn }
-          );
-          console.log('Step 5: jwt.sign for refreshToken completed successfully');
-        } catch (signErr) {
-          console.error('Step 5.1: jwt.sign failed with refreshSecret, trying with accessSecret...');
-          // Si falla, intentar con el secreto de accessToken como fallback
-          refreshToken = jwt.sign(
-            payload,
-            config.jwt.secret, // Usar el mismo secreto que accessToken
-            { expiresIn: config.jwt.refreshExpiresIn }
-          );
-          console.log('Step 5.2: jwt.sign completed using accessSecret as fallback');
-        }
-        
-        console.log('Step 5: jwt.sign for refreshToken completed successfully');
+      console.log('Step 4.5.5: All parameters validated, calling jwt.sign now...');
+      
+      // TEMPORAL: Usar el mismo secreto que accessToken para verificar si el problema
+      // está en el refreshSecret específicamente
+      // Si esto funciona, sabemos que el problema es con el refreshSecret que contiene "ñ"
+      const secretToUse = config.jwt.refreshSecret;
+      console.log('Step 4.5.6: Using secret (first 10 chars):', secretToUse.substring(0, 10));
+      
+      // Simplificar la llamada - ejecutar jwt.sign directamente
+      refreshToken = jwt.sign(payload, secretToUse, { expiresIn: config.jwt.refreshExpiresIn });
+      
+      console.log('Step 5: jwt.sign for refreshToken completed successfully');
       } catch (jwtError) {
         console.error('Step 5 ERROR: jwt.sign failed');
         console.error('JWT Error type:', typeof jwtError);
