@@ -34,10 +34,10 @@ export const authService = {
       isActive: true
     });
 
-    const { accessToken, refreshToken } = generateTokens(user._id.toString());
+    const { accessToken } = generateTokens(user._id.toString());
 
-    // Update user with refresh token
-    await authRepository.updateUserRefreshToken(user._id, refreshToken);
+    // Update last login
+    await authRepository.updateLastLogin(user._id);
 
     return {
       user: {
@@ -55,8 +55,7 @@ export const authService = {
         plan: company.plan
       },
       tokens: {
-        accessToken,
-        refreshToken
+        accessToken
       }
     };
   },
@@ -86,9 +85,9 @@ export const authService = {
       throw new Error('Invalid credentials');
     }
 
-    const { accessToken, refreshToken } = generateTokens(user._id.toString());
+    const { accessToken } = generateTokens(user._id.toString());
 
-    await authRepository.updateUserRefreshToken(user._id, refreshToken);
+    await authRepository.updateLastLogin(user._id);
 
     return {
       user: {
@@ -100,54 +99,14 @@ export const authService = {
         companyId: user.companyId
       },
       tokens: {
-        accessToken,
-        refreshToken
+        accessToken
       }
     };
   },
 
-  async refreshAccessToken(refreshToken, companyId = null) {
-    try {
-      if (!refreshToken) {
-        throw new Error('Refresh token is required');
-      }
-
-      const decoded = verifyToken(refreshToken, true);
-      
-      // Buscar usuario por userId y companyId (si se proporciona)
-      let user;
-      if (companyId) {
-        user = await authRepository.findUserById(decoded.userId, companyId);
-      } else {
-        // Si no hay companyId, buscar solo por userId
-        const { User } = await import('../../users/models/User.js');
-        user = await User.findById(decoded.userId).select('-password');
-      }
-
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      if (!user.refreshToken || user.refreshToken !== refreshToken) {
-        throw new Error('Invalid refresh token');
-      }
-
-      if (!user.isActive) {
-        throw new Error('User account is inactive');
-      }
-
-      const { accessToken } = generateTokens(user._id.toString());
-      return { accessToken };
-    } catch (error) {
-      if (error.message === 'User not found' || error.message === 'Invalid refresh token' || error.message === 'User account is inactive') {
-        throw error;
-      }
-      throw new Error('Invalid refresh token');
-    }
-  },
-
   async logout(userId) {
-    await authRepository.updateUserRefreshToken(userId, null);
+    // Con solo accessToken, el logout es simplemente invalidar el token del lado del cliente
+    // No necesitamos hacer nada en el servidor
     return { message: 'Logged out successfully' };
   }
 };

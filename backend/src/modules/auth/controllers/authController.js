@@ -24,17 +24,6 @@ export const authController = {
     }
   },
 
-  async refreshToken(req, res, next) {
-    try {
-      const { refreshToken } = req.body;
-      const companyId = req.companyId; // Obtener companyId del middleware de tenant
-      const result = await authService.refreshAccessToken(refreshToken, companyId);
-      res.json(result);
-    } catch (error) {
-      next(error);
-    }
-  },
-
   async logout(req, res, next) {
     try {
       await authService.logout(req.userId);

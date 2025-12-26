@@ -11,10 +11,10 @@ export const authRepository = {
     return await user.save();
   },
 
-  async updateUserRefreshToken(userId, refreshToken) {
+  async updateLastLogin(userId) {
     return await User.findByIdAndUpdate(
       userId,
-      { refreshToken, lastLogin: new Date() },
+      { lastLogin: new Date() },
       { new: true }
     ).select('-password');
   },

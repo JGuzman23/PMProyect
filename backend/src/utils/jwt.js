@@ -8,18 +8,11 @@ export const generateTokens = (userId) => {
     { expiresIn: config.jwt.expiresIn }
   );
 
-  const refreshToken = jwt.sign(
-    { userId, type: 'refresh' },
-    config.jwt.refreshSecret,
-    { expiresIn: config.jwt.refreshExpiresIn }
-  );
-
-  return { accessToken, refreshToken };
+  return { accessToken };
 };
 
-export const verifyToken = (token, isRefresh = false) => {
-  const secret = isRefresh ? config.jwt.refreshSecret : config.jwt.secret;
-  return jwt.verify(token, secret);
+export const verifyToken = (token) => {
+  return jwt.verify(token, config.jwt.secret);
 };
 
 
