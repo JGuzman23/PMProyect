@@ -18,6 +18,24 @@ import adminRoutes from './src/modules/admin/routes.js';
 
 dotenv.config();
 
+// Validar variables de entorno críticas
+const requiredEnvVars = ['JWT_SECRET', 'JWT_REFRESH_SECRET'];
+const missingVars = requiredEnvVars.filter(varName => {
+  const value = process.env[varName];
+  return !value || 
+         value === 'default-secret-change-in-production' || 
+         value === 'default-refresh-secret-change-in-production' ||
+         value === 'your-secret-key-change-in-production' ||
+         value === 'your-refresh-secret-key-change-in-production';
+});
+
+if (missingVars.length > 0) {
+  console.error('❌ Error: Las siguientes variables de entorno no están configuradas correctamente:');
+  missingVars.forEach(varName => console.error(`   - ${varName}`));
+  console.error('Por favor, configura estas variables en tu archivo .env o en docker-compose.yml');
+  process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 

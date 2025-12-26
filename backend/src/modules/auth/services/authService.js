@@ -34,31 +34,46 @@ export const authService = {
       isActive: true
     });
 
-    const { accessToken, refreshToken } = generateTokens(user._id.toString());
+    // Validar que el usuario tenga un ID válido
+    if (!user._id) {
+      console.error('Error: User object does not have a valid _id after creation');
+      throw new Error('Failed to create user account');
+    }
 
-    // Update user with refresh token
-    await authRepository.updateUserRefreshToken(user._id, refreshToken);
+    try {
+      const { accessToken, refreshToken } = generateTokens(user._id.toString());
 
-    return {
-      user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        companyId: user.companyId
-      },
-      company: {
-        id: company._id,
-        name: company.name,
-        subdomain: company.subdomain,
-        plan: company.plan
-      },
-      tokens: {
-        accessToken,
-        refreshToken
+      // Update user with refresh token
+      await authRepository.updateUserRefreshToken(user._id, refreshToken);
+
+      return {
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          companyId: user.companyId
+        },
+        company: {
+          id: company._id,
+          name: company.name,
+          subdomain: company.subdomain,
+          plan: company.plan
+        },
+        tokens: {
+          accessToken,
+          refreshToken
+        }
+      };
+    } catch (error) {
+      console.error('Error during token generation or user update in register:', error);
+      if (error.message.includes('JWT') || error.message.includes('token')) {
+        throw new Error('Registration service error: ' + error.message);
       }
-    };
+      throw error;
+    }
+
   },
 
   async login(email, password, companyId = null) {
@@ -86,24 +101,39 @@ export const authService = {
       throw new Error('Invalid credentials');
     }
 
-    const { accessToken, refreshToken } = generateTokens(user._id.toString());
+    // Validar que el usuario tenga un ID válido
+    if (!user._id) {
+      console.error('Error: User object does not have a valid _id');
+      throw new Error('User data is invalid');
+    }
 
-    await authRepository.updateUserRefreshToken(user._id, refreshToken);
+    try {
+      const { accessToken, refreshToken } = generateTokens(user._id.toString());
 
-    return {
-      user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        companyId: user.companyId
-      },
-      tokens: {
-        accessToken,
-        refreshToken
+      await authRepository.updateUserRefreshToken(user._id, refreshToken);
+
+      return {
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          companyId: user.companyId
+        },
+        tokens: {
+          accessToken,
+          refreshToken
+        }
+      };
+    } catch (error) {
+      console.error('Error during token generation or user update:', error);
+      // Si el error es de generación de tokens, propagarlo con un mensaje más claro
+      if (error.message.includes('JWT') || error.message.includes('token')) {
+        throw new Error('Authentication service error: ' + error.message);
       }
-    };
+      throw error;
+    }
   },
 
   async refreshAccessToken(refreshToken, companyId = null) {
@@ -134,6 +164,12 @@ export const authService = {
 
       if (!user.isActive) {
         throw new Error('User account is inactive');
+      }
+
+      // Validar que el usuario tenga un ID válido
+      if (!user._id) {
+        console.error('Error: User object does not have a valid _id');
+        throw new Error('User data is invalid');
       }
 
       const { accessToken } = generateTokens(user._id.toString());
