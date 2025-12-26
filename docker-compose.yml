@@ -9,13 +9,13 @@ services:
     container_name: singops-backend
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3001:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - MONGODB_URI=${MONGODB_URI}
-      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your-refresh-secret-key-change-in-production}
+      - MONGODB_URI=mongodb://admin:password@62.146.181.11:27017/pmproyect?authSource=admin
+      - JWT_SECRET=estoesunavirlaoperacional123
+      - JWT_REFRESH_SECRET=abejitadondeestas123
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-15m}
       - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
     volumes:
@@ -34,7 +34,7 @@ services:
     container_name: singops-frontend
     restart: unless-stopped
     ports:
-      - "4202:80"
+      - "4203:80"
     depends_on:
       - backend
     networks:
@@ -51,4 +51,3 @@ volumes:
     driver: local
   backend_data:
     driver: local
-
