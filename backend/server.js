@@ -1,7 +1,26 @@
+// IMPORTANTE: Cargar dotenv PRIMERO antes de cualquier otra importación
+// para asegurar que las variables de entorno estén disponibles
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Configurar dotenv para buscar .env en el directorio del backend
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const envPath = join(__dirname, '.env');
+const envResult = dotenv.config({ path: envPath });
+
+if (envResult.error) {
+  console.warn('⚠️  No se encontró archivo .env en', envPath);
+  console.warn('   Usando variables de entorno del sistema o valores por defecto');
+} else {
+  console.log('✅ Archivo .env cargado desde:', envPath);
+}
+
+// Ahora importar el resto de módulos (después de cargar las variables de entorno)
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import { connectDB } from './src/database/connection.js';
 import { errorHandler } from './src/middleware/errorHandler.js';
 import { tenantMiddleware } from './src/middleware/tenantMiddleware.js';
@@ -16,25 +35,8 @@ import clientRoutes from './src/modules/clients/routes.js';
 import teamRoutes from './src/modules/teams/routes.js';
 import adminRoutes from './src/modules/admin/routes.js';
 
-dotenv.config();
-
-// Validar variables de entorno críticas
-const requiredEnvVars = ['JWT_SECRET', 'JWT_REFRESH_SECRET'];
-const missingVars = requiredEnvVars.filter(varName => {
-  const value = process.env[varName];
-  return !value || 
-         value === 'default-secret-change-in-production' || 
-         value === 'default-refresh-secret-change-in-production' ||
-         value === 'your-secret-key-change-in-production' ||
-         value === 'your-refresh-secret-key-change-in-production';
-});
-
-if (missingVars.length > 0) {
-  console.error('❌ Error: Las siguientes variables de entorno no están configuradas correctamente:');
-  missingVars.forEach(varName => console.error(`   - ${varName}`));
-  console.error('Por favor, configura estas variables en tu archivo .env o en docker-compose.yml');
-  process.exit(1);
-}
+// Los secretos JWT están ahora hardcodeados en el código (backend/src/config/index.js)
+// No es necesario validar variables de entorno para JWT
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -78,10 +80,6 @@ app.use(cookieParser());
 app.use(tenantMiddleware);
 
 // Servir archivos estáticos
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
 
 // Health check

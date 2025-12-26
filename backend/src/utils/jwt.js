@@ -7,13 +7,13 @@ export const generateTokens = (userId) => {
     throw new Error('User ID is required to generate tokens');
   }
 
-  // Validar que los secretos estén configurados
-  if (!config.jwt.secret || config.jwt.secret === 'default-secret-change-in-production') {
-    throw new Error('JWT_SECRET is not properly configured');
+  // Validar que los secretos estén presentes (ahora están hardcodeados en el código)
+  if (!config.jwt.secret) {
+    throw new Error('JWT_SECRET is not configured');
   }
 
-  if (!config.jwt.refreshSecret || config.jwt.refreshSecret === 'default-refresh-secret-change-in-production') {
-    throw new Error('JWT_REFRESH_SECRET is not properly configured');
+  if (!config.jwt.refreshSecret) {
+    throw new Error('JWT_REFRESH_SECRET is not configured');
   }
 
   try {
