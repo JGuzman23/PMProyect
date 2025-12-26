@@ -113,11 +113,22 @@ export const authService = {
     }
 
     try {
-      const { accessToken, refreshToken } = generateTokens(user._id.toString());
+      console.log('Calling generateTokens with userId:', user._id.toString());
+      const tokens = generateTokens(user._id.toString());
+      console.log('Tokens received from generateTokens:', {
+        hasAccessToken: !!tokens.accessToken,
+        hasRefreshToken: !!tokens.refreshToken,
+        accessTokenLength: tokens.accessToken ? tokens.accessToken.length : 0,
+        refreshTokenLength: tokens.refreshToken ? tokens.refreshToken.length : 0
+      });
 
+      const { accessToken, refreshToken } = tokens;
+      console.log('About to update user refresh token in database...');
       await authRepository.updateUserRefreshToken(user._id, refreshToken);
+      console.log('User refresh token updated successfully');
 
       // Asegurar que todos los valores se serialicen correctamente
+      console.log('Creating response object...');
       const response = {
         user: {
           id: user._id ? user._id.toString() : null,
@@ -133,6 +144,7 @@ export const authService = {
         }
       };
 
+      console.log('Response object created, returning...');
       return response;
     } catch (error) {
       console.error('Error during token generation or user update:', error);

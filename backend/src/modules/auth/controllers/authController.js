@@ -20,9 +20,17 @@ export const authController = {
       console.log('Login attempt for:', email);
       const result = await authService.login(email, password, companyId);
       console.log('Login successful for:', email);
+      console.log('Result structure:', {
+        hasUser: !!result.user,
+        hasTokens: !!result.tokens,
+        userKeys: result.user ? Object.keys(result.user) : [],
+        tokensKeys: result.tokens ? Object.keys(result.tokens) : []
+      });
       
       // Asegurar que la respuesta se envíe correctamente
+      console.log('Sending response to client...');
       res.json(result);
+      console.log('Response sent successfully');
     } catch (error) {
       console.error('Login error:', error);
       next(error);

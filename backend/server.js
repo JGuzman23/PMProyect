@@ -105,20 +105,24 @@ app.use(errorHandler);
 // Manejo de errores no capturados para evitar que el proceso se detenga
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
+  console.error('Error name:', error.name);
+  console.error('Error message:', error.message);
   console.error('Stack:', error.stack);
-  // No salir del proceso en producción, solo loguear
-  if (process.env.NODE_ENV !== 'production') {
-    process.exit(1);
-  }
+  // En producción, loguear pero no salir para mantener el servicio disponible
+  // Docker se encargará de reiniciar si es necesario
+  console.error('Process will continue running to maintain service availability');
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise);
   console.error('Reason:', reason);
-  // No salir del proceso en producción, solo loguear
-  if (process.env.NODE_ENV !== 'production') {
-    process.exit(1);
+  if (reason instanceof Error) {
+    console.error('Error name:', reason.name);
+    console.error('Error message:', reason.message);
+    console.error('Error stack:', reason.stack);
   }
+  // En producción, loguear pero no salir
+  console.error('Process will continue running to maintain service availability');
 });
 
 // Connect to database and start server

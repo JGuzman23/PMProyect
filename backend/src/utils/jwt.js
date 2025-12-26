@@ -49,8 +49,12 @@ export const generateTokens = (userId) => {
     );
     
     console.log('refreshToken generated successfully, length:', refreshToken ? refreshToken.length : 0);
+    console.log('Both tokens generated, returning result...');
 
-    return { accessToken, refreshToken };
+    const result = { accessToken, refreshToken };
+    console.log('Result object created, accessToken exists:', !!result.accessToken, 'refreshToken exists:', !!result.refreshToken);
+    
+    return result;
   } catch (error) {
     console.error('Error generating JWT tokens:', error);
     console.error('Error name:', error.name);
