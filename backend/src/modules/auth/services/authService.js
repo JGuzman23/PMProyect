@@ -114,18 +114,38 @@ export const authService = {
 
     try {
       console.log('Calling generateTokens with userId:', user._id.toString());
-      const tokens = generateTokens(user._id.toString());
-      console.log('Tokens received from generateTokens:', {
-        hasAccessToken: !!tokens.accessToken,
-        hasRefreshToken: !!tokens.refreshToken,
-        accessTokenLength: tokens.accessToken ? tokens.accessToken.length : 0,
-        refreshTokenLength: tokens.refreshToken ? tokens.refreshToken.length : 0
-      });
+      
+      // Generar tokens de forma síncrona (generateTokens es síncrono)
+      let tokens;
+      try {
+        tokens = generateTokens(user._id.toString());
+        console.log('Tokens received from generateTokens:', {
+          hasAccessToken: !!tokens.accessToken,
+          hasRefreshToken: !!tokens.refreshToken,
+          accessTokenLength: tokens.accessToken ? tokens.accessToken.length : 0,
+          refreshTokenLength: tokens.refreshToken ? tokens.refreshToken.length : 0
+        });
+      } catch (tokenError) {
+        console.error('Error in generateTokens:', tokenError);
+        console.error('Token error name:', tokenError.name);
+        console.error('Token error message:', tokenError.message);
+        console.error('Token error stack:', tokenError.stack);
+        throw tokenError;
+      }
 
       const { accessToken, refreshToken } = tokens;
       console.log('About to update user refresh token in database...');
-      await authRepository.updateUserRefreshToken(user._id, refreshToken);
-      console.log('User refresh token updated successfully');
+      
+      try {
+        await authRepository.updateUserRefreshToken(user._id, refreshToken);
+        console.log('User refresh token updated successfully');
+      } catch (dbError) {
+        console.error('Error updating refresh token in database:', dbError);
+        console.error('DB error name:', dbError.name);
+        console.error('DB error message:', dbError.message);
+        console.error('DB error stack:', dbError.stack);
+        throw dbError;
+      }
 
       // Asegurar que todos los valores se serialicen correctamente
       console.log('Creating response object...');

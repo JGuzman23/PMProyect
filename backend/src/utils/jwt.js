@@ -39,14 +39,28 @@ export const generateTokens = (userId) => {
     console.log('About to generate refreshToken with:', {
       userId,
       refreshSecretLength: config.jwt.refreshSecret ? config.jwt.refreshSecret.length : 0,
-      expiresIn: config.jwt.refreshExpiresIn
+      refreshSecretType: typeof config.jwt.refreshSecret,
+      refreshSecretValue: config.jwt.refreshSecret ? config.jwt.refreshSecret.substring(0, 10) + '...' : 'null',
+      expiresIn: config.jwt.refreshExpiresIn,
+      expiresInType: typeof config.jwt.refreshExpiresIn
     });
 
-    const refreshToken = jwt.sign(
-      { userId, type: 'refresh' },
-      config.jwt.refreshSecret,
-      { expiresIn: config.jwt.refreshExpiresIn }
-    );
+    let refreshToken;
+    try {
+      console.log('Calling jwt.sign for refreshToken...');
+      refreshToken = jwt.sign(
+        { userId, type: 'refresh' },
+        config.jwt.refreshSecret,
+        { expiresIn: config.jwt.refreshExpiresIn }
+      );
+      console.log('jwt.sign for refreshToken completed successfully');
+    } catch (signError) {
+      console.error('ERROR in jwt.sign for refreshToken:', signError);
+      console.error('Error name:', signError.name);
+      console.error('Error message:', signError.message);
+      console.error('Error stack:', signError.stack);
+      throw signError;
+    }
     
     console.log('refreshToken generated successfully, length:', refreshToken ? refreshToken.length : 0);
     console.log('Both tokens generated, returning result...');
