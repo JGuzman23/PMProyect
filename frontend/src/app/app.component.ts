@@ -10,7 +10,7 @@ import { TranslationService } from './core/services/translation.service';
   templateUrl: './app.component.html'
 })
 export class AppComponent implements OnInit {
-  title = 'SingOps';
+  title = 'SignOps';
 
   constructor(private translationService: TranslationService) {}
 
