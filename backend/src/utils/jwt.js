@@ -4,6 +4,7 @@ import { config } from '../config/index.js';
 export const generateTokens = (userId) => {
   // Validar que userId esté presente
   if (!userId) {
+    console.log('userId is required');
     throw new Error('User ID is required to generate tokens');
   }
 

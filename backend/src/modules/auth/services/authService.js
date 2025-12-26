@@ -86,18 +86,23 @@ export const authService = {
       // Si no hay companyId, buscar solo por email (asumimos que el email es único o tomamos el primero)
       const { User } = await import('../../users/models/User.js');
       user = await User.findOne({ email }).select('+password');
+
+      console.log('user', user);
     }
     
     if (!user) {
+      console.log('user not found');
       throw new Error('Invalid credentials');
     }
 
     if (!user.isActive) {
+      console.log('user is inactive');
       throw new Error('Account is inactive');
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
+      console.log('password is invalid');
       throw new Error('Invalid credentials');
     }
 

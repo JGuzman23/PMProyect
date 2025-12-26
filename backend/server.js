@@ -39,6 +39,8 @@ import adminRoutes from './src/modules/admin/routes.js';
 // No es necesario validar variables de entorno para JWT
 
 const app = express();
+// En Docker, debe escuchar en 3000 para que nginx pueda conectarse (backend:3000)
+// El mapeo 3001:3000 expone el puerto 3000 del contenedor como 3001 en el host
 const PORT = process.env.PORT || 3001;
 
 // Middleware
