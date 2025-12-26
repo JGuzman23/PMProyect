@@ -112,22 +112,26 @@ export const authService = {
 
       await authRepository.updateUserRefreshToken(user._id, refreshToken);
 
-      return {
+      // Asegurar que todos los valores se serialicen correctamente
+      const response = {
         user: {
-          id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          companyId: user.companyId
+          id: user._id ? user._id.toString() : null,
+          email: user.email || null,
+          firstName: user.firstName || null,
+          lastName: user.lastName || null,
+          role: user.role || null,
+          companyId: user.companyId || null
         },
         tokens: {
           accessToken,
           refreshToken
         }
       };
+
+      return response;
     } catch (error) {
       console.error('Error during token generation or user update:', error);
+      console.error('Error stack:', error.stack);
       // Si el error es de generación de tokens, propagarlo con un mensaje más claro
       if (error.message.includes('JWT') || error.message.includes('token')) {
         throw new Error('Authentication service error: ' + error.message);

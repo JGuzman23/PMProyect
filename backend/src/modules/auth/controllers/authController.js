@@ -17,9 +17,14 @@ export const authController = {
       // Obtener companyId del header si está disponible, sino será null y se buscará por email
       const companyId = req.companyId || null;
 
+      console.log('Login attempt for:', email);
       const result = await authService.login(email, password, companyId);
+      console.log('Login successful for:', email);
+      
+      // Asegurar que la respuesta se envíe correctamente
       res.json(result);
     } catch (error) {
+      console.error('Login error:', error);
       next(error);
     }
   },

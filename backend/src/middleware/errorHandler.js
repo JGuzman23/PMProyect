@@ -1,5 +1,16 @@
 export const errorHandler = (err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('Error handler - Error:', err);
+  console.error('Error handler - Error name:', err.name);
+  console.error('Error handler - Error message:', err.message);
+  if (err.stack) {
+    console.error('Error handler - Error stack:', err.stack);
+  }
+
+  // Asegurar que la respuesta no se haya enviado ya
+  if (res.headersSent) {
+    console.error('Response already sent, cannot send error response');
+    return next(err);
+  }
 
   if (err.name === 'ValidationError') {
     return res.status(400).json({
@@ -33,10 +44,16 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
+  const statusCode = err.status || 500;
+  const errorResponse = {
+    error: err.message || 'Internal server error'
+  };
+
+  if (process.env.NODE_ENV === 'development' && err.stack) {
+    errorResponse.stack = err.stack;
+  }
+
+  return res.status(statusCode).json(errorResponse);
 };
 
 

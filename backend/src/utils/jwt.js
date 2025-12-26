@@ -8,9 +8,13 @@ export const generateTokens = (userId) => {
   }
 
   // Validar que los secretos estén presentes (ahora están hardcodeados en el código)
+  console.log('config.jwt.refreshSecret', config.jwt.refreshSecret);
+  console.log('config.jwt.secret', config.jwt.secret);
+
   if (!config.jwt.secret) {
     throw new Error('JWT_SECRET is not configured');
   }
+  console.log('config.jwt.refreshExpiresIn', config.jwt.refreshExpiresIn);
 
   if (!config.jwt.refreshSecret) {
     throw new Error('JWT_REFRESH_SECRET is not configured');
@@ -22,12 +26,16 @@ export const generateTokens = (userId) => {
       config.jwt.secret,
       { expiresIn: config.jwt.expiresIn }
     );
+    console.log('accessToken', accessToken);
+
+
 
     const refreshToken = jwt.sign(
       { userId, type: 'refresh' },
       config.jwt.refreshSecret,
       { expiresIn: config.jwt.refreshExpiresIn }
     );
+    console.log('refreshToken', refreshToken);
 
     return { accessToken, refreshToken };
   } catch (error) {

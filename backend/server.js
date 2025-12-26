@@ -100,14 +100,33 @@ app.use('/api/admin', adminRoutes);
 // Error handler
 app.use(errorHandler);
 
+// Manejo de errores no capturados para evitar que el proceso se detenga
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
+  // No salir del proceso en producción, solo loguear
+  if (process.env.NODE_ENV !== 'production') {
+    process.exit(1);
+  }
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise);
+  console.error('Reason:', reason);
+  // No salir del proceso en producción, solo loguear
+  if (process.env.NODE_ENV !== 'production') {
+    process.exit(1);
+  }
+});
+
 // Connect to database and start server
 connectDB()
   .then(() => {
     // Escuchar en 0.0.0.0 para que sea accesible desde fuera del contenedor Docker
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
-        console.log('CORS configurado para:', allowedOrigins);
-
+      console.log('CORS configurado para:', allowedOrigins);
+      console.log('Environment:', process.env.NODE_ENV || 'development');
     });
   })
   .catch((error) => {
