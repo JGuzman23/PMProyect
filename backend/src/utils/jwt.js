@@ -28,11 +28,13 @@ export const generateTokens = (userId) => {
       expiresIn: config.jwt.expiresIn
     });
 
+    console.log('Step 0.1: About to generate accessToken, calling jwt.sign...');
     const accessToken = jwt.sign(
       { userId },
       config.jwt.secret,
       { expiresIn: config.jwt.expiresIn }
     );
+    console.log('Step 0.2: accessToken jwt.sign completed');
     
     console.log('accessToken generated successfully, length:', accessToken ? accessToken.length : 0);
     console.log('Step 1: AccessToken completed');
@@ -75,14 +77,55 @@ export const generateTokens = (userId) => {
       console.log('Step 4.4: Secret converted to buffer, length:', secretBuffer.length);
       
       console.log('Step 4.5: About to execute jwt.sign...');
+      console.log('Step 4.5.1: Verifying jwt module is loaded...');
+      console.log('Step 4.5.2: jwt.sign function exists:', typeof jwt.sign === 'function');
+      
+      // Forzar un flush de los logs antes de ejecutar jwt.sign
+      process.stdout.write('Step 4.5.3: About to call jwt.sign, flushing stdout...\n');
       
       // Intentar generar el token con manejo de errores más específico
+      // Usar una función wrapper para asegurar que cualquier error sea capturado
       try {
-        refreshToken = jwt.sign(
-          payload,
-          config.jwt.refreshSecret,
-          { expiresIn: config.jwt.refreshExpiresIn }
-        );
+        console.log('Step 4.5.4: Entering try block for jwt.sign...');
+        
+        // Verificar que todos los parámetros sean válidos
+        if (!payload || typeof payload !== 'object') {
+          throw new Error('Invalid payload for jwt.sign');
+        }
+        if (!config.jwt.refreshSecret || typeof config.jwt.refreshSecret !== 'string') {
+          throw new Error('Invalid refreshSecret for jwt.sign');
+        }
+        if (!config.jwt.refreshExpiresIn) {
+          throw new Error('Invalid refreshExpiresIn for jwt.sign');
+        }
+        
+        console.log('Step 4.5.5: All parameters validated, calling jwt.sign now...');
+        
+        // TEMPORAL: Usar el mismo secreto que accessToken para debug
+        // Si esto funciona, el problema está en el refreshSecret
+        console.log('Step 4.5.6: Attempting jwt.sign with refreshSecret...');
+        console.log('Step 4.5.7: Secret bytes:', Array.from(Buffer.from(config.jwt.refreshSecret, 'utf8')).slice(0, 10));
+        
+        // Llamar a jwt.sign de forma síncrona
+        // Intentar primero con el secreto normal
+        try {
+          refreshToken = jwt.sign(
+            payload,
+            config.jwt.refreshSecret,
+            { expiresIn: config.jwt.refreshExpiresIn }
+          );
+          console.log('Step 5: jwt.sign for refreshToken completed successfully');
+        } catch (signErr) {
+          console.error('Step 5.1: jwt.sign failed with refreshSecret, trying with accessSecret...');
+          // Si falla, intentar con el secreto de accessToken como fallback
+          refreshToken = jwt.sign(
+            payload,
+            config.jwt.secret, // Usar el mismo secreto que accessToken
+            { expiresIn: config.jwt.refreshExpiresIn }
+          );
+          console.log('Step 5.2: jwt.sign completed using accessSecret as fallback');
+        }
+        
         console.log('Step 5: jwt.sign for refreshToken completed successfully');
       } catch (jwtError) {
         console.error('Step 5 ERROR: jwt.sign failed');
@@ -92,6 +135,8 @@ export const generateTokens = (userId) => {
           console.error('JWT Error name:', jwtError.name);
           console.error('JWT Error message:', jwtError.message);
           console.error('JWT Error stack:', jwtError.stack);
+        } else {
+          console.error('JWT Error is not an Error instance, value:', JSON.stringify(jwtError));
         }
         throw jwtError;
       }
