@@ -64,14 +64,14 @@ export const authService = {
   async login(email, password, companyId = null) {
     let user;
     
-    // Si hay companyId, buscar por email y companyId
-    if (companyId) {
-      user = await authRepository.findUserByEmail(email, companyId);
-    } else {
+    // // Si hay companyId, buscar por email y companyId
+    // if (companyId) {
+    //   user = await authRepository.findUserByEmail(email, companyId);
+    // } else {
       // Si no hay companyId, buscar solo por email (asumimos que el email es único o tomamos el primero)
       const { User } = await import('../../users/models/User.js');
       user = await User.findOne({ email }).select('+password');
-    }
+   // }
     
     if (!user) {
       throw new Error('Invalid credentials');
