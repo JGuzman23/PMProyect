@@ -16,7 +16,7 @@ services:
       - MONGODB_URI=mongodb://admin:password@62.146.181.11:27017/pmproyect?authSource=admin
       - JWT_SECRET=estoesunavirlaoperacional123
       - JWT_REFRESH_SECRET=abejitadondeestas123
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-15m}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
     volumes:
       # Volumen para archivos subidos
