@@ -108,14 +108,17 @@ process.on('uncaughtException', (error) => {
   console.error('Error name:', error.name);
   console.error('Error message:', error.message);
   console.error('Stack:', error.stack);
+  console.error('Error occurred at:', new Date().toISOString());
   // En producción, loguear pero no salir para mantener el servicio disponible
   // Docker se encargará de reiniciar si es necesario
   console.error('Process will continue running to maintain service availability');
+  // NO hacer process.exit() para que Docker pueda manejar el reinicio
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise);
   console.error('Reason:', reason);
+  console.error('Rejection occurred at:', new Date().toISOString());
   if (reason instanceof Error) {
     console.error('Error name:', reason.name);
     console.error('Error message:', reason.message);
@@ -123,6 +126,18 @@ process.on('unhandledRejection', (reason, promise) => {
   }
   // En producción, loguear pero no salir
   console.error('Process will continue running to maintain service availability');
+  // NO hacer process.exit() para que Docker pueda manejar el reinicio
+});
+
+// También capturar señales de terminación
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  process.exit(0);
 });
 
 // Connect to database and start server
