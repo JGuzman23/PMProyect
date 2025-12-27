@@ -125,6 +125,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
   loadingUsers = false;
   loadingClients = false;
   showEmojiPicker = false;
+  commentAttachments: File[] = [];
+  commentAttachmentPreviews: { file: File; preview?: string }[] = [];
   
   taskForm = {
     title: '',
@@ -750,6 +752,47 @@ export class TaskModalComponent implements OnInit, OnChanges {
     }
   ];
 
+  triggerCommentFileInput(inputId: string): void {
+    setTimeout(() => {
+      const input = document.getElementById(inputId) as HTMLInputElement;
+      if (input) {
+        input.click();
+      } else {
+        console.error(`Input with id ${inputId} not found`);
+      }
+    }, 0);
+  }
+
+  onCommentFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const files = Array.from(input.files);
+      files.forEach(file => {
+        this.commentAttachments.push(file);
+        const preview: { file: File; preview?: string } = { file };
+        
+        // Crear preview para imágenes
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e: any) => {
+            preview.preview = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+        
+        this.commentAttachmentPreviews.push(preview);
+      });
+      
+      // Limpiar el input para permitir seleccionar el mismo archivo de nuevo
+      input.value = '';
+    }
+  }
+
+  removeCommentAttachment(index: number): void {
+    this.commentAttachments.splice(index, 1);
+    this.commentAttachmentPreviews.splice(index, 1);
+  }
+
   addComment(): void {
     if (!this.task) return;
 
@@ -759,7 +802,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
     const text = editor.innerText || editor.textContent || '';
     const html = editor.innerHTML || '';
     
-    if (!text.trim() && !html.replace(/<[^>]*>/g, '').trim()) {
+    // Permitir enviar comentario si hay texto o archivos adjuntos
+    if (!text.trim() && !html.replace(/<[^>]*>/g, '').trim() && this.commentAttachments.length === 0) {
       return;
     }
 
@@ -770,16 +814,96 @@ export class TaskModalComponent implements OnInit, OnChanges {
     }
 
     const commentText = html.trim() || text.trim();
+    
+    // Si hay archivos adjuntos, subirlos primero
+    if (this.commentAttachments.length > 0) {
+      this.uploadCommentAttachments(commentText);
+    } else {
+      // Si no hay archivos, enviar el comentario normalmente
+      this.sendComment(commentText);
+    }
+  }
+
+  uploadCommentAttachments(commentText: string): void {
+    if (!this.task) return;
+
+    const uploadPromises = this.commentAttachments.map(file => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', file.name);
+      formData.append('statusId', ''); // Sin statusId para adjuntos de comentarios
+      formData.append('statusName', '');
+
+      return this.http.post<any>(`${this.apiUrl}/tasks/upload`, formData).toPromise();
+    });
+
+    Promise.all(uploadPromises).then((responses) => {
+      if (!this.task) return;
+      
+      // Agregar los attachments a la tarea
+      const newAttachments = responses.map(response => {
+        let fullUrl = response.url;
+        if (!fullUrl.startsWith('http') && !fullUrl.startsWith('data:')) {
+          if (fullUrl.startsWith('/')) {
+            const baseUrl = this.apiUrl.replace('/api', '');
+            fullUrl = `${baseUrl}${fullUrl}`;
+          } else {
+            fullUrl = `${this.apiUrl}/${fullUrl}`;
+          }
+        }
+        return {
+          url: fullUrl,
+          name: response.name || '',
+          title: response.title || response.name || '',
+          size: response.size || 0,
+          statusId: '',
+          statusName: '',
+          uploadedAt: response.uploadedAt || new Date().toISOString()
+        };
+      });
+
+      // Actualizar la tarea con los nuevos attachments
+      const currentAttachments = this.task.attachments || [];
+      const updatedAttachments = [...currentAttachments, ...newAttachments];
+
+      this.http.put(`${this.apiUrl}/tasks/${this.task._id}`, {
+        attachments: updatedAttachments
+      }).subscribe({
+        next: () => {
+          // Después de agregar los attachments, enviar el comentario
+          this.sendComment(commentText);
+        },
+        error: (err) => {
+          console.error('Error adding attachments to task', err);
+          // Aún así, enviar el comentario
+          this.sendComment(commentText);
+        }
+      });
+    }).catch(err => {
+      console.error('Error uploading comment attachments', err);
+      alert(this.translationService.translate('tasks.errorUploadingFile'));
+    });
+  }
+
+  sendComment(commentText: string): void {
+    if (!this.task) return;
+
     const commentData = { text: commentText };
 
     this.http.post(`${this.apiUrl}/tasks/${this.task._id}/comments`, commentData).subscribe({
       next: (response: any) => {
+        // Limpiar el editor y los adjuntos
+        const editor = document.querySelector('.comment-editor') as HTMLElement;
         this.newCommentText = '';
         if (editor) {
           editor.innerHTML = '';
         }
+        this.commentAttachments = [];
+        this.commentAttachmentPreviews = [];
         
-        this.http.get<Task>(`${this.apiUrl}/tasks/${this.task!._id}`).subscribe({
+        if (!this.task) return;
+        
+        this.http.get<Task>(`${this.apiUrl}/tasks/${this.task._id}`).subscribe({
           next: (updatedTask) => {
             this.task = updatedTask;
             this.taskUpdated.emit(updatedTask);
@@ -792,6 +916,9 @@ export class TaskModalComponent implements OnInit, OnChanges {
               userId: typeof activity.userId === 'object' ? activity.userId : this.users.find(u => u._id === activity.userId) || activity.userId
             }));
             this.combineActivitiesAndComments();
+            // Recargar attachments
+            this.attachments = updatedTask.attachments || [];
+            this.groupAttachmentsByStatus();
           },
           error: (err) => {
             console.error('Error reloading task', err);

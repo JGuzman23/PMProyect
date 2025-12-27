@@ -308,15 +308,26 @@
                    
                   <div class="w-px h-5 bg-gray-300 mx-0.5"></div>
                    
-                  <button
-                    type="button"
-                    class="w-7 h-7 rounded hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-600"
-                    title="Adjuntar"
-                  >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                  </button>
+                  <div class="relative">
+                    <input
+                      type="file"
+                      id="commentFileInput"
+                      multiple
+                      (change)="onCommentFileSelected($event)"
+                      class="hidden"
+                      accept="*/*"
+                    />
+                    <button
+                      type="button"
+                      (click)="triggerCommentFileInput('commentFileInput')"
+                      class="w-7 h-7 rounded hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-600"
+                      title="Adjuntar"
+                    >
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                    </button>
+                  </div>
                    
                    
                   <div class="relative emoji-picker-container">
@@ -372,7 +383,7 @@
             <button
               type="button"
               (click)="addComment()"
-              [disabled]="!newCommentText.trim()"
+              [disabled]="!newCommentText.trim() && commentAttachments.length === 0"
                     class="w-7 h-7 rounded hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Enviar"
             >
@@ -987,6 +998,37 @@
             
             <!-- Editor de comentarios (fijo en la parte inferior) -->
             <div class="bg-gray-100 rounded-lg flex-shrink-0 mt-auto">
+              <!-- Preview de archivos adjuntos -->
+              <div *ngIf="commentAttachmentPreviews.length > 0" class="px-3 pt-2 pb-1 flex flex-wrap gap-2">
+                <div
+                  *ngFor="let preview of commentAttachmentPreviews; let i = index"
+                  class="relative group"
+                >
+                  <div class="w-16 h-16 rounded border border-gray-300 bg-white overflow-hidden flex items-center justify-center">
+                    <img
+                      *ngIf="preview.preview"
+                      [src]="preview.preview"
+                      [alt]="preview.file.name"
+                      class="w-full h-full object-cover"
+                    />
+                    <div
+                      *ngIf="!preview.preview"
+                      class="flex flex-col items-center justify-center p-2"
+                    >
+                      <span class="text-xl mb-1">📎</span>
+                      <span class="text-xs text-gray-600 truncate w-full text-center">{{ preview.file.name }}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="removeCommentAttachment(i)"
+                    class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                    title="Eliminar"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
               <div
                 #commentEditor
                 contenteditable="true"
@@ -1028,15 +1070,26 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </button>
-                  <button
-                    type="button"
-                    class="w-7 h-7 rounded hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-600"
-                    title="Adjuntar"
-                  >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                  </button>
+                  <div class="relative">
+                    <input
+                      type="file"
+                      id="commentFileInput2"
+                      multiple
+                      (change)="onCommentFileSelected($event)"
+                      class="hidden"
+                      accept="*/*"
+                    />
+                    <button
+                      type="button"
+                      (click)="triggerCommentFileInput('commentFileInput2')"
+                      class="w-7 h-7 rounded hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-600"
+                      title="Adjuntar"
+                    >
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                    </button>
+                  </div>
                   <button
                     type="button"
                     class="w-7 h-7 rounded hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-600 font-medium"
@@ -1115,7 +1168,7 @@
                   <button
                     type="button"
                     (click)="addComment()"
-                    [disabled]="!newCommentText.trim()"
+                    [disabled]="!newCommentText.trim() && commentAttachments.length === 0"
                     class="w-7 h-7 rounded hover:bg-gray-200 flex items-center justify-center transition-colors text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Enviar"
                   >
