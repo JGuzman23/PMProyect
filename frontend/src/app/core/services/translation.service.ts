@@ -281,7 +281,11 @@ export class TranslationService {
         statusColor: 'Color',
         defaultStatus: 'Estado por defecto',
         selectProjectToView: 'Selecciona un proyecto para ver o crear estados del tablero',
-        noStatuses: 'No hay estados creados para este proyecto'
+        noStatuses: 'No hay estados creados para este proyecto',
+        statusNameRequired: 'El nombre del estado es requerido',
+        cannotIdentifyStatus: 'Error: No se puede identificar el estado',
+        cannotIdentifyProject: 'Error: No se puede identificar el proyecto',
+        errorUpdatingStatus: 'Error al actualizar el estado'
       }
     };
 
@@ -478,7 +482,11 @@ export class TranslationService {
         statusColor: 'Color',
         defaultStatus: 'Default status',
         selectProjectToView: 'Select a project to view or create board statuses',
-        noStatuses: 'No statuses created for this project'
+        noStatuses: 'No statuses created for this project',
+        statusNameRequired: 'Status name is required',
+        cannotIdentifyStatus: 'Error: Cannot identify the status',
+        cannotIdentifyProject: 'Error: Cannot identify the project',
+        errorUpdatingStatus: 'Error updating status'
       }
     };
 
@@ -600,7 +608,11 @@ export class TranslationService {
         statusColor: 'Couleur',
         defaultStatus: 'Statut par défaut',
         selectProjectToView: 'Sélectionnez un projet pour voir ou créer des statuts de tableau',
-        noStatuses: 'Aucun statut créé pour ce projet'
+        noStatuses: 'Aucun statut créé pour ce projet',
+        statusNameRequired: 'Le nom du statut est requis',
+        cannotIdentifyStatus: 'Erreur: Impossible d\'identifier le statut',
+        cannotIdentifyProject: 'Erreur: Impossible d\'identifier le projet',
+        errorUpdatingStatus: 'Erreur lors de la mise à jour du statut'
       }
     };
 
@@ -722,7 +734,11 @@ export class TranslationService {
         statusColor: 'Farbe',
         defaultStatus: 'Standardstatus',
         selectProjectToView: 'Wählen Sie ein Projekt aus, um Board-Status anzuzeigen oder zu erstellen',
-        noStatuses: 'Keine Status für dieses Projekt erstellt'
+        noStatuses: 'Keine Status für dieses Projekt erstellt',
+        statusNameRequired: 'Der Statusname ist erforderlich',
+        cannotIdentifyStatus: 'Fehler: Status kann nicht identifiziert werden',
+        cannotIdentifyProject: 'Fehler: Projekt kann nicht identifiziert werden',
+        errorUpdatingStatus: 'Fehler beim Aktualisieren des Status'
       }
     };
 
@@ -844,7 +860,11 @@ export class TranslationService {
         statusColor: 'Cor',
         defaultStatus: 'Status padrão',
         selectProjectToView: 'Selecione um projeto para ver ou criar status do quadro',
-        noStatuses: 'Nenhum status criado para este projeto'
+        noStatuses: 'Nenhum status criado para este projeto',
+        statusNameRequired: 'O nome do status é obrigatório',
+        cannotIdentifyStatus: 'Erro: Não é possível identificar o status',
+        cannotIdentifyProject: 'Erro: Não é possível identificar o projeto',
+        errorUpdatingStatus: 'Erro ao atualizar o status'
       }
     };
 
@@ -966,7 +986,11 @@ export class TranslationService {
         statusColor: 'Colore',
         defaultStatus: 'Stato predefinito',
         selectProjectToView: 'Seleziona un progetto per visualizzare o creare stati della bacheca',
-        noStatuses: 'Nessuno stato creato per questo progetto'
+        noStatuses: 'Nessuno stato creato per questo progetto',
+        statusNameRequired: 'Il nome dello stato è obbligatorio',
+        cannotIdentifyStatus: 'Errore: Impossibile identificare lo stato',
+        cannotIdentifyProject: 'Errore: Impossibile identificare il progetto',
+        errorUpdatingStatus: 'Errore durante l\'aggiornamento dello stato'
       }
     };
   }

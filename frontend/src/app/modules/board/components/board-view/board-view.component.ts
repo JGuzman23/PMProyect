@@ -1929,5 +1929,69 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   hasFilterPriorities(): boolean {
     return this.selectedFilterPriorities.length > 0;
   }
+
+  // Status edit modal properties
+  showStatusModal = false;
+  selectedStatus: Column | null = null;
+  statusForm = {
+    name: '',
+    color: '#94A3B8',
+    order: 0
+  };
+  statusError = '';
+
+  openStatusEditModal(column: Column): void {
+    this.selectedStatus = column;
+    this.statusForm = {
+      name: column.name,
+      color: column.color || '#94A3B8',
+      order: column.order || 0
+    };
+    this.statusError = '';
+    this.showStatusModal = true;
+  }
+
+  closeStatusModal(): void {
+    this.showStatusModal = false;
+    this.selectedStatus = null;
+    this.statusError = '';
+  }
+
+  saveStatus(): void {
+    if (!this.statusForm.name) {
+      this.statusError = this.translationService.translate('admin.statusNameRequired');
+      return;
+    }
+
+    if (!this.selectedStatus || !this.selectedStatus._id) {
+      this.statusError = this.translationService.translate('admin.cannotIdentifyStatus');
+      return;
+    }
+
+    if (!this.board?.projectId?._id) {
+      this.statusError = this.translationService.translate('admin.cannotIdentifyProject');
+      return;
+    }
+
+    this.statusError = '';
+
+    const statusData = {
+      name: this.statusForm.name,
+      color: this.statusForm.color,
+      order: this.statusForm.order,
+      projectId: this.board.projectId._id
+    };
+
+    this.http.put(`${this.apiUrl}/admin/statuses/${this.selectedStatus._id}`, statusData).subscribe({
+      next: () => {
+        this.loadStatuses(); // Recargar estados para actualizar el board
+        this.closeStatusModal();
+      },
+      error: (err) => {
+        console.error('Error updating status', err);
+        this.statusError = err.error?.error || err.error?.message || this.translationService.translate('admin.errorUpdatingStatus');
+      }
+    });
+  }
 }
 
