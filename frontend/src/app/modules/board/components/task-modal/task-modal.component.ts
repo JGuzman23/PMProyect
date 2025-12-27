@@ -124,6 +124,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
   pendingStatusId: string | null = null;
   loadingUsers = false;
   loadingClients = false;
+  showEmojiPicker = false;
   
   taskForm = {
     title: '',
@@ -464,6 +465,9 @@ export class TaskModalComponent implements OnInit, OnChanges {
     if (!target.closest('.task-actions-dropdown-container')) {
       this.showTaskActionsDropdown = false;
     }
+    if (!target.closest('.emoji-picker-container') && !target.closest('.emoji-picker-button')) {
+      this.showEmojiPicker = false;
+    }
   }
 
   // Métodos para comentarios y actividades
@@ -611,6 +615,140 @@ export class TaskModalComponent implements OnInit, OnChanges {
     const target = event.target as HTMLElement;
     this.newCommentText = target.innerHTML || '';
   }
+
+  toggleEmojiPicker(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.showEmojiPicker = !this.showEmojiPicker;
+    
+    // Calcular posición después de que Angular renderice el elemento
+    if (this.showEmojiPicker) {
+      setTimeout(() => {
+        this.positionEmojiPicker(event);
+      }, 0);
+    }
+  }
+
+  positionEmojiPicker(event?: Event): void {
+    if (!event) return;
+    
+    const button = (event.target as HTMLElement).closest('.emoji-picker-button') as HTMLElement;
+    if (!button) return;
+    
+    setTimeout(() => {
+      const buttonRect = button.getBoundingClientRect();
+      const picker = document.querySelector('.emoji-picker-container .fixed') as HTMLElement;
+      
+      if (picker) {
+        // Calcular posición: intentar arriba primero, si no cabe, abajo
+        const spaceAbove = buttonRect.top;
+        const spaceBelow = window.innerHeight - buttonRect.bottom;
+        const pickerHeight = 384; // max-h-96 = 384px
+        
+        if (spaceAbove >= pickerHeight + 10) {
+          // Colocar arriba
+          picker.style.top = `${buttonRect.top - pickerHeight - 8}px`;
+          picker.style.bottom = 'auto';
+        } else if (spaceBelow >= pickerHeight + 10) {
+          // Colocar abajo
+          picker.style.top = `${buttonRect.bottom + 8}px`;
+          picker.style.bottom = 'auto';
+        } else {
+          // Si no cabe en ninguno, colocar arriba pero ajustar
+          picker.style.top = '10px';
+          picker.style.bottom = 'auto';
+          picker.style.maxHeight = `${spaceAbove - 20}px`;
+        }
+        
+        // Posición horizontal: alinear con el botón
+        picker.style.left = `${buttonRect.left}px`;
+        picker.style.right = 'auto';
+        
+        // Asegurar que no se salga de la pantalla
+        setTimeout(() => {
+          const pickerRect = picker.getBoundingClientRect();
+          if (pickerRect.right > window.innerWidth) {
+            picker.style.left = `${window.innerWidth - pickerRect.width - 10}px`;
+          }
+          if (pickerRect.left < 0) {
+            picker.style.left = '10px';
+          }
+        }, 0);
+      }
+    }, 0);
+  }
+
+  insertEmoji(emoji: string): void {
+    const editor = document.querySelector('.comment-editor') as HTMLElement;
+    if (editor) {
+      editor.focus();
+      
+      try {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          const textNode = document.createTextNode(emoji);
+          range.insertNode(textNode);
+          range.setStartAfter(textNode);
+          range.setEndAfter(textNode);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else {
+          // Si no hay selección, insertar al final
+          const range = document.createRange();
+          range.selectNodeContents(editor);
+          range.collapse(false);
+          const textNode = document.createTextNode(emoji);
+          range.insertNode(textNode);
+          range.setStartAfter(textNode);
+          range.setEndAfter(textNode);
+          const newSelection = window.getSelection();
+          if (newSelection) {
+            newSelection.removeAllRanges();
+            newSelection.addRange(range);
+          }
+        }
+      } catch (e) {
+        // Fallback: insertar al final si hay algún error
+        const textNode = document.createTextNode(emoji);
+        editor.appendChild(textNode);
+      }
+      
+      // Actualizar el texto del comentario
+      this.newCommentText = editor.innerHTML;
+      
+      // Disparar evento input para actualizar el modelo
+      const inputEvent = new Event('input', { bubbles: true });
+      editor.dispatchEvent(inputEvent);
+    }
+    this.showEmojiPicker = false;
+  }
+
+  // Lista de emojis comunes organizados por categorías
+  emojiCategories = [
+    {
+      name: 'Smileys',
+      emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔']
+    },
+    {
+      name: 'Emotions',
+      emojis: ['😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤐', '🤨', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐']
+    },
+    {
+      name: 'Gestures',
+      emojis: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏']
+    },
+    {
+      name: 'Objects',
+      emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐']
+    },
+    {
+      name: 'Symbols',
+      emojis: ['✅', '❌', '⭕', '❓', '❔', '❗', '❕', '➕', '➖', '➗', '✖️', '💯', '🔝', '🔚', '🔙', '🔛', '🔜', '🔃', '🔄', '🔂', '🔁', '🔀', '🔉', '🔊', '🔈', '🔇', '🔔', '🔕', '📢', '📣']
+    }
+  ];
 
   addComment(): void {
     if (!this.task) return;
