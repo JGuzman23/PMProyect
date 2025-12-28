@@ -50,6 +50,16 @@ const boardSchema = new mongoose.Schema({
       enum: ['board', 'list', 'calendar'],
       default: 'board'
     }
+  },
+  taskPrefix: {
+    type: String,
+    trim: true,
+    uppercase: true,
+    default: ''
+  },
+  taskCounter: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

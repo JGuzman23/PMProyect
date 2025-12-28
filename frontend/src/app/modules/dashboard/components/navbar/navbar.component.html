@@ -49,8 +49,13 @@
                   {{ task.title.substring(0, 2).toUpperCase() }}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <div class="text-sm font-medium text-gray-900 truncate">
-                    {{ task.title }}
+                  <div class="flex items-center gap-2">
+                    <div class="text-sm font-medium text-gray-900 truncate">
+                      {{ task.title }}
+                    </div>
+                    <span *ngIf="task.taskId" class="text-xs font-mono font-semibold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded flex-shrink-0">
+                      {{ task.taskId }}
+                    </span>
                   </div>
                   <div class="text-xs text-gray-500 truncate" *ngIf="task.boardId">
                     {{ getBoardName(task.boardId) }}

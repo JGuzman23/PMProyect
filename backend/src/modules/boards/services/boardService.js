@@ -21,11 +21,16 @@ export const boardService = {
       { name: 'Done', order: 3, color: '#10B981' }
     ];
 
+    // Normalizar el prefijo a mayúsculas
+    const taskPrefix = data.taskPrefix ? data.taskPrefix.toUpperCase().trim() : '';
+
     return await boardRepository.create({
       ...data,
       companyId,
       ownerId: userId,
-      columns: data.columns || defaultColumns
+      columns: data.columns || defaultColumns,
+      taskPrefix: taskPrefix,
+      taskCounter: 0
     });
   },
 

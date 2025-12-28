@@ -268,7 +268,11 @@ export class TranslationService {
         noColumnsInBoard: 'No hay columnas en este tablero.',
         boardNameRequired: 'El nombre del tablero es requerido',
         mustSelectProject: 'Debes seleccionar un proyecto',
-        errorCreatingBoard: 'Error al crear el tablero'
+        errorCreatingBoard: 'Error al crear el tablero',
+        taskPrefix: 'Prefijo de ID de Tareas',
+        taskPrefixHint: 'Ej: PROJ, TASK, DEV',
+        taskPrefixPlaceholder: 'PROJ',
+        taskPrefixDescription: 'Este prefijo se usará para generar IDs automáticos de tareas (ej: PROJ-001, PROJ-002)'
       },
       admin: {
         projects: 'Proyectos',
@@ -469,7 +473,11 @@ export class TranslationService {
         noColumnsInBoard: 'No columns in this board.',
         boardNameRequired: 'Board name is required',
         mustSelectProject: 'You must select a project',
-        errorCreatingBoard: 'Error creating board'
+        errorCreatingBoard: 'Error creating board',
+        taskPrefix: 'Task ID Prefix',
+        taskPrefixHint: 'E.g: PROJ, TASK, DEV',
+        taskPrefixPlaceholder: 'PROJ',
+        taskPrefixDescription: 'This prefix will be used to generate automatic task IDs (e.g: PROJ-001, PROJ-002)'
       },
       admin: {
         projects: 'Projects',

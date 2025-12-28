@@ -39,7 +39,8 @@ export class BoardListComponent implements OnInit {
   newBoard = {
     name: '',
     description: '',
-    projectId: ''
+    projectId: '',
+    taskPrefix: ''
   };
 
   private apiUrl = environment.apiUrl;
@@ -95,7 +96,7 @@ export class BoardListComponent implements OnInit {
 
   closeCreateModal(): void {
     this.showCreateModal = false;
-    this.newBoard = { name: '', description: '', projectId: '' };
+    this.newBoard = { name: '', description: '', projectId: '', taskPrefix: '' };
     this.error = '';
   }
 

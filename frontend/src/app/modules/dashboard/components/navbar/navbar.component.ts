@@ -11,6 +11,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 interface Task {
   _id: string;
+  taskId?: string;
   title: string;
   boardId?: string | { _id: string; name: string };
   columnId?: string;

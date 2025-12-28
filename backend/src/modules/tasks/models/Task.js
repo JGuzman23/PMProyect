@@ -70,6 +70,11 @@ const taskSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  taskId: {
+    type: String,
+    trim: true,
+    index: true
+  },
   attachments: [{
     url: String,
     name: String,

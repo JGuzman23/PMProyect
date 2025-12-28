@@ -77,6 +77,7 @@ interface Label {
 
 interface Task {
   _id: string;
+  taskId?: string;
   title: string;
   description: string;
   assignees: User[];

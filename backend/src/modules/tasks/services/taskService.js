@@ -1,11 +1,19 @@
 import { taskRepository } from '../repositories/taskRepository.js';
 import { Task } from '../models/Task.js';
+import { Board } from '../../boards/models/Board.js';
 
 export const taskService = {
   async getAll(companyId, filters = {}) {
     // Si hay un filtro de título, usar búsqueda por regex (case-insensitive)
     if (filters.title) {
-      filters.title = { $regex: filters.title, $options: 'i' };
+      const searchTerm = filters.title;
+      // Buscar por título o por taskId
+      return await taskRepository.findAll(companyId, {
+        $or: [
+          { title: { $regex: searchTerm, $options: 'i' } },
+          { taskId: { $regex: searchTerm, $options: 'i' } }
+        ]
+      });
     }
     return await taskRepository.findAll(companyId, filters);
   },
@@ -23,10 +31,27 @@ export const taskService = {
   },
 
   async create(data, companyId, userId) {
+    // Generar taskId automáticamente si no se proporciona
+    let taskId = data.taskId;
+    if (!taskId && data.boardId) {
+      // Obtener el board para acceder al prefijo y contador
+      const board = await Board.findOne({ _id: data.boardId, companyId });
+      if (board && board.taskPrefix) {
+        // Incrementar el contador del board
+        board.taskCounter = (board.taskCounter || 0) + 1;
+        await board.save();
+        
+        // Generar el taskId con formato: PREFIX-001
+        const counterStr = board.taskCounter.toString().padStart(3, '0');
+        taskId = `${board.taskPrefix}-${counterStr}`;
+      }
+    }
+
     const task = await taskRepository.create({
       ...data,
       companyId,
       createdBy: userId,
+      taskId: taskId,
       activityLog: [{
         type: 'created',
         userId,
