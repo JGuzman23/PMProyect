@@ -38,7 +38,9 @@ export class TranslationService {
   setLanguage(lang: Language): void {
     this.currentLanguage$.next(lang);
     localStorage.setItem('language', lang);
-    document.documentElement.lang = lang;
+    // Establecer el atributo lang del documento con la variante correcta
+    const langAttribute = lang === 'en' ? 'en-US' : lang;
+    document.documentElement.lang = langAttribute;
   }
 
   translate(key: string, params?: { [key: string]: string }): string {

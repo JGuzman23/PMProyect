@@ -21,7 +21,7 @@ export class LanguageSelectorComponent implements OnInit {
 
   languages: LanguageOption[] = [
     { code: 'es', name: 'Español', flag: '🇪🇸', countryCode: 'es' },
-    { code: 'en', name: 'English', flag: '🇬🇧', countryCode: 'gb' },
+    { code: 'en', name: 'English', flag: '🇺🇸', countryCode: 'us' },
     { code: 'fr', name: 'Français', flag: '🇫🇷', countryCode: 'fr' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪', countryCode: 'de' },
     { code: 'pt', name: 'Português', flag: '🇵🇹', countryCode: 'pt' },
