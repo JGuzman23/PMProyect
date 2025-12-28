@@ -105,6 +105,21 @@ export class NavbarComponent implements OnInit {
     return typeof boardId === 'string' ? boardId : '';
   }
 
+  getBoardInitials(boardId: string | { _id: string; name: string } | undefined): string {
+    if (!boardId) return '??';
+    const boardName = this.getBoardName(boardId);
+    if (!boardName || boardName.length === 0) return '??';
+    // Obtener las primeras 2 letras del nombre del tablero
+    const words = boardName.trim().split(/\s+/);
+    if (words.length >= 2) {
+      // Si hay 2 o más palabras, usar la primera letra de cada una
+      return (words[0][0] + words[1][0]).toUpperCase();
+    } else {
+      // Si solo hay una palabra, usar las primeras 2 letras
+      return boardName.substring(0, 2).toUpperCase();
+    }
+  }
+
   navigateToTask(task: Task): void {
     // Obtener el boardId de la tarea
     let boardId = typeof task.boardId === 'object' ? task.boardId._id : task.boardId;
