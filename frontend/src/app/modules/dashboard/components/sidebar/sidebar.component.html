@@ -1,7 +1,9 @@
 <aside
   [class]="isOpen ? 'translate-x-0' : '-translate-x-full'"
-  class="fixed top-0 left-0 z-50 w-64 bg-white border-r border-gray-200 h-full overflow-y-auto transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative lg:z-auto lg:h-full lg:flex-shrink-0"
-  [class.lg:hidden]="!sidebarOpen"
+  class="fixed top-0 left-0 z-50 w-64 bg-white border-r border-gray-200 h-full overflow-y-auto overflow-x-hidden transform transition-transform duration-300 ease-in-out lg:fixed lg:top-16 lg:z-30 lg:h-[calc(100vh-4rem)] flex-shrink-0"
+  [class.lg:translate-x-0]="sidebarOpen"
+  [class.lg:-translate-x-full]="!sidebarOpen"
+  style="max-width: 16rem;"
 >
   <nav class="px-4 py-4">
     <!-- Logo y Botón Cerrar -->
