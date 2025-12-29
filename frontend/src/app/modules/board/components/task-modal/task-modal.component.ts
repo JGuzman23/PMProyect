@@ -276,6 +276,28 @@ export class TaskModalComponent implements OnInit, OnChanges {
     return client ? client.name + (client.type === 'persona' && client.lastName ? ` ${client.lastName}` : '') : '';
   }
 
+  getClientById(clientId: string | Client | undefined): Client | null {
+    if (!clientId) return null;
+    if (typeof clientId === 'object') {
+      return clientId;
+    }
+    return this.clients.find(c => c._id === clientId) || null;
+  }
+
+  getClientIdAsString(): string | undefined {
+    if (this.taskForm.clientId && this.taskForm.clientId.trim() !== '') {
+      return this.taskForm.clientId;
+    }
+    if (this.task?.clientId) {
+      if (typeof this.task.clientId === 'string') {
+        return this.task.clientId;
+      } else if (this.task.clientId._id) {
+        return this.task.clientId._id;
+      }
+    }
+    return undefined;
+  }
+
   getSelectedAssignees(): User[] {
     return this.users.filter(u => this.taskForm.assignees.includes(u._id));
   }

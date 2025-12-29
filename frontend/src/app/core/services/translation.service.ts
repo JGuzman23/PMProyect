@@ -245,7 +245,10 @@ export class TranslationService {
         to: 'a',
         titleChanged: 'Título cambiado',
         uploadFileFor: 'Subir archivo para',
-        leaveCommentHere: 'Deja tu comentario aquí...'
+        leaveCommentHere: 'Deja tu comentario aquí...',
+        email: 'Email',
+        phone: 'Teléfono',
+        agents: 'Agentes',
       },
       boards: {
         newBoard: 'Nuevo Tablero',
@@ -450,7 +453,10 @@ export class TranslationService {
         to: 'to',
         titleChanged: 'Title changed',
         uploadFileFor: 'Upload file for',
-        leaveCommentHere: 'Leave your comment here...'
+        leaveCommentHere: 'Leave your comment here...',
+        email: 'Email',
+        phone: 'Phone',
+        agents: 'Agents',
       },
       boards: {
         newBoard: 'New Board',
@@ -731,7 +737,10 @@ export class TranslationService {
         attachments: 'Anhänge',
         comments: 'Kommentare',
         noComments: 'Noch keine Kommentare',
-        addComment: 'Kommentar hinzufügen'
+        addComment: 'Kommentar hinzufügen',
+        email: 'Email',
+        phone: 'Telefon',
+        agents: 'Agenten',
       },
       admin: {
         projects: 'Projekte',
@@ -857,7 +866,9 @@ export class TranslationService {
         attachments: 'Anexos',
         comments: 'Comentários',
         noComments: 'Ainda não há comentários',
-        addComment: 'Adicionar comentário'
+        addComment: 'Adicionar comentário',
+        email: 'Email',
+        phone: 'Telefone',
       },
       admin: {
         projects: 'Projetos',
@@ -983,7 +994,10 @@ export class TranslationService {
         attachments: 'Allegati',
         comments: 'Commenti',
         noComments: 'Ancora nessun commento',
-        addComment: 'Aggiungi commento'
+        addComment: 'Aggiungi commento',
+        email: 'Email',
+        phone: 'Telefono',
+        agents: 'Agenti',
       },
       admin: {
         projects: 'Progetti',
