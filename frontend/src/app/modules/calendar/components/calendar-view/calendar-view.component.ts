@@ -3,6 +3,8 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { TaskModalComponent } from '../../../board/components/task-modal/task-modal.component';
+import { TranslationService } from '../../../../core/services/translation.service';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
 interface Attachment {
   url: string;
@@ -71,14 +73,14 @@ interface Task {
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [CommonModule, DatePipe, TaskModalComponent],
+  imports: [CommonModule, DatePipe, TaskModalComponent, TranslatePipe],
   templateUrl: './calendar-view.component.html'
 })
 export class CalendarViewComponent implements OnInit {
   viewMode: 'month' | 'week' = 'month';
   currentDate = new Date();
   tasks: Task[] = [];
-  weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  weekDays: string[] = [];
   hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
   selectedTask: Task | null = null;
   showTaskModal = false;
@@ -88,6 +90,17 @@ export class CalendarViewComponent implements OnInit {
   clients: Client[] = [];
   private apiUrl = environment.apiUrl;
   staticFilesUrl = environment.apiUrl.replace('/api', '');
+
+  constructor(private http: HttpClient, public translationService: TranslationService) {
+    this.updateWeekDays();
+    this.translationService.getCurrentLanguage().subscribe(() => {
+      this.updateWeekDays();
+    });
+  }
+
+  updateWeekDays(): void {
+    this.weekDays = this.translationService.translateArray('calendar.daysShort');
+  }
 
   get currentMonth(): Date {
     return new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
@@ -146,8 +159,6 @@ export class CalendarViewComponent implements OnInit {
 
     return days;
   }
-
-  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.loadStatuses();
@@ -384,13 +395,7 @@ export class CalendarViewComponent implements OnInit {
   }
 
   getPriorityLabel(priority: string): string {
-    const labels: { [key: string]: string } = {
-      low: 'Baja',
-      medium: 'Media',
-      high: 'Alta',
-      urgent: 'Urgente'
-    };
-    return labels[priority] || priority;
+    return this.translationService.translate(`tasks.${priority}`) || priority;
   }
 
   getPriorityClass(priority: string): string {

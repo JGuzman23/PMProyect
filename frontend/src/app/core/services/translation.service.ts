@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 export type Language = 'es' | 'en' | 'fr' | 'de' | 'pt' | 'it';
 
 interface Translations {
-  [key: string]: string | Translations;
+  [key: string]: string | string[] | Translations;
 }
 
 @Injectable({
@@ -54,13 +54,19 @@ export class TranslationService {
         console.warn(`Translation missing for key: ${key}`);
         return key;
       }
-      return this.replaceParams(fallback, params);
+      if (typeof fallback === 'string') {
+        return this.replaceParams(fallback, params);
+      }
+      return key;
     }
 
-    return this.replaceParams(translation, params);
+    if (typeof translation === 'string') {
+      return this.replaceParams(translation, params);
+    }
+    return key;
   }
 
-  private getNestedTranslation(obj: Translations, key: string): string | null {
+  private getNestedTranslation(obj: Translations, key: string): string | string[] | null {
     const keys = key.split('.');
     let current: any = obj;
     
@@ -72,7 +78,28 @@ export class TranslationService {
       }
     }
     
-    return typeof current === 'string' ? current : null;
+    if (typeof current === 'string' || Array.isArray(current)) {
+      return current;
+    }
+    return null;
+  }
+
+  translateArray(key: string): string[] {
+    const lang = this.currentLanguage$.value;
+    const translation = this.getNestedTranslation(this.translations[lang] || {}, key);
+    
+    if (Array.isArray(translation)) {
+      return translation;
+    }
+    
+    // Fallback a español si no existe la traducción
+    const fallback = this.getNestedTranslation(this.translations['es'] || {}, key);
+    if (Array.isArray(fallback)) {
+      return fallback;
+    }
+    
+    console.warn(`Translation array missing for key: ${key}`);
+    return [];
   }
 
   private replaceParams(text: string, params?: { [key: string]: string }): string {
@@ -138,6 +165,13 @@ export class TranslationService {
         teams: 'Equipos',
         administration: 'Administración',
         boardStatuses: 'Estados del Tablero'
+      },
+      calendar: {
+        title: 'Calendario',
+        month: 'Mes',
+        week: 'Semana',
+        days: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+        daysShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
       },
       clients: {
         title: 'Clientes',
@@ -348,6 +382,13 @@ export class TranslationService {
         administration: 'Administration',
         boardStatuses: 'Board Statuses'
       },
+      calendar: {
+        title: 'Calendar',
+        month: 'Month',
+        week: 'Week',
+        days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        daysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      },
       clients: {
         title: 'Clients',
         newClient: 'New Client',
@@ -556,6 +597,13 @@ export class TranslationService {
         administration: 'Administration',
         boardStatuses: 'Statuts du Tableau'
       },
+      calendar: {
+        title: 'Calendrier',
+        month: 'Mois',
+        week: 'Semaine',
+        days: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+        daysShort: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+      },
       clients: {
         title: 'Clients',
         newClient: 'Nouveau Client',
@@ -681,6 +729,13 @@ export class TranslationService {
         teams: 'Teams',
         administration: 'Verwaltung',
         boardStatuses: 'Board-Status'
+      },
+      calendar: {
+        title: 'Kalender',
+        month: 'Monat',
+        week: 'Woche',
+        days: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+        daysShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
       },
       clients: {
         title: 'Kunden',
@@ -811,6 +866,13 @@ export class TranslationService {
         administration: 'Administração',
         boardStatuses: 'Status do Quadro'
       },
+      calendar: {
+        title: 'Calendário',
+        month: 'Mês',
+        week: 'Semana',
+        days: ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'],
+        daysShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+      },
       clients: {
         title: 'Clientes',
         newClient: 'Novo Cliente',
@@ -938,6 +1000,13 @@ export class TranslationService {
         teams: 'Squadre',
         administration: 'Amministrazione',
         boardStatuses: 'Stati della Bacheca'
+      },
+      calendar: {
+        title: 'Calendario',
+        month: 'Mese',
+        week: 'Settimana',
+        days: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'],
+        daysShort: ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
       },
       clients: {
         title: 'Clienti',
