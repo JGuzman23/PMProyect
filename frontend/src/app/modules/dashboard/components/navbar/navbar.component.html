@@ -1,6 +1,6 @@
-<nav class="bg-white border-b border-gray-200 fixed w-full top-0 z-50 overflow-x-hidden">
-  <div class="px-2 sm:px-4 lg:px-8">
-    <div class="flex justify-between items-center h-16 gap-2">
+<nav class="bg-white border-b border-gray-200 fixed w-full top-0 z-50 overflow-visible">
+  <div class="px-2 sm:px-4 lg:px-8 overflow-visible">
+    <div class="flex justify-between items-center h-16 gap-2 overflow-visible">
       <!-- Left section: Menu button and Logo -->
       <div class="flex items-center flex-shrink-0">
         <h1 class="hidden sm:block text-xl sm:text-2xl font-bold text-indigo-600 mr-4">SignOps</h1>
@@ -17,8 +17,8 @@
       </div>
       
       <!-- Center section: Search Bar -->
-      <div class="flex items-center flex-1 min-w-0 max-w-md mx-2 sm:mx-4">
-        <div class="relative w-full">
+      <div class="flex items-center flex-1 min-w-0 max-w-md mx-2 sm:mx-4 overflow-visible">
+        <div class="relative w-full overflow-visible">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -36,7 +36,7 @@
           <!-- Search Results Dropdown -->
           <div
             *ngIf="showSearchResults && searchResults.length > 0"
-            class="absolute z-50 mt-1 w-full bg-white shadow-lg max-h-96 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+            class="absolute z-[110] mt-1 w-full bg-white shadow-lg max-h-96 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
             (mousedown)="preventBlur = true"
             (mouseup)="preventBlur = false"
           >
@@ -59,7 +59,7 @@
           <!-- No Results Message -->
           <div
             *ngIf="showSearchResults && searchTerm && searchResults.length === 0 && !searching"
-            class="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md py-2 px-3 text-sm text-gray-500"
+            class="absolute z-[110] mt-1 w-full bg-white shadow-lg rounded-md py-2 px-3 text-sm text-gray-500"
           >
             {{ translationService.translate('common.noResults') }}
           </div>
@@ -67,7 +67,7 @@
       </div>
       
       <!-- Right section: Language, User, Logout -->
-      <div class="flex items-center flex-shrink-0 gap-1 sm:gap-2">
+      <div class="flex items-center flex-shrink-0 gap-1 sm:gap-2 overflow-visible relative">
         <!-- Language Selector -->
         <app-language-selector></app-language-selector>
         
