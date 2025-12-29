@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
+import { TranslationService } from '../../../../core/services/translation.service';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
 interface Agent {
   name: string;
@@ -37,7 +39,7 @@ interface Client {
 @Component({
   selector: 'app-client-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   templateUrl: './client-list.component.html'
 })
 export class ClientListComponent implements OnInit {
@@ -47,7 +49,8 @@ export class ClientListComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    public translationService: TranslationService
   ) {}
 
   ngOnInit(): void {
@@ -74,7 +77,7 @@ export class ClientListComponent implements OnInit {
   }
 
   deleteClient(id: string): void {
-    if (confirm('¿Estás seguro de eliminar este cliente?')) {
+    if (confirm(this.translationService.translate('clients.confirmDelete'))) {
       this.http.delete(`${this.apiUrl}/clients/${id}`).subscribe({
         next: () => {
           this.loadClients();

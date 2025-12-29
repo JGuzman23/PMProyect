@@ -4,6 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
+import { TranslationService } from '../../../../core/services/translation.service';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
 interface Agent {
   name: string;
@@ -38,7 +40,7 @@ interface Client {
 @Component({
   selector: 'app-client-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
   templateUrl: './client-form.component.html'
 })
 export class ClientFormComponent implements OnInit {
@@ -74,7 +76,8 @@ export class ClientFormComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    public translationService: TranslationService
   ) {}
 
   ngOnInit(): void {
@@ -166,11 +169,11 @@ export class ClientFormComponent implements OnInit {
 
   getStepTitle(step: number): string {
     const titles: { [key: number]: string } = {
-      1: 'Tipo y Datos Básicos',
-      2: 'Información de Contacto',
-      3: 'Dirección',
-      4: this.clientForm.type === 'empresa' ? 'Agentes' : 'Documentos',
-      5: 'Notas'
+      1: this.translationService.translate('clients.step1'),
+      2: this.translationService.translate('clients.step2'),
+      3: this.translationService.translate('clients.step3'),
+      4: this.clientForm.type === 'empresa' ? this.translationService.translate('clients.step4Agents') : this.translationService.translate('clients.step4Documents'),
+      5: this.translationService.translate('clients.step5')
     };
     return titles[step] || '';
   }
@@ -178,7 +181,7 @@ export class ClientFormComponent implements OnInit {
   saveClient(): void {
     // Validación básica
     if (!this.clientForm.name || this.clientForm.name.trim() === '') {
-      alert('El nombre es obligatorio');
+      alert(this.translationService.translate('clients.nameRequired'));
       return;
     }
 
@@ -233,26 +236,26 @@ export class ClientFormComponent implements OnInit {
     if (this.isEditMode && this.clientId) {
       this.http.put(`${this.apiUrl}/clients/${this.clientId}`, dataToSend).subscribe({
         next: () => {
-          alert('Cliente actualizado correctamente');
+          alert(this.translationService.translate('clients.updatedSuccessfully'));
           this.router.navigate(['/clients']);
         },
         error: (err) => {
           console.error('Error updating client', err);
           this.loading = false;
-          const errorMessage = err.error?.message || err.error?.error || 'Error al actualizar el cliente';
-          alert(`Error: ${errorMessage}`);
+          const errorMessage = err.error?.message || err.error?.error || this.translationService.translate('clients.errorUpdating');
+          alert(`${this.translationService.translate('common.error')}: ${errorMessage}`);
         }
       });
     } else {
       this.http.post(`${this.apiUrl}/clients`, dataToSend).subscribe({
         next: () => {
-          alert('Cliente creado correctamente');
+          alert(this.translationService.translate('clients.createdSuccessfully'));
           this.router.navigate(['/clients']);
         },
         error: (err) => {
           console.error('Error creating client', err);
           this.loading = false;
-          let errorMessage = 'Error al crear el cliente';
+          let errorMessage = this.translationService.translate('clients.errorCreating');
           
           if (err.error) {
             if (err.error.message) {
@@ -266,11 +269,11 @@ export class ClientFormComponent implements OnInit {
               const validationErrors = Object.values(err.error.errors)
                 .map((e: any) => e.message)
                 .join(', ');
-              errorMessage = `Errores de validación: ${validationErrors}`;
+              errorMessage = `${this.translationService.translate('clients.validationErrors')}: ${validationErrors}`;
             }
           }
           
-          alert(`Error: ${errorMessage}`);
+          alert(`${this.translationService.translate('common.error')}: ${errorMessage}`);
         }
       });
     }

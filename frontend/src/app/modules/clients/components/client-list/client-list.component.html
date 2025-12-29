@@ -1,6 +1,6 @@
 <div class="max-w-7xl mx-auto px-2 sm:px-4">
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
-    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Clientes</h2>
+    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ 'clients.title' | translate }}</h2>
     <a
       routerLink="/clients/create"
       class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
@@ -8,7 +8,7 @@
       <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
       </svg>
-      Nuevo Cliente
+      {{ 'clients.newClient' | translate }}
     </a>
   </div>
 
@@ -16,13 +16,13 @@
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Email</th>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Teléfono</th>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Empresa/Info</th>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-          <th class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'clients.type' | translate }}</th>
+          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'clients.name' | translate }}</th>
+          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">{{ 'tasks.email' | translate }}</th>
+          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">{{ 'tasks.phone' | translate }}</th>
+          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">{{ 'clients.companyInfo' | translate }}</th>
+          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'clients.status' | translate }}</th>
+          <th class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'common.actions' | translate }}</th>
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
@@ -32,7 +32,7 @@
               [class]="client.type === 'empresa' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'"
               class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
             >
-              {{ client.type === 'empresa' ? 'Empresa' : 'Persona' }}
+              {{ client.type === 'empresa' ? ('clients.company' | translate) : ('clients.person' | translate) }}
             </span>
           </td>
           <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -47,7 +47,7 @@
             <div *ngIf="client.type === 'empresa'" class="flex flex-col">
               <span>{{ client.company }}</span>
               <span *ngIf="client.agents && client.agents.length > 0" class="text-xs text-gray-400 mt-1">
-                {{ client.agents.length }} agente{{ client.agents.length > 1 ? 's' : '' }}
+                {{ client.agents.length }} {{ client.agents.length > 1 ? ('clients.agents' | translate) : ('clients.agent' | translate) }}
               </span>
             </div>
             <span *ngIf="client.type === 'persona' && client.documentNumber">{{ client.documentType }}: {{ client.documentNumber }}</span>
@@ -57,7 +57,7 @@
               [class]="client.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
               class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
             >
-              {{ client.isActive ? 'Activo' : 'Inactivo' }}
+              {{ client.isActive ? ('clients.active' | translate) : ('clients.inactive' | translate) }}
             </span>
           </td>
           <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -66,13 +66,13 @@
                 [routerLink]="['/clients/edit', client._id]"
                 class="text-indigo-600 hover:text-indigo-900 sm:mr-4"
               >
-                Editar
+                {{ 'common.edit' | translate }}
               </a>
               <button
                 (click)="deleteClient(client._id)"
                 class="text-red-600 hover:text-red-900"
               >
-                Eliminar
+                {{ 'common.delete' | translate }}
               </button>
             </div>
           </td>
