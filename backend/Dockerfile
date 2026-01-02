@@ -14,10 +14,11 @@ RUN npm install --omit=dev
 # Copiar el resto de los archivos de la aplicación
 COPY . .
 
-# Crear directorios para uploads y datos
+# Crear directorios para uploads y datos con permisos adecuados
 RUN mkdir -p uploads/tasks && \
     mkdir -p uploads/avatars && \
-    mkdir -p data
+    mkdir -p data && \
+    chmod -R 755 uploads
 
 # Exponer el puerto
 EXPOSE 3000

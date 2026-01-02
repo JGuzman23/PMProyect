@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { userController } from './controllers/userController.js';
 import { authMiddleware } from '../../middleware/authMiddleware.js';
@@ -10,11 +11,20 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
+// Asegurar que el directorio de avatares existe
+const avatarsPath = path.join(__dirname, '../../../uploads/avatars');
+if (!fs.existsSync(avatarsPath)) {
+  fs.mkdirSync(avatarsPath, { recursive: true });
+}
+
 // Configurar multer para subir avatares
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../../../uploads/avatars');
-    cb(null, uploadPath);
+    // Asegurar que el directorio existe antes de guardar
+    if (!fs.existsSync(avatarsPath)) {
+      fs.mkdirSync(avatarsPath, { recursive: true });
+    }
+    cb(null, avatarsPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

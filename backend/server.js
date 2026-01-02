@@ -62,9 +62,26 @@ app.use(tenantMiddleware);
 // Servir archivos estáticos
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-app.use('/uploads', express.static(join(__dirname, 'uploads')));
+
+// Asegurar que los directorios de uploads existan (necesario cuando se usan volúmenes de Docker)
+const uploadsDir = join(__dirname, 'uploads');
+const avatarsDir = join(__dirname, 'uploads', 'avatars');
+const tasksDir = join(__dirname, 'uploads', 'tasks');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(avatarsDir)) {
+  fs.mkdirSync(avatarsDir, { recursive: true });
+}
+if (!fs.existsSync(tasksDir)) {
+  fs.mkdirSync(tasksDir, { recursive: true });
+}
+
+app.use('/uploads', express.static(uploadsDir));
 
 // Health check
 app.get('/health', (req, res) => {
