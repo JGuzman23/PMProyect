@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -25,12 +25,15 @@ interface Task {
 })
 export class NavbarComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
+  @ViewChild('userMenuButton', { static: false }) userMenuButton!: ElementRef;
+  @ViewChild('userMenuDropdown', { static: false }) userMenuDropdown!: ElementRef;
   currentUser = this.authService.currentUser;
   searchTerm = '';
   searchResults: Task[] = [];
   showSearchResults = false;
   searching = false;
   preventBlur = false;
+  showUserMenu = false;
   private searchSubject = new Subject<string>();
   private apiUrl = environment.apiUrl;
 
@@ -160,7 +163,29 @@ export class NavbarComponent implements OnInit {
     this.toggleSidebar.emit();
   }
 
+  toggleUserMenu(): void {
+    this.showUserMenu = !this.showUserMenu;
+  }
+
+  closeUserMenu(): void {
+    this.showUserMenu = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.showUserMenu) {
+      const target = event.target as HTMLElement;
+      const button = this.userMenuButton?.nativeElement;
+      const dropdown = this.userMenuDropdown?.nativeElement;
+      
+      if (button && dropdown && !button.contains(target) && !dropdown.contains(target)) {
+        this.closeUserMenu();
+      }
+    }
+  }
+
   logout(): void {
+    this.showUserMenu = false;
     this.authService.logout();
   }
 }
