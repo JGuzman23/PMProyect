@@ -54,8 +54,12 @@ export class NavbarComponent implements OnInit {
       if (avatarPath.startsWith('http')) {
         return avatarPath;
       }
+      // Construir URL completa: remover /api y agregar la ruta del avatar
       const baseUrl = this.apiUrl.replace('/api', '');
-      return `${baseUrl}${avatarPath}`;
+      // Asegurar que avatarPath comience con /
+      const normalizedPath = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`;
+      const fullUrl = `${baseUrl}${normalizedPath}`;
+      return fullUrl;
     }
     return null;
   }

@@ -57,9 +57,8 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(tenantMiddleware);
 
-// Servir archivos estáticos
+// Servir archivos estáticos ANTES del tenantMiddleware para que las imágenes sean accesibles
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
@@ -81,7 +80,15 @@ if (!fs.existsSync(tasksDir)) {
   fs.mkdirSync(tasksDir, { recursive: true });
 }
 
-app.use('/uploads', express.static(uploadsDir));
+// Servir archivos estáticos antes del tenantMiddleware
+app.use('/uploads', express.static(uploadsDir, {
+  setHeaders: (res, path) => {
+    // Permitir CORS para imágenes
+    res.set('Access-Control-Allow-Origin', '*');
+  }
+}));
+
+app.use(tenantMiddleware);
 
 // Health check
 app.get('/health', (req, res) => {
