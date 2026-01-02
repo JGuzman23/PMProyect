@@ -16,6 +16,7 @@ COPY . .
 
 # Crear directorios para uploads y datos
 RUN mkdir -p uploads/tasks && \
+    mkdir -p uploads/avatars && \
     mkdir -p data
 
 # Exponer el puerto
