@@ -34,20 +34,7 @@ interface Task {
   comments?: any[];
   activityLog?: any[];
   labels?: any[];
-  clientId?: string | {
-    _id: string;
-    name: string;
-  } | {
-    _id: string;
-    type: 'empresa' | 'persona';
-    name: string;
-    email: string;
-    phone: string;
-    company?: string;
-    agents?: Agent[];
-    lastName?: string;
-    isActive: boolean;
-  };
+  clientId?: string | Client;
   projectId?: {
     _id: string;
     name: string;

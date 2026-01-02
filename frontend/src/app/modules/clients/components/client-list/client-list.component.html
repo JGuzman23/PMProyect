@@ -48,16 +48,106 @@
     </p>
   </div>
 
+  <!-- Export Buttons -->
+  <div class="mb-4 flex flex-wrap gap-2 justify-end">
+    <button
+      (click)="exportToCSV()"
+      class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-green-600 rounded-md hover:bg-green-700 flex items-center gap-2 transition-colors"
+      [title]="'clients.exportCSV' | translate"
+    >
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      {{ 'clients.exportCSV' | translate }}
+    </button>
+    <button
+      (click)="exportToPDF()"
+      class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-md hover:bg-red-700 flex items-center gap-2 transition-colors"
+      [title]="'clients.exportPDF' | translate"
+    >
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+      {{ 'clients.exportPDF' | translate }}
+    </button>
+  </div>
+
   <div class="bg-white shadow rounded-lg overflow-hidden overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'clients.type' | translate }}</th>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'clients.name' | translate }}</th>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">{{ 'tasks.email' | translate }}</th>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">{{ 'tasks.phone' | translate }}</th>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">{{ 'clients.companyInfo' | translate }}</th>
-          <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'clients.status' | translate }}</th>
+          <th 
+            (click)="sort('type')"
+            class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+            [class.bg-gray-100]="isSorted('type')"
+          >
+            <div class="flex items-center gap-1">
+              {{ 'clients.type' | translate }}
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('type')" />
+              </svg>
+            </div>
+          </th>
+          <th 
+            (click)="sort('name')"
+            class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+            [class.bg-gray-100]="isSorted('name')"
+          >
+            <div class="flex items-center gap-1">
+              {{ 'clients.name' | translate }}
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('name')" />
+              </svg>
+            </div>
+          </th>
+          <th 
+            (click)="sort('email')"
+            class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell cursor-pointer hover:bg-gray-100 select-none"
+            [class.bg-gray-100]="isSorted('email')"
+          >
+            <div class="flex items-center gap-1">
+              {{ 'tasks.email' | translate }}
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('email')" />
+              </svg>
+            </div>
+          </th>
+          <th 
+            (click)="sort('phone')"
+            class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell cursor-pointer hover:bg-gray-100 select-none"
+            [class.bg-gray-100]="isSorted('phone')"
+          >
+            <div class="flex items-center gap-1">
+              {{ 'tasks.phone' | translate }}
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('phone')" />
+              </svg>
+            </div>
+          </th>
+          <th 
+            (click)="sort('company')"
+            class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell cursor-pointer hover:bg-gray-100 select-none"
+            [class.bg-gray-100]="isSorted('company')"
+          >
+            <div class="flex items-center gap-1">
+              {{ 'clients.companyInfo' | translate }}
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('company')" />
+              </svg>
+            </div>
+          </th>
+          <th 
+            (click)="sort('status')"
+            class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+            [class.bg-gray-100]="isSorted('status')"
+          >
+            <div class="flex items-center gap-1">
+              {{ 'clients.status' | translate }}
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getSortIcon('status')" />
+              </svg>
+            </div>
+          </th>
           <th class="px-3 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'common.actions' | translate }}</th>
         </tr>
       </thead>

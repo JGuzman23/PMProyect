@@ -240,7 +240,11 @@ export class TranslationService {
         showing: 'Mostrando',
         to: 'a',
         of: 'de',
-        results: 'resultados'
+        results: 'resultados',
+        exportCSV: 'Exportar CSV',
+        exportPDF: 'Exportar PDF',
+        exportedOn: 'Exportado el',
+        pdfBlocked: 'Por favor, permite las ventanas emergentes para exportar PDF'
       },
       tasks: {
         title: 'Título',
@@ -492,7 +496,11 @@ export class TranslationService {
         showing: 'Showing',
         to: 'to',
         of: 'of',
-        results: 'results'
+        results: 'results',
+        exportCSV: 'Export CSV',
+        exportPDF: 'Export PDF',
+        exportedOn: 'Exported on',
+        pdfBlocked: 'Please allow pop-ups to export PDF'
       },
       tasks: {
         title: 'Title',

@@ -54,6 +54,13 @@ export class ClientListComponent implements OnInit {
   itemsPerPage: number = 10;
   totalPages: number = 1;
 
+  // Sorting
+  sortColumn: string = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
+  
+  // Export
+  exportFormat: 'csv' | 'excel' = 'csv';
+
   private apiUrl = environment.apiUrl;
 
   constructor(
@@ -71,6 +78,7 @@ export class ClientListComponent implements OnInit {
       next: (clients) => {
         this.clients = clients;
         this.filteredClients = clients;
+        this.applySorting();
         this.updatePagination();
       },
       error: (err) => {
@@ -83,6 +91,7 @@ export class ClientListComponent implements OnInit {
     if (!this.searchTerm || this.searchTerm.trim() === '') {
       this.filteredClients = this.clients;
       this.currentPage = 1;
+      this.applySorting();
       this.updatePagination();
       return;
     }
@@ -118,6 +127,7 @@ export class ClientListComponent implements OnInit {
     });
     
     this.currentPage = 1;
+    this.applySorting();
     this.updatePagination();
   }
 
@@ -208,6 +218,281 @@ export class ClientListComponent implements OnInit {
         error: (err) => console.error('Error deleting client', err)
       });
     }
+  }
+
+  sort(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applySorting();
+    this.updatePagination();
+  }
+
+  applySorting(): void {
+    if (!this.sortColumn) {
+      return;
+    }
+
+    this.filteredClients.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (this.sortColumn) {
+        case 'type':
+          aValue = a.type;
+          bValue = b.type;
+          break;
+        case 'name':
+          aValue = a.type === 'persona' && a.lastName 
+            ? `${a.name} ${a.lastName}`.toLowerCase()
+            : a.name.toLowerCase();
+          bValue = b.type === 'persona' && b.lastName 
+            ? `${b.name} ${b.lastName}`.toLowerCase()
+            : b.name.toLowerCase();
+          break;
+        case 'email':
+          aValue = (a.email || '').toLowerCase();
+          bValue = (b.email || '').toLowerCase();
+          break;
+        case 'phone':
+          aValue = (a.phone || '').toLowerCase();
+          bValue = (b.phone || '').toLowerCase();
+          break;
+        case 'company':
+          aValue = (a.company || '').toLowerCase();
+          bValue = (b.company || '').toLowerCase();
+          break;
+        case 'status':
+          aValue = a.isActive ? 1 : 0;
+          bValue = b.isActive ? 1 : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return this.sortDirection === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return this.sortDirection === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }
+
+  getSortIcon(column: string): string {
+    if (this.sortColumn !== column) {
+      // Icono de ordenamiento neutro (sin ordenar)
+      return 'M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4';
+    }
+    // Icono de ordenamiento activo
+    return this.sortDirection === 'asc' 
+      ? 'M5 15l7-7 7 7'  // Flecha arriba
+      : 'M19 9l-7 7-7-7'; // Flecha abajo
+  }
+
+  isSorted(column: string): boolean {
+    return this.sortColumn === column;
+  }
+
+  exportToCSV(): void {
+    const headers = [
+      this.translationService.translate('clients.type'),
+      this.translationService.translate('clients.name'),
+      this.translationService.translate('tasks.email'),
+      this.translationService.translate('tasks.phone'),
+      this.translationService.translate('clients.companyInfo'),
+      this.translationService.translate('clients.status')
+    ];
+
+    const rows = this.filteredClients.map(client => {
+      const name = client.type === 'persona' && client.lastName 
+        ? `${client.name} ${client.lastName}`
+        : client.name;
+      const type = client.type === 'empresa' 
+        ? this.translationService.translate('clients.company')
+        : this.translationService.translate('clients.person');
+      const companyInfo = client.type === 'empresa' 
+        ? (client.company || '')
+        : (client.documentNumber ? `${client.documentType}: ${client.documentNumber}` : '');
+      const status = client.isActive 
+        ? this.translationService.translate('clients.active')
+        : this.translationService.translate('clients.inactive');
+
+      return [
+        type,
+        name,
+        client.email || '',
+        client.phone || '',
+        companyInfo,
+        status
+      ];
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `clientes_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  exportToPDF(): void {
+    // Crear una ventana nueva para el PDF
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert(this.translationService.translate('clients.pdfBlocked') || 'Por favor, permite las ventanas emergentes para exportar PDF');
+      return;
+    }
+
+    const headers = [
+      this.translationService.translate('clients.type'),
+      this.translationService.translate('clients.name'),
+      this.translationService.translate('tasks.email'),
+      this.translationService.translate('tasks.phone'),
+      this.translationService.translate('clients.companyInfo'),
+      this.translationService.translate('clients.status')
+    ];
+
+    const rows = this.filteredClients.map(client => {
+      const name = client.type === 'persona' && client.lastName 
+        ? `${client.name} ${client.lastName}`
+        : client.name;
+      const type = client.type === 'empresa' 
+        ? this.translationService.translate('clients.company')
+        : this.translationService.translate('clients.person');
+      const companyInfo = client.type === 'empresa' 
+        ? (client.company || '')
+        : (client.documentNumber ? `${client.documentType}: ${client.documentNumber}` : '');
+      const status = client.isActive 
+        ? this.translationService.translate('clients.active')
+        : this.translationService.translate('clients.inactive');
+
+      return [
+        type,
+        name,
+        client.email || '',
+        client.phone || '',
+        companyInfo,
+        status
+      ];
+    });
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${this.translationService.translate('clients.title')}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      font-size: 12px;
+    }
+    h1 {
+      text-align: center;
+      color: #1f2937;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      padding: 8px;
+      text-align: left;
+      font-weight: bold;
+    }
+    td {
+      border: 1px solid #e5e7eb;
+      padding: 8px;
+    }
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 10px;
+    }
+    @media print {
+      @page {
+        margin: 1cm;
+      }
+      body {
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>${this.translationService.translate('clients.title')}</h1>
+  <p><strong>${this.translationService.translate('clients.showing')} ${this.filteredClients.length} ${this.translationService.translate('clients.results')}</strong></p>
+  <table>
+    <thead>
+      <tr>
+        ${headers.map(h => `<th>${this.escapeHtml(h)}</th>`).join('')}
+      </tr>
+    </thead>
+    <tbody>
+      ${rows.map(row => `<tr>${row.map(cell => `<td>${this.escapeHtml(String(cell))}</td>`).join('')}</tr>`).join('')}
+    </tbody>
+  </table>
+  <div class="footer">
+    ${this.translationService.translate('clients.exportedOn')} ${new Date().toLocaleString()}
+  </div>
+  <script>
+    window.onload = function() {
+      window.print();
+    };
+  </script>
+</body>
+</html>`;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  }
+
+  escapeXml(unsafe: string): string {
+    return unsafe.replace(/[<>&'"]/g, (c) => {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case '\'': return '&apos;';
+        case '"': return '&quot;';
+        default: return c;
+      }
+    });
+  }
+
+  escapeHtml(unsafe: string): string {
+    return unsafe.replace(/[<>&'"]/g, (c) => {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case '\'': return '&#39;';
+        case '"': return '&quot;';
+        default: return c;
+      }
+    });
   }
 }
 
