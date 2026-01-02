@@ -81,17 +81,47 @@
           </div>
         </div>
 
+        <!-- Address in Company Data -->
+        <div *ngIf="client.address && (client.address.street || client.address.city || client.address.state || client.address.zip || client.address.country)" class="mt-6">
+          <label class="block text-sm font-medium text-gray-500 mb-3">{{ 'clients.address' | translate }}</label>
+          <div class="text-sm text-gray-900 space-y-1">
+            <p *ngIf="client.address.street">{{ client.address.street }}</p>
+            <p *ngIf="client.address.city || client.address.state || client.address.zip">
+              <span *ngIf="client.address.city">{{ client.address.city }}</span>
+              <span *ngIf="client.address.state && client.address.city">, </span>
+              <span *ngIf="client.address.state">{{ client.address.state }}</span>
+              <span *ngIf="client.address.zip"> {{ client.address.zip }}</span>
+            </p>
+            <p *ngIf="client.address.country">{{ client.address.country }}</p>
+          </div>
+        </div>
+
         <!-- Agents -->
         <div *ngIf="client.agents && client.agents.length > 0" class="mt-6">
           <label class="block text-sm font-medium text-gray-500 mb-3">{{ 'clients.agents' | translate }}</label>
-          <div class="space-y-3">
-            <div *ngFor="let agent of client.agents" class="border border-gray-200 rounded-lg p-3">
-              <p class="font-medium text-gray-900">{{ agent.name }}</p>
-              <div class="mt-2 space-y-1">
-                <p *ngIf="agent.email" class="text-sm text-gray-600">{{ 'tasks.email' | translate }}: {{ agent.email }}</p>
-                <p *ngIf="agent.phone" class="text-sm text-gray-600">{{ 'tasks.phone' | translate }}: {{ agent.phone }}</p>
-              </div>
-            </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'clients.name' | translate }}</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'tasks.email' | translate }}</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ 'tasks.phone' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let agent of client.agents" class="hover:bg-gray-50">
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {{ agent.name }}
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    {{ agent.email || '-' }}
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    {{ agent.phone || '-' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -106,10 +136,10 @@
         </div>
       </div>
 
-      <!-- Address -->
-      <div class="bg-white shadow rounded-lg p-4 sm:p-6" *ngIf="client.address && (client.address.street || client.address.city)">
+      <!-- Address (only for persona type) -->
+      <div class="bg-white shadow rounded-lg p-4 sm:p-6" *ngIf="client.type === 'persona' && client.address && (client.address.street || client.address.city || client.address.state || client.address.zip || client.address.country)">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.address' | translate }}</h3>
-        <div class="text-sm text-gray-900">
+        <div class="text-sm text-gray-900 space-y-1">
           <p *ngIf="client.address.street">{{ client.address.street }}</p>
           <p *ngIf="client.address.city || client.address.state || client.address.zip">
             <span *ngIf="client.address.city">{{ client.address.city }}</span>
@@ -140,45 +170,29 @@
           <p class="mt-2 text-sm text-gray-500">{{ 'clients.noTasks' | translate }}</p>
         </div>
 
-        <div *ngIf="tasks.length > 0" class="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
-          <div *ngFor="let task of tasks" class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
-            <div class="flex items-start justify-between mb-2">
+        <div *ngIf="tasks.length > 0" class="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto">
+          <div 
+            *ngFor="let task of tasks" 
+            (click)="openTaskModal(task)"
+            class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 hover:border-indigo-300 cursor-pointer transition-all"
+          >
+            <div class="flex items-start justify-between gap-2">
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate" [title]="task.title">
-                  {{ task.taskId || task._id.substring(0, 8) }}: {{ task.title }}
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xs font-mono font-semibold text-indigo-600">
+                    {{ task.taskId || task._id.substring(0, 8) }}
+                  </span>
+                  <span [class]="getStatusClass(task.status)" class="px-2 py-1 text-xs font-semibold rounded">
+                    {{ getStatusLabel(task.status) }}
+                  </span>
+                </div>
+                <p class="text-sm font-medium text-gray-900 mb-2" [title]="task.title">
+                  {{ task.title }}
+                </p>
+                <p *ngIf="task.dueDate" class="text-xs text-gray-500">
+                  {{ formatDate(task.dueDate) }}
                 </p>
               </div>
-            </div>
-            
-            <div class="flex flex-wrap gap-2 mb-2">
-              <span [class]="getPriorityClass(task.priority)" class="px-2 py-1 text-xs font-semibold rounded">
-                {{ 'tasks.' + task.priority | translate }}
-              </span>
-              <span [class]="getStatusClass(task.status)" class="px-2 py-1 text-xs font-semibold rounded">
-                {{ getStatusLabel(task.status) }}
-              </span>
-            </div>
-
-            <div class="text-xs text-gray-500 space-y-1">
-              <p *ngIf="task.projectId">
-                <span class="font-medium">{{ 'boards.project' | translate }}:</span> {{ task.projectId.name }}
-              </p>
-              <p *ngIf="task.boardId">
-                <span class="font-medium">{{ 'sidebar.boards' | translate }}:</span> {{ task.boardId.name }}
-              </p>
-              <p *ngIf="task.dueDate">
-                <span class="font-medium">{{ 'tasks.dueDate' | translate }}:</span> {{ formatDate(task.dueDate) }}
-              </p>
-              <p *ngIf="task.assignees && task.assignees.length > 0">
-                <span class="font-medium">{{ 'tasks.assignedTo' | translate }}:</span>
-                <span *ngFor="let assignee of task.assignees; let last = last">
-                  {{ assignee.firstName }} {{ assignee.lastName }}<span *ngIf="!last">, </span>
-                </span>
-              </p>
-            </div>
-
-            <div *ngIf="task.description" class="mt-2">
-              <p class="text-xs text-gray-600 line-clamp-2" [title]="task.description">{{ task.description }}</p>
             </div>
           </div>
         </div>
@@ -206,4 +220,18 @@
     </a>
   </div>
 </div>
+
+<!-- Task Modal -->
+<app-task-modal
+  *ngIf="showTaskModal"
+  [task]="selectedTask"
+  [columns]="columns"
+  [users]="users"
+  [clients]="clients"
+  [isOpen]="showTaskModal"
+  (close)="closeTaskModal()"
+  (save)="onTaskModalSave($event)"
+  (delete)="onTaskModalDelete($event)"
+  (taskUpdated)="onTaskUpdated($event)"
+></app-task-modal>
 

@@ -139,7 +139,8 @@ export class TranslationService {
         clear: 'Limpiar',
         menu: 'Menú',
         noResults: 'No se encontraron resultados',
-        view: 'Ver'
+        view: 'Ver',
+        remove: 'Eliminar'
       },
       footer: {
         createdBy: 'Creado por',
@@ -390,7 +391,8 @@ export class TranslationService {
         yes: 'Yes',
         no: 'No',
         confirm: 'Confirm',
-        view: 'View'
+        view: 'View',
+        remove: 'Remove'
       },
       footer: {
         createdBy: 'Created by',
