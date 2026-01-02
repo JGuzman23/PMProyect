@@ -34,6 +34,7 @@ export class NavbarComponent implements OnInit {
   searching = false;
   preventBlur = false;
   showUserMenu = false;
+  avatarLoadError = false;
   private searchSubject = new Subject<string>();
   private apiUrl = environment.apiUrl;
 
@@ -44,6 +45,25 @@ export class NavbarComponent implements OnInit {
     return 'U';
   }
 
+  get avatarUrl(): string | null {
+    if (this.avatarLoadError) {
+      return null;
+    }
+    if (this.currentUser?.avatar) {
+      const avatarPath = this.currentUser.avatar;
+      if (avatarPath.startsWith('http')) {
+        return avatarPath;
+      }
+      const baseUrl = this.apiUrl.replace('/api', '');
+      return `${baseUrl}${avatarPath}`;
+    }
+    return null;
+  }
+
+  onAvatarError(): void {
+    this.avatarLoadError = true;
+  }
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -52,6 +72,8 @@ export class NavbarComponent implements OnInit {
   ) {
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
+      // Reset avatar error when user changes
+      this.avatarLoadError = false;
     });
   }
 
