@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../environments/environment';
+import { TranslationService } from '../../../../core/services/translation.service';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
 interface User {
   _id: string;
@@ -11,12 +13,14 @@ interface User {
   lastName: string;
   role: string;
   isActive: boolean;
+  avatar?: string | null;
+  position?: string | null;
 }
 
 @Component({
   selector: 'app-team-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './team-list.component.html'
 })
 export class TeamListComponent implements OnInit {
@@ -28,12 +32,17 @@ export class TeamListComponent implements OnInit {
     lastName: '',
     email: '',
     password: '',
-    role: 'member'
+    role: 'member',
+    position: ''
   };
+  avatarErrors: { [userId: string]: boolean } = {};
 
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    public translationService: TranslationService
+  ) {}
 
   ngOnInit(): void {
     this.loadUsers();
@@ -52,7 +61,7 @@ export class TeamListComponent implements OnInit {
 
   openCreateModal(): void {
     this.selectedUser = null;
-    this.userForm = { firstName: '', lastName: '', email: '', password: '', role: 'member' };
+    this.userForm = { firstName: '', lastName: '', email: '', password: '', role: 'member', position: '' };
     this.showModal = true;
   }
 
@@ -63,7 +72,8 @@ export class TeamListComponent implements OnInit {
       lastName: user.lastName,
       email: user.email,
       password: '',
-      role: user.role
+      role: user.role,
+      position: user.position || ''
     };
     this.showModal = true;
   }
@@ -99,7 +109,8 @@ export class TeamListComponent implements OnInit {
   }
 
   deleteUser(id: string): void {
-    if (confirm('¿Estás seguro de eliminar este usuario?')) {
+    const message = this.translationService.translate('teams.confirmDelete');
+    if (confirm(message)) {
       this.http.delete(`${this.apiUrl}/users/${id}`).subscribe({
         next: () => {
           this.loadUsers();
@@ -110,12 +121,7 @@ export class TeamListComponent implements OnInit {
   }
 
   getRoleLabel(role: string): string {
-    const labels: { [key: string]: string } = {
-      admin: 'Administrador',
-      manager: 'Manager',
-      member: 'Miembro'
-    };
-    return labels[role] || role;
+    return this.translationService.translate(`teams.role.${role}`);
   }
 
   getRoleClass(role: string): string {
@@ -125,6 +131,29 @@ export class TeamListComponent implements OnInit {
       member: 'bg-gray-100 text-gray-800'
     };
     return classes[role] || classes['member'];
+  }
+
+  getUserInitials(user: User): string {
+    return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+  }
+
+  getAvatarUrl(user: User): string | null {
+    if (this.avatarErrors[user._id]) {
+      return null;
+    }
+    if (user.avatar) {
+      const avatarPath = user.avatar;
+      if (avatarPath.startsWith('http')) {
+        return avatarPath;
+      }
+      const baseUrl = this.apiUrl.replace('/api', '');
+      return `${baseUrl}${avatarPath}`;
+    }
+    return null;
+  }
+
+  onAvatarError(userId: string): void {
+    this.avatarErrors[userId] = true;
   }
 }
 

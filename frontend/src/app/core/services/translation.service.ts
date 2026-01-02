@@ -132,6 +132,7 @@ export class TranslationService {
         actions: 'Acciones',
         active: 'Activo',
         inactive: 'Inactivo',
+        status: 'Estado',
         yes: 'Sí',
         no: 'No',
         confirm: 'Confirmar',
@@ -204,6 +205,23 @@ export class TranslationService {
         teams: 'Equipos',
         administration: 'Administración',
         boardStatuses: 'Estados del Tablero'
+      },
+      teams: {
+        title: 'Equipos',
+        newMember: 'Nuevo Miembro',
+        editUser: 'Editar Usuario',
+        newUser: 'Nuevo Usuario',
+        name: 'Nombre',
+        position: 'Cargo',
+        noPosition: 'Sin cargo',
+        roleLabel: 'Rol',
+        confirmDelete: '¿Estás seguro de eliminar este usuario?',
+        positionPlaceholder: 'Ej: Desarrollador, Gerente, etc.',
+        role: {
+          admin: 'Administrador',
+          manager: 'Manager',
+          member: 'Miembro'
+        }
       },
       calendar: {
         title: 'Calendario',
@@ -429,6 +447,7 @@ export class TranslationService {
         actions: 'Actions',
         active: 'Active',
         inactive: 'Inactive',
+        status: 'Status',
         yes: 'Yes',
         no: 'No',
         confirm: 'Confirm',
@@ -497,6 +516,23 @@ export class TranslationService {
         teams: 'Teams',
         administration: 'Administration',
         boardStatuses: 'Board Statuses'
+      },
+      teams: {
+        title: 'Teams',
+        newMember: 'New Member',
+        editUser: 'Edit User',
+        newUser: 'New User',
+        name: 'Name',
+        position: 'Position',
+        noPosition: 'No position',
+        roleLabel: 'Role',
+        confirmDelete: 'Are you sure you want to delete this user?',
+        positionPlaceholder: 'E.g: Developer, Manager, etc.',
+        role: {
+          admin: 'Administrator',
+          manager: 'Manager',
+          member: 'Member'
+        }
       },
       calendar: {
         title: 'Calendar',
@@ -721,6 +757,7 @@ export class TranslationService {
         actions: 'Actions',
         active: 'Actif',
         inactive: 'Inactif',
+        status: 'Statut',
         yes: 'Oui',
         no: 'Non',
         confirm: 'Confirmer'
@@ -775,6 +812,23 @@ export class TranslationService {
         teams: 'Équipes',
         administration: 'Administration',
         boardStatuses: 'Statuts du Tableau'
+      },
+      teams: {
+        title: 'Équipes',
+        newMember: 'Nouveau Membre',
+        editUser: 'Modifier l\'Utilisateur',
+        newUser: 'Nouvel Utilisateur',
+        name: 'Nom',
+        position: 'Poste',
+        noPosition: 'Sans poste',
+        roleLabel: 'Rôle',
+        confirmDelete: 'Êtes-vous sûr de vouloir supprimer cet utilisateur?',
+        positionPlaceholder: 'Ex: Développeur, Gestionnaire, etc.',
+        role: {
+          admin: 'Administrateur',
+          manager: 'Gestionnaire',
+          member: 'Membre'
+        }
       },
       calendar: {
         title: 'Calendrier',
@@ -904,6 +958,7 @@ export class TranslationService {
         actions: 'Aktionen',
         active: 'Aktiv',
         inactive: 'Inaktiv',
+        status: 'Status',
         yes: 'Ja',
         no: 'Nein',
         confirm: 'Bestätigen'
@@ -958,6 +1013,23 @@ export class TranslationService {
         teams: 'Teams',
         administration: 'Verwaltung',
         boardStatuses: 'Board-Status'
+      },
+      teams: {
+        title: 'Teams',
+        newMember: 'Neues Mitglied',
+        editUser: 'Benutzer bearbeiten',
+        newUser: 'Neuer Benutzer',
+        name: 'Name',
+        position: 'Position',
+        noPosition: 'Keine Position',
+        roleLabel: 'Rolle',
+        confirmDelete: 'Sind Sie sicher, dass Sie diesen Benutzer löschen möchten?',
+        positionPlaceholder: 'z.B: Entwickler, Manager, etc.',
+        role: {
+          admin: 'Administrator',
+          manager: 'Manager',
+          member: 'Mitglied'
+        }
       },
       calendar: {
         title: 'Kalender',
@@ -1090,6 +1162,7 @@ export class TranslationService {
         actions: 'Ações',
         active: 'Ativo',
         inactive: 'Inativo',
+        status: 'Status',
         yes: 'Sim',
         no: 'Não',
         confirm: 'Confirmar'
@@ -1144,6 +1217,23 @@ export class TranslationService {
         teams: 'Equipes',
         administration: 'Administração',
         boardStatuses: 'Status do Quadro'
+      },
+      teams: {
+        title: 'Equipes',
+        newMember: 'Novo Membro',
+        editUser: 'Editar Usuário',
+        newUser: 'Novo Usuário',
+        name: 'Nome',
+        position: 'Cargo',
+        noPosition: 'Sem cargo',
+        roleLabel: 'Função',
+        confirmDelete: 'Tem certeza de que deseja excluir este usuário?',
+        positionPlaceholder: 'Ex: Desenvolvedor, Gerente, etc.',
+        role: {
+          admin: 'Administrador',
+          manager: 'Gerente',
+          member: 'Membro'
+        }
       },
       calendar: {
         title: 'Calendário',
@@ -1275,6 +1365,7 @@ export class TranslationService {
         actions: 'Azioni',
         active: 'Attivo',
         inactive: 'Inattivo',
+        status: 'Stato',
         yes: 'Sì',
         no: 'No',
         confirm: 'Conferma'
@@ -1329,6 +1420,23 @@ export class TranslationService {
         teams: 'Squadre',
         administration: 'Amministrazione',
         boardStatuses: 'Stati della Bacheca'
+      },
+      teams: {
+        title: 'Squadre',
+        newMember: 'Nuovo Membro',
+        editUser: 'Modifica Utente',
+        newUser: 'Nuovo Utente',
+        name: 'Nome',
+        position: 'Posizione',
+        noPosition: 'Nessuna posizione',
+        roleLabel: 'Ruolo',
+        confirmDelete: 'Sei sicuro di voler eliminare questo utente?',
+        positionPlaceholder: 'Es: Sviluppatore, Manager, ecc.',
+        role: {
+          admin: 'Amministratore',
+          manager: 'Manager',
+          member: 'Membro'
+        }
       },
       calendar: {
         title: 'Calendario',
