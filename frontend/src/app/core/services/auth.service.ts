@@ -11,6 +11,7 @@ export interface User {
   lastName: string;
   role: string;
   companyId: string;
+  avatar?: string | null;
 }
 
 export interface AuthResponse {

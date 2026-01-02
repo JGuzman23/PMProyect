@@ -1,8 +1,8 @@
 import { Component, Output, EventEmitter, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { Router } from '@angular/router';
 import { LanguageSelectorComponent } from '../../../../core/components/language-selector/language-selector.component';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { HttpClient } from '@angular/common/http';
@@ -20,7 +20,7 @@ interface Task {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, LanguageSelectorComponent, FormsModule],
+  imports: [CommonModule, LanguageSelectorComponent, FormsModule, RouterLink],
   templateUrl: './navbar.component.html'
 })
 export class NavbarComponent implements OnInit {

@@ -62,6 +62,10 @@ export const DASHBOARD_ROUTES: Routes = [
       {
         path: 'admin/teams',
         loadComponent: () => import('../teams/components/team-list/team-list.component').then(m => m.TeamListComponent)
+      },
+      {
+        path: 'profile/edit',
+        loadComponent: () => import('../profile/components/profile-edit/profile-edit.component').then(m => m.ProfileEditComponent)
       }
     ]
   }

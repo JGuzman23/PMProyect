@@ -42,7 +42,8 @@ export const authController = {
           firstName: req.user.firstName,
           lastName: req.user.lastName,
           role: req.user.role,
-          companyId: req.user.companyId
+          companyId: req.user.companyId,
+          avatar: req.user.avatar || null
         }
       });
     } catch (error) {

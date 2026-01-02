@@ -26,8 +26,35 @@ export const userService = {
   },
 
   async update(id, companyId, updateData) {
-    if (updateData.password) {
-      updateData.password = await hashPassword(updateData.password);
+    // Si se quiere cambiar la contraseña, validar la contraseña actual
+    if (updateData.newPassword) {
+      if (!updateData.currentPassword) {
+        throw new Error('Current password is required to change password');
+      }
+      
+      // Obtener el usuario con la contraseña para validarla
+      const { User } = await import('../models/User.js');
+      const user = await User.findOne({ _id: id, companyId }).select('+password');
+      
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      // Validar la contraseña actual
+      const { comparePassword } = await import('../../../utils/password.js');
+      const isPasswordValid = await comparePassword(updateData.currentPassword, user.password);
+      
+      if (!isPasswordValid) {
+        throw new Error('Current password is incorrect');
+      }
+      
+      // Hash de la nueva contraseña
+      updateData.password = await hashPassword(updateData.newPassword);
+      delete updateData.currentPassword;
+      delete updateData.newPassword;
+    } else if (updateData.currentPassword) {
+      // Si se envía currentPassword pero no newPassword, es un error
+      throw new Error('New password is required when providing current password');
     }
     
     const user = await userRepository.update(id, companyId, updateData);
