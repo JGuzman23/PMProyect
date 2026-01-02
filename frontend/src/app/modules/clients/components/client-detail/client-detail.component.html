@@ -1,0 +1,209 @@
+<div class="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6" *ngIf="!loading && client">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+        <a
+          [routerLink]="['/clients']"
+          class="text-gray-500 hover:text-gray-700"
+          [title]="'common.back' | translate"
+        >
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </a>
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">
+          {{ client.name }}<span *ngIf="client.type === 'persona' && client.lastName"> {{ client.lastName }}</span>
+        </h2>
+      </div>
+      <div class="flex gap-2">
+        <a
+          [routerLink]="['/clients/edit', client._id]"
+          class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
+        >
+          {{ 'common.edit' | translate }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Client Type and Status Badges -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <span
+        [class]="client.type === 'empresa' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'"
+        class="px-3 py-1 text-sm font-semibold rounded-full"
+      >
+        {{ client.type === 'empresa' ? ('clients.company' | translate) : ('clients.person' | translate) }}
+      </span>
+      <span
+        [class]="client.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+        class="px-3 py-1 text-sm font-semibold rounded-full"
+      >
+        {{ client.isActive ? ('clients.active' | translate) : ('clients.inactive' | translate) }}
+      </span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Column: Client Information -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Contact Information -->
+      <div class="bg-white shadow rounded-lg p-4 sm:p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.contactInfo' | translate }}</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div *ngIf="client.email">
+            <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.email' | translate }}</label>
+            <p class="text-sm text-gray-900">{{ client.email }}</p>
+          </div>
+          <div *ngIf="client.phone">
+            <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.phone' | translate }}</label>
+            <p class="text-sm text-gray-900">{{ client.phone }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Company/Personal Information -->
+      <div class="bg-white shadow rounded-lg p-4 sm:p-6" *ngIf="client.type === 'empresa'">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.companyData' | translate }}</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div *ngIf="client.company">
+            <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.companyName' | translate }}</label>
+            <p class="text-sm text-gray-900">{{ client.company }}</p>
+          </div>
+          <div *ngIf="client.taxId">
+            <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.taxId' | translate }}</label>
+            <p class="text-sm text-gray-900">{{ client.taxId }}</p>
+          </div>
+          <div *ngIf="client.website">
+            <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.website' | translate }}</label>
+            <a [href]="client.website" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-800">
+              {{ client.website }}
+            </a>
+          </div>
+        </div>
+
+        <!-- Agents -->
+        <div *ngIf="client.agents && client.agents.length > 0" class="mt-6">
+          <label class="block text-sm font-medium text-gray-500 mb-3">{{ 'clients.agents' | translate }}</label>
+          <div class="space-y-3">
+            <div *ngFor="let agent of client.agents" class="border border-gray-200 rounded-lg p-3">
+              <p class="font-medium text-gray-900">{{ agent.name }}</p>
+              <div class="mt-2 space-y-1">
+                <p *ngIf="agent.email" class="text-sm text-gray-600">{{ 'tasks.email' | translate }}: {{ agent.email }}</p>
+                <p *ngIf="agent.phone" class="text-sm text-gray-600">{{ 'tasks.phone' | translate }}: {{ agent.phone }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow rounded-lg p-4 sm:p-6" *ngIf="client.type === 'persona'">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.personalData' | translate }}</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div *ngIf="client.documentType && client.documentNumber">
+            <label class="block text-sm font-medium text-gray-500 mb-1">{{ client.documentType }}</label>
+            <p class="text-sm text-gray-900">{{ client.documentNumber }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="bg-white shadow rounded-lg p-4 sm:p-6" *ngIf="client.address && (client.address.street || client.address.city)">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.address' | translate }}</h3>
+        <div class="text-sm text-gray-900">
+          <p *ngIf="client.address.street">{{ client.address.street }}</p>
+          <p *ngIf="client.address.city || client.address.state || client.address.zip">
+            <span *ngIf="client.address.city">{{ client.address.city }}</span>
+            <span *ngIf="client.address.state && client.address.city">, </span>
+            <span *ngIf="client.address.state">{{ client.address.state }}</span>
+            <span *ngIf="client.address.zip"> {{ client.address.zip }}</span>
+          </p>
+          <p *ngIf="client.address.country">{{ client.address.country }}</p>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="bg-white shadow rounded-lg p-4 sm:p-6" *ngIf="client.notes">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.notes' | translate }}</h3>
+        <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ client.notes }}</p>
+      </div>
+    </div>
+
+    <!-- Right Column: Tasks -->
+    <div class="lg:col-span-1">
+      <div class="bg-white shadow rounded-lg p-4 sm:p-6 sticky top-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.tasks' | translate }}</h3>
+        
+        <div *ngIf="tasks.length === 0" class="text-center py-8">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <p class="mt-2 text-sm text-gray-500">{{ 'clients.noTasks' | translate }}</p>
+        </div>
+
+        <div *ngIf="tasks.length > 0" class="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+          <div *ngFor="let task of tasks" class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate" [title]="task.title">
+                  {{ task.taskId || task._id.substring(0, 8) }}: {{ task.title }}
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-2 mb-2">
+              <span [class]="getPriorityClass(task.priority)" class="px-2 py-1 text-xs font-semibold rounded">
+                {{ 'tasks.' + task.priority | translate }}
+              </span>
+              <span [class]="getStatusClass(task.status)" class="px-2 py-1 text-xs font-semibold rounded">
+                {{ getStatusLabel(task.status) }}
+              </span>
+            </div>
+
+            <div class="text-xs text-gray-500 space-y-1">
+              <p *ngIf="task.projectId">
+                <span class="font-medium">{{ 'boards.project' | translate }}:</span> {{ task.projectId.name }}
+              </p>
+              <p *ngIf="task.boardId">
+                <span class="font-medium">{{ 'sidebar.boards' | translate }}:</span> {{ task.boardId.name }}
+              </p>
+              <p *ngIf="task.dueDate">
+                <span class="font-medium">{{ 'tasks.dueDate' | translate }}:</span> {{ formatDate(task.dueDate) }}
+              </p>
+              <p *ngIf="task.assignees && task.assignees.length > 0">
+                <span class="font-medium">{{ 'tasks.assignedTo' | translate }}:</span>
+                <span *ngFor="let assignee of task.assignees; let last = last">
+                  {{ assignee.firstName }} {{ assignee.lastName }}<span *ngIf="!last">, </span>
+                </span>
+              </p>
+            </div>
+
+            <div *ngIf="task.description" class="mt-2">
+              <p class="text-xs text-gray-600 line-clamp-2" [title]="task.description">{{ task.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
+  <div class="flex items-center justify-center h-64">
+    <div class="text-center">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      <p class="mt-4 text-sm text-gray-500">{{ 'common.loading' | translate }}</p>
+    </div>
+  </div>
+</div>
+
+<!-- Error State -->
+<div *ngIf="!loading && !client" class="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
+  <div class="bg-white shadow rounded-lg p-6 text-center">
+    <p class="text-gray-500">{{ 'common.noResults' | translate }}</p>
+    <a [routerLink]="['/clients']" class="mt-4 inline-block text-indigo-600 hover:text-indigo-800">
+      {{ 'common.back' | translate }}
+    </a>
+  </div>
+</div>
+

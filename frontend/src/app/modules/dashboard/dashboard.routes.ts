@@ -40,6 +40,10 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('../clients/components/client-form/client-form.component').then(m => m.ClientFormComponent)
       },
       {
+        path: 'clients/detail/:id',
+        loadComponent: () => import('../clients/components/client-detail/client-detail.component').then(m => m.ClientDetailComponent)
+      },
+      {
         path: 'teams',
         loadComponent: () => import('../teams/components/team-list/team-list.component').then(m => m.TeamListComponent)
       },

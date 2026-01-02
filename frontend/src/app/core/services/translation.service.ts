@@ -138,7 +138,8 @@ export class TranslationService {
         all: 'Todos',
         clear: 'Limpiar',
         menu: 'Menú',
-        noResults: 'No se encontraron resultados'
+        noResults: 'No se encontraron resultados',
+        view: 'Ver'
       },
       footer: {
         createdBy: 'Creado por',
@@ -229,7 +230,16 @@ export class TranslationService {
         createdSuccessfully: 'Cliente creado correctamente',
         validationErrors: 'Errores de validación',
         notesPlaceholder: 'Agrega cualquier información adicional sobre el cliente...',
-        zipCode: 'Código Postal'
+        zipCode: 'Código Postal',
+        tasks: 'Tareas',
+        noTasks: 'Sin tareas',
+        viewDetails: 'Ver detalles',
+        clientFound: 'cliente encontrado',
+        clientsFound: 'clientes encontrados',
+        showing: 'Mostrando',
+        to: 'a',
+        of: 'de',
+        results: 'resultados'
       },
       tasks: {
         title: 'Título',
@@ -379,7 +389,8 @@ export class TranslationService {
         inactive: 'Inactive',
         yes: 'Yes',
         no: 'No',
-        confirm: 'Confirm'
+        confirm: 'Confirm',
+        view: 'View'
       },
       footer: {
         createdBy: 'Created by',
@@ -470,7 +481,16 @@ export class TranslationService {
         createdSuccessfully: 'Client created successfully',
         validationErrors: 'Validation errors',
         notesPlaceholder: 'Add any additional information about the client...',
-        zipCode: 'Postal Code'
+        zipCode: 'Postal Code',
+        tasks: 'Tasks',
+        noTasks: 'No tasks',
+        viewDetails: 'View details',
+        clientFound: 'client found',
+        clientsFound: 'clients found',
+        showing: 'Showing',
+        to: 'to',
+        of: 'of',
+        results: 'results'
       },
       tasks: {
         title: 'Title',
