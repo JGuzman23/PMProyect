@@ -15,10 +15,12 @@ RUN npm install --omit=dev
 COPY . .
 
 # Crear directorios para uploads y datos con permisos adecuados
+# Nota: Estos directorios pueden ser sobrescritos por volúmenes de Docker
+# Los directorios se crearán en tiempo de ejecución en server.js con permisos adecuados
 RUN mkdir -p uploads/tasks && \
     mkdir -p uploads/avatars && \
     mkdir -p data && \
-    chmod -R 755 uploads
+    chmod -R 777 uploads data
 
 # Exponer el puerto
 EXPOSE 3000

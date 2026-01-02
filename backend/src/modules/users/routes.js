@@ -13,18 +13,40 @@ const router = express.Router();
 
 // Asegurar que el directorio de avatares existe
 const avatarsPath = path.join(__dirname, '../../../uploads/avatars');
-if (!fs.existsSync(avatarsPath)) {
-  fs.mkdirSync(avatarsPath, { recursive: true });
+
+// Función para asegurar que el directorio existe con permisos correctos
+const ensureDirectoryExists = (dirPath) => {
+  try {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true, mode: 0o755 });
+      console.log(`Directorio creado: ${dirPath}`);
+    }
+    // Verificar permisos de escritura
+    fs.accessSync(dirPath, fs.constants.W_OK);
+  } catch (error) {
+    console.error(`Error al crear/verificar directorio ${dirPath}:`, error);
+    throw error;
+  }
+};
+
+// Crear directorio al cargar el módulo
+try {
+  ensureDirectoryExists(avatarsPath);
+} catch (error) {
+  console.error('Error crítico al inicializar directorio de avatares:', error);
 }
 
 // Configurar multer para subir avatares
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Asegurar que el directorio existe antes de guardar
-    if (!fs.existsSync(avatarsPath)) {
-      fs.mkdirSync(avatarsPath, { recursive: true });
+    try {
+      // Asegurar que el directorio existe antes de guardar
+      ensureDirectoryExists(avatarsPath);
+      cb(null, avatarsPath);
+    } catch (error) {
+      console.error('Error al preparar directorio de destino:', error);
+      cb(error, null);
     }
-    cb(null, avatarsPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

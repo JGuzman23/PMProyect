@@ -70,14 +70,30 @@ const uploadsDir = join(__dirname, 'uploads');
 const avatarsDir = join(__dirname, 'uploads', 'avatars');
 const tasksDir = join(__dirname, 'uploads', 'tasks');
 
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-if (!fs.existsSync(avatarsDir)) {
-  fs.mkdirSync(avatarsDir, { recursive: true });
-}
-if (!fs.existsSync(tasksDir)) {
-  fs.mkdirSync(tasksDir, { recursive: true });
+// Función para asegurar que los directorios existen con permisos correctos
+const ensureDirectoryExists = (dirPath) => {
+  try {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true, mode: 0o755 });
+      console.log(`✓ Directorio creado: ${dirPath}`);
+    }
+    // Verificar permisos de escritura
+    fs.accessSync(dirPath, fs.constants.W_OK);
+    console.log(`✓ Permisos verificados para: ${dirPath}`);
+  } catch (error) {
+    console.error(`✗ Error al crear/verificar directorio ${dirPath}:`, error);
+    throw error;
+  }
+};
+
+try {
+  ensureDirectoryExists(uploadsDir);
+  ensureDirectoryExists(avatarsDir);
+  ensureDirectoryExists(tasksDir);
+  console.log('✓ Directorios de uploads inicializados correctamente');
+} catch (error) {
+  console.error('✗ Error crítico al inicializar directorios de uploads:', error);
+  // No detener el servidor, pero registrar el error
 }
 
 // Servir archivos estáticos antes del tenantMiddleware

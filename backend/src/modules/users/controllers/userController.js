@@ -55,30 +55,60 @@ export const userController = {
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      // Verificar que el archivo se guardó correctamente
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      const filePath = path.join(__dirname, '../../../uploads/avatars', req.file.filename);
+      // Usar la ruta del archivo que multer ya guardó
+      const filePath = req.file.path;
       
+      // Verificar que el archivo se guardó correctamente
       if (!fs.existsSync(filePath)) {
         console.error('Error: Archivo no encontrado después de subir:', filePath);
+        console.error('Detalles del archivo:', {
+          filename: req.file.filename,
+          destination: req.file.destination,
+          path: req.file.path,
+          size: req.file.size
+        });
         return res.status(500).json({ error: 'Error al guardar el archivo' });
+      }
+
+      // Verificar permisos del archivo
+      try {
+        fs.accessSync(filePath, fs.constants.R_OK);
+        const stats = fs.statSync(filePath);
+        if (stats.size === 0) {
+          console.error('Error: Archivo guardado está vacío:', filePath);
+          return res.status(500).json({ error: 'El archivo subido está vacío' });
+        }
+      } catch (accessError) {
+        console.error('Error de permisos al acceder al archivo:', accessError);
+        return res.status(500).json({ error: 'Error de permisos al acceder al archivo' });
       }
 
       const avatarUrl = `/uploads/avatars/${req.file.filename}`;
       const user = await userService.update(req.params.id, req.companyId, { avatar: avatarUrl });
       
-      console.log('Avatar subido exitosamente:', {
+      console.log('✓ Avatar subido exitosamente:', {
         filename: req.file.filename,
         path: filePath,
         url: avatarUrl,
         fileExists: fs.existsSync(filePath),
-        fileSize: fs.statSync(filePath).size
+        fileSize: fs.statSync(filePath).size,
+        mimetype: req.file.mimetype
       });
       
       res.json({ avatar: avatarUrl, user });
     } catch (error) {
-      console.error('Error en uploadAvatar:', error);
+      console.error('✗ Error en uploadAvatar:', error);
+      // Si hay un error, intentar eliminar el archivo parcial si existe
+      if (req.file && req.file.path) {
+        try {
+          if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+            console.log('Archivo parcial eliminado:', req.file.path);
+          }
+        } catch (unlinkError) {
+          console.error('Error al eliminar archivo parcial:', unlinkError);
+        }
+      }
       next(error);
     }
   },
