@@ -26,6 +26,13 @@ export const userService = {
   },
 
   async update(id, companyId, updateData) {
+    // Asegurar que el avatar solo sea una ruta/URL, nunca base64
+    if (updateData.avatar && updateData.avatar.startsWith('data:image/')) {
+      console.warn('Attempted to save base64 avatar to DB. Only paths/URLs should be saved.');
+      // Remove base64 from updateData - don't save it
+      delete updateData.avatar;
+    }
+    
     // Si se quiere cambiar la contraseña, validar la contraseña actual
     if (updateData.newPassword) {
       if (!updateData.currentPassword) {

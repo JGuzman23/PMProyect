@@ -50,12 +50,20 @@ export const authController = {
           let filename = null;
           
           // Extract filename from URL or path
+          // IMPORTANT: In DB we only store the path/URL, never base64
           if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-            filename = avatarPath.split('/').pop() || null;
+            // Extract filename from URL like: https://api.signops.pro/api/users/avatar/1767722670661-278460117.jpg
+            // or: https://api.signops.pro/uploads/avatars/1767722670661-278460117.jpg
+            const urlParts = avatarPath.split('/');
+            filename = urlParts[urlParts.length - 1] || null;
           } else if (avatarPath.startsWith('data:image/')) {
-            // Already base64, use it directly
-            avatarBase64 = avatarPath;
+            // If somehow base64 is in DB (legacy data), we should not use it
+            // Instead, try to extract filename if possible, or skip
+            console.warn('Avatar in DB is base64, should be path/URL only. Skipping base64 conversion.');
+            // Don't use base64 from DB, return null
+            filename = null;
           } else {
+            // Relative path like: /api/uploads/avatars/filename.jpg or /uploads/avatars/filename.jpg
             filename = avatarPath.split('/').pop() || null;
           }
           
@@ -80,6 +88,8 @@ export const authController = {
               const mimeType = mimeTypes[ext] || 'image/jpeg';
               
               avatarBase64 = `data:${mimeType};base64,${base64Image}`;
+            } else {
+              console.warn(`Avatar file not found: ${avatarFilePath}`);
             }
           }
         } catch (avatarError) {
@@ -96,7 +106,7 @@ export const authController = {
           lastName: req.user.lastName,
           role: req.user.role,
           companyId: req.user.companyId,
-          avatar: avatarBase64 || req.user.avatar || null
+          avatar: avatarBase64 || null  // Always return base64 or null, never the URL
         }
       });
     } catch (error) {

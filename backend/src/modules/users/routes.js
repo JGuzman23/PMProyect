@@ -68,10 +68,11 @@ const upload = multer({
   }
 });
 
-router.use(authMiddleware);
-
-// Avatar endpoint must be before /:id route
+// Avatar endpoint must be before authMiddleware and /:id route
+// This endpoint should be public to allow direct image access
 router.get('/avatar/:filename', userController.getAvatar);
+
+router.use(authMiddleware);
 
 router.get('/', userController.getAll);
 router.get('/:id', userController.getById);
