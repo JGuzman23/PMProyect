@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import http from 'http';
 import { connectDB } from './src/database/connection.js';
 import { errorHandler } from './src/middleware/errorHandler.js';
 import { tenantMiddleware } from './src/middleware/tenantMiddleware.js';
@@ -128,11 +129,19 @@ app.use(errorHandler);
 // Connect to database and start server
 connectDB()
   .then(() => {
+    // Crear servidor HTTP con timeouts extendidos para archivos grandes
+    const server = http.createServer(app);
+    
+    // Configurar timeouts extendidos (10 minutos)
+    server.timeout = 600000; // 10 minutos en milisegundos
+    server.keepAliveTimeout = 65000; // 65 segundos
+    server.headersTimeout = 66000; // 66 segundos
+    
     // Escuchar en 0.0.0.0 para que sea accesible desde fuera del contenedor Docker
-    app.listen(PORT, '0.0.0.0', () => {
+    server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
-        console.log('CORS configurado para:', allowedOrigins);
-
+      console.log('CORS configurado para:', allowedOrigins);
+      console.log('Timeouts configurados: 10 minutos para requests grandes');
     });
   })
   .catch((error) => {

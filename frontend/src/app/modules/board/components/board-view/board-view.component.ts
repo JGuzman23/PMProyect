@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { timeout, catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../environments/environment';
@@ -1230,11 +1232,25 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       this.groupAttachmentsByStatus();
     }
 
-    // Subir archivo al servidor con timeout extendido para archivos grandes
+    // Subir archivo al servidor con timeout extendido para archivos grandes (10 minutos)
     this.http.post(`${this.apiUrl}/tasks/upload`, formData, {
       reportProgress: true,
       observe: 'body'
-    }).subscribe({
+    }).pipe(
+      timeout(600000), // 10 minutos en milisegundos
+      catchError(err => {
+        if (err.name === 'TimeoutError') {
+          return throwError(() => ({ 
+            status: 504, 
+            error: { 
+              error: 'Timeout', 
+              message: 'La subida del archivo está tomando demasiado tiempo. Por favor, verifique su conexión e intente nuevamente.' 
+            } 
+          }));
+        }
+        return throwError(() => err);
+      })
+    ).subscribe({
       next: (response: any) => {
         // Actualizar el attachment con la URL del servidor
         const index = this.attachments.findIndex(a => a._id === tempId);

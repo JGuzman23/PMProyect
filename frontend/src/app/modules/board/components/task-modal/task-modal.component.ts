@@ -2,6 +2,8 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { timeout, catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
@@ -1058,11 +1060,25 @@ export class TaskModalComponent implements OnInit, OnChanges {
       this.groupAttachmentsByStatus();
     }
 
-    // Subir archivo al servidor con timeout extendido para archivos grandes
+    // Subir archivo al servidor con timeout extendido para archivos grandes (10 minutos)
     this.http.post(`${this.apiUrl}/tasks/upload`, formData, {
       reportProgress: true,
       observe: 'body'
-    }).subscribe({
+    }).pipe(
+      timeout(600000), // 10 minutos en milisegundos
+      catchError(err => {
+        if (err.name === 'TimeoutError') {
+          return throwError(() => ({ 
+            status: 504, 
+            error: { 
+              error: 'Timeout', 
+              message: 'La subida del archivo está tomando demasiado tiempo. Por favor, verifique su conexión e intente nuevamente.' 
+            } 
+          }));
+        }
+        return throwError(() => err);
+      })
+    ).subscribe({
       next: (response: any) => {
         const index = this.attachments.findIndex(a => a._id === tempId);
         if (index !== -1 && response.url) {
