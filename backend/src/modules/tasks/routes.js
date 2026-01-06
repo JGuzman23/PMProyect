@@ -29,6 +29,9 @@ const upload = multer({
   }
 });
 
+// Attachment endpoint must be before authMiddleware (public access)
+router.get('/attachment/:filename', taskController.getAttachment);
+
 router.use(authMiddleware);
 
 router.get('/', taskController.getAll);
