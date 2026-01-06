@@ -30,6 +30,12 @@ interface ChartNode {
   children?: ChartNode[];
 }
 
+interface Connection {
+  from: string; // node id
+  to: string; // node id
+  id?: string; // connection id for deletion
+}
+
 type ViewMode = 'org' | 'flow';
 
 @Component({
@@ -49,12 +55,27 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
   flowNodes: ChartNode[] = [];
   avatarErrors: { [userId: string]: boolean } = {};
   
-  // Edit mode state
+  // Edit mode state - unified edit mode
   isEditMode: boolean = false;
+  editModeType: 'positions' | 'connections' | null = null;
+  
+  // Computed property for backward compatibility
+  get isConnectionEditMode(): boolean {
+    return this.isEditMode && this.editModeType === 'connections';
+  }
   originalOrgNodes: ChartNode[] = [];
   originalFlowNodes: ChartNode[] = [];
   draggedNode: ChartNode | null = null;
   dragOffset = { x: 0, y: 0 };
+  
+  // Connection editing state
+  customConnections: Connection[] = [];
+  originalConnections: Connection[] = [];
+  selectedNodeForConnection: string | null = null;
+  tempConnectionLine: { from: { x: number; y: number } | null; to: { x: number; y: number } | null } = { from: null, to: null };
+  
+  // Notification state
+  notification: { message: string; type: 'success' | 'error' | 'info' } | null = null;
   
   // Computed properties for template
   get totalMembers(): number {
@@ -87,6 +108,8 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     // Render charts after view initialization
     setTimeout(() => {
+      // Load saved connections first
+      this.loadSavedConnections();
       this.renderOrgChart();
       this.renderFlowChart();
     }, 100);
@@ -97,19 +120,72 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
       next: (users) => {
         this.users = users.filter(u => u.isActive);
         this.organizeData();
-        // Try to load saved positions
-        setTimeout(() => {
-          this.loadSavedPositions();
-          if (!localStorage.getItem('teamChartPositions')) {
-            this.renderOrgChart();
-            this.renderFlowChart();
-          }
-        }, 100);
+        // Load saved positions and connections from backend
+        this.loadChartSettings();
       },
       error: (err) => {
         console.error('Error loading users', err);
       }
     });
+  }
+
+  loadChartSettings(): void {
+    this.http.get<any>(`${this.apiUrl}/teams/charts/settings`).subscribe({
+      next: (settings) => {
+        // Load positions from backend
+        if (settings.chartPositions) {
+          this.applyPositions(settings.chartPositions);
+        }
+        
+        // Load connections from backend
+        if (settings.chartConnections && settings.chartConnections.length > 0) {
+          this.customConnections = settings.chartConnections;
+        } else {
+          // Fallback to localStorage if no backend data
+          this.loadSavedConnections();
+        }
+        
+        // Render charts after loading all data
+        setTimeout(() => {
+          this.renderOrgChart();
+          this.renderFlowChart();
+        }, 100);
+      },
+      error: (err) => {
+        console.error('Error loading chart settings', err);
+        // Fallback to localStorage if backend fails
+        setTimeout(() => {
+          this.loadSavedPositions();
+          this.loadSavedConnections();
+          this.renderOrgChart();
+          this.renderFlowChart();
+        }, 100);
+      }
+    });
+  }
+
+  applyPositions(positions: { orgNodes: any[]; flowNodes: any[] }): void {
+    // Apply saved positions to org nodes
+    positions.orgNodes?.forEach((savedNode: { id: string; x: number; y: number }) => {
+      const node = this.orgNodes.find(n => n.id === savedNode.id);
+      if (node) {
+        node.x = savedNode.x;
+        node.y = savedNode.y;
+      }
+    });
+    
+    // Apply saved positions to flow nodes
+    positions.flowNodes?.forEach((savedNode: { id: string; x: number; y: number }) => {
+      const node = this.flowNodes.find(n => n.id === savedNode.id);
+      if (node) {
+        node.x = savedNode.x;
+        node.y = savedNode.y;
+      }
+    });
+    
+    // Update original positions
+    this.originalOrgNodes = JSON.parse(JSON.stringify(this.orgNodes));
+    this.originalFlowNodes = JSON.parse(JSON.stringify(this.flowNodes));
   }
 
   organizeData(): void {
@@ -229,36 +305,53 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
     const svg = this.orgChartSvg.nativeElement;
     svg.innerHTML = '';
 
-    // Draw connections
-    const admins = this.orgNodes.filter(n => n.role === 'admin');
-    const managers = this.orgNodes.filter(n => n.role === 'manager');
-    const members = this.orgNodes.filter(n => n.role === 'member');
+    // Draw connections - use custom connections if they exist, otherwise use default
+    if (this.customConnections.length > 0) {
+      // Draw custom connections
+      this.customConnections.forEach(conn => {
+        const fromNode = this.orgNodes.find(n => n.id === conn.from);
+        const toNode = this.orgNodes.find(n => n.id === conn.to);
+        if (fromNode && toNode) {
+          this.drawConnection(svg, fromNode, toNode, false, conn.id);
+        }
+      });
+    } else {
+      // Draw default connections
+      const admins = this.orgNodes.filter(n => n.role === 'admin');
+      const managers = this.orgNodes.filter(n => n.role === 'manager');
+      const members = this.orgNodes.filter(n => n.role === 'member');
 
-    // Connect admins to managers
-    if (admins.length > 0 && managers.length > 0) {
-      admins.forEach(admin => {
+      // Connect admins to managers
+      if (admins.length > 0 && managers.length > 0) {
+        admins.forEach(admin => {
+          managers.forEach(manager => {
+            this.drawConnection(svg, admin, manager);
+          });
+        });
+      }
+
+      // Connect managers to members
+      if (managers.length > 0 && members.length > 0) {
         managers.forEach(manager => {
-          this.drawConnection(svg, admin, manager);
+          members.forEach(member => {
+            this.drawConnection(svg, manager, member);
+          });
         });
-      });
+      }
+
+      // If no managers, connect admins directly to members
+      if (admins.length > 0 && managers.length === 0 && members.length > 0) {
+        admins.forEach(admin => {
+          members.forEach(member => {
+            this.drawConnection(svg, admin, member);
+          });
+        });
+      }
     }
 
-    // Connect managers to members
-    if (managers.length > 0 && members.length > 0) {
-      managers.forEach(manager => {
-        members.forEach(member => {
-          this.drawConnection(svg, manager, member);
-        });
-      });
-    }
-
-    // If no managers, connect admins directly to members
-    if (admins.length > 0 && managers.length === 0 && members.length > 0) {
-      admins.forEach(admin => {
-        members.forEach(member => {
-          this.drawConnection(svg, admin, member);
-        });
-      });
+    // Draw temporary connection line if creating one
+    if (this.tempConnectionLine.from && this.tempConnectionLine.to) {
+      this.drawTempConnection(svg, this.tempConnectionLine.from, this.tempConnectionLine.to);
     }
 
     // Draw nodes
@@ -273,17 +366,34 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
     const svg = this.flowChartSvg.nativeElement;
     svg.innerHTML = '';
 
-    // Draw connections between all nodes (network view)
-    for (let i = 0; i < this.flowNodes.length; i++) {
-      for (let j = i + 1; j < this.flowNodes.length; j++) {
-        const node1 = this.flowNodes[i];
-        const node2 = this.flowNodes[j];
-        
-        // Only connect if roles allow (hierarchical connections)
-        if (this.shouldConnect(node1.role, node2.role)) {
-          this.drawConnection(svg, node1, node2, true);
+    // Draw connections - use custom connections if they exist, otherwise use default
+    if (this.customConnections.length > 0) {
+      // Draw custom connections
+      this.customConnections.forEach(conn => {
+        const fromNode = this.flowNodes.find(n => n.id === conn.from);
+        const toNode = this.flowNodes.find(n => n.id === conn.to);
+        if (fromNode && toNode) {
+          this.drawConnection(svg, fromNode, toNode, false, conn.id);
+        }
+      });
+    } else {
+      // Draw default connections
+      for (let i = 0; i < this.flowNodes.length; i++) {
+        for (let j = i + 1; j < this.flowNodes.length; j++) {
+          const node1 = this.flowNodes[i];
+          const node2 = this.flowNodes[j];
+          
+          // Only connect if roles allow (hierarchical connections)
+          if (this.shouldConnect(node1.role, node2.role)) {
+            this.drawConnection(svg, node1, node2, true);
+          }
         }
       }
+    }
+
+    // Draw temporary connection line if creating one
+    if (this.tempConnectionLine.from && this.tempConnectionLine.to) {
+      this.drawTempConnection(svg, this.tempConnectionLine.from, this.tempConnectionLine.to);
     }
 
     // Draw nodes
@@ -299,17 +409,58 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
     return diff <= 1;
   }
 
-  drawConnection(svg: SVGElement, from: ChartNode, to: ChartNode, dashed: boolean = false): void {
+  drawConnection(svg: SVGElement, from: ChartNode, to: ChartNode, dashed: boolean = false, connectionId?: string): void {
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', (from.x + from.width / 2).toString());
     line.setAttribute('y1', (from.y + from.height).toString());
     line.setAttribute('x2', (to.x + to.width / 2).toString());
     line.setAttribute('y2', to.y.toString());
-    line.setAttribute('stroke', '#94a3b8');
-    line.setAttribute('stroke-width', '2');
+    // Use blue color for custom connections, gray for default
+    const isCustomConnection = connectionId !== undefined;
+    line.setAttribute('stroke', isCustomConnection ? '#3b82f6' : '#94a3b8');
+    line.setAttribute('stroke-width', isCustomConnection ? '3' : '2');
     if (dashed) {
       line.setAttribute('stroke-dasharray', '5,5');
     }
+    
+    if (this.isEditMode && this.editModeType === 'connections' && connectionId) {
+      line.setAttribute('data-connection-id', connectionId);
+      line.style.cursor = 'pointer';
+      line.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.deleteConnection(connectionId);
+      });
+    }
+    
+    // Add arrow marker
+    const markerId = `arrow-${connectionId || `default-${Date.now()}`}`;
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', markerId);
+    marker.setAttribute('markerWidth', '10');
+    marker.setAttribute('markerHeight', '10');
+    marker.setAttribute('refX', '9');
+    marker.setAttribute('refY', '3');
+    marker.setAttribute('orient', 'auto');
+    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    polygon.setAttribute('points', '0 0, 10 3, 0 6');
+    polygon.setAttribute('fill', isCustomConnection ? '#3b82f6' : '#94a3b8');
+    marker.appendChild(polygon);
+    svg.appendChild(marker);
+    
+    line.setAttribute('marker-end', `url(#${markerId})`);
+    svg.appendChild(line);
+  }
+
+  drawTempConnection(svg: SVGElement, from: { x: number; y: number }, to: { x: number; y: number }): void {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', from.x.toString());
+    line.setAttribute('y1', from.y.toString());
+    line.setAttribute('x2', to.x.toString());
+    line.setAttribute('y2', to.y.toString());
+    line.setAttribute('stroke', '#f59e0b');
+    line.setAttribute('stroke-width', '3');
+    line.setAttribute('stroke-dasharray', '10,5');
+    line.style.opacity = '0.7';
     svg.appendChild(line);
   }
 
@@ -333,6 +484,21 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
     // Set data attribute for styling (needed for CSS and drag handlers)
     if (this.isEditMode) {
       group.setAttribute('data-node-id', node.id);
+    }
+    
+    // Add connection editing functionality
+    if (this.isEditMode && this.editModeType === 'connections') {
+      group.style.cursor = 'pointer';
+      group.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handleNodeClickForConnection(node);
+      });
+      
+      // Highlight selected node
+      if (this.selectedNodeForConnection === node.id) {
+        rect.setAttribute('stroke', '#f59e0b');
+        rect.setAttribute('stroke-width', '4');
+      }
     }
 
     // Avatar circle
@@ -417,8 +583,8 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
 
     svg.appendChild(group);
     
-    // Attach drag handlers after group is added to SVG
-    if (this.isEditMode) {
+    // Attach drag handlers after group is added to SVG (only if in position edit mode)
+    if (this.isEditMode && this.editModeType === 'positions') {
       this.attachDragHandlers(group, node);
     }
   }
@@ -494,12 +660,48 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
 
   // Edit mode methods
   toggleEditMode(): void {
-    this.isEditMode = !this.isEditMode;
-    if (this.isEditMode) {
-      // Save original positions when entering edit mode
+    if (!this.isEditMode) {
+      // Entering edit mode - default to positions
+      this.isEditMode = true;
+      this.editModeType = 'positions';
+      // Save original positions
       this.originalOrgNodes = JSON.parse(JSON.stringify(this.orgNodes));
       this.originalFlowNodes = JSON.parse(JSON.stringify(this.flowNodes));
+    } else {
+      // Exiting edit mode
+      this.isEditMode = false;
+      this.editModeType = null;
+      this.selectedNodeForConnection = null;
+      this.tempConnectionLine = { from: null, to: null };
     }
+    // Re-render charts
+    setTimeout(() => {
+      if (this.viewMode === 'org') {
+        this.renderOrgChart();
+      } else {
+        this.renderFlowChart();
+      }
+    }, 100);
+  }
+
+  switchEditType(type: 'positions' | 'connections'): void {
+    if (!this.isEditMode) {
+      this.isEditMode = true;
+    }
+    this.editModeType = type;
+    
+    if (type === 'positions') {
+      // Save original positions
+      this.originalOrgNodes = JSON.parse(JSON.stringify(this.orgNodes));
+      this.originalFlowNodes = JSON.parse(JSON.stringify(this.flowNodes));
+    } else if (type === 'connections') {
+      // Load saved connections
+      this.loadSavedConnections();
+      this.originalConnections = JSON.parse(JSON.stringify(this.customConnections));
+      this.selectedNodeForConnection = null;
+      this.tempConnectionLine = { from: null, to: null };
+    }
+    
     // Re-render charts
     setTimeout(() => {
       if (this.viewMode === 'org') {
@@ -526,27 +728,32 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
   }
 
   saveChart(): void {
-    // Save positions to localStorage (or send to backend if needed)
+    // Save positions to backend
     const chartData = {
       orgNodes: this.orgNodes.map(n => ({ id: n.id, x: n.x, y: n.y })),
-      flowNodes: this.flowNodes.map(n => ({ id: n.id, x: n.x, y: n.y })),
-      timestamp: new Date().toISOString()
+      flowNodes: this.flowNodes.map(n => ({ id: n.id, x: n.x, y: n.y }))
     };
-    localStorage.setItem('teamChartPositions', JSON.stringify(chartData));
     
-    // Update original positions
-    this.originalOrgNodes = JSON.parse(JSON.stringify(this.orgNodes));
-    this.originalFlowNodes = JSON.parse(JSON.stringify(this.flowNodes));
-    
-    // Optionally exit edit mode after saving
-    // this.isEditMode = false;
-    // setTimeout(() => {
-    //   if (this.viewMode === 'org') {
-    //     this.renderOrgChart();
-    //   } else {
-    //     this.renderFlowChart();
-    //   }
-    // }, 100);
+    this.http.post(`${this.apiUrl}/teams/charts/positions`, chartData).subscribe({
+      next: () => {
+        // Update original positions
+        this.originalOrgNodes = JSON.parse(JSON.stringify(this.orgNodes));
+        this.originalFlowNodes = JSON.parse(JSON.stringify(this.flowNodes));
+        
+        // Also save to localStorage as backup
+        localStorage.setItem('teamChartPositions', JSON.stringify({
+          ...chartData,
+          timestamp: new Date().toISOString()
+        }));
+        
+        // Show success notification
+        this.showNotification('teams.charts.positionsSaved', 'success');
+      },
+      error: (err) => {
+        console.error('Error saving chart positions', err);
+        this.showNotification('teams.charts.saveError', 'error');
+      }
+    });
   }
 
   loadSavedPositions(): void {
@@ -721,6 +928,142 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
     if (members.length > 0) levels++;
     
     return Math.max(400, levels * this.VERTICAL_SPACING + 100);
+  }
+
+  // Connection editing methods
+
+  handleNodeClickForConnection(node: ChartNode): void {
+    if (!this.selectedNodeForConnection) {
+      // First node selected
+      this.selectedNodeForConnection = node.id;
+      const centerX = node.x + node.width / 2;
+      const centerY = node.y + node.height / 2;
+      this.tempConnectionLine.from = { x: centerX, y: centerY };
+      this.tempConnectionLine.to = null;
+    } else if (this.selectedNodeForConnection === node.id) {
+      // Clicked same node - deselect
+      this.selectedNodeForConnection = null;
+      this.tempConnectionLine = { from: null, to: null };
+    } else {
+      // Second node selected - create connection
+      const fromNode = (this.viewMode === 'org' ? this.orgNodes : this.flowNodes)
+        .find(n => n.id === this.selectedNodeForConnection);
+      
+      if (fromNode) {
+        // Check if connection already exists
+        const exists = this.customConnections.some(
+          c => c.from === fromNode.id && c.to === node.id
+        );
+        
+        if (!exists) {
+          const connectionId = `conn-${Date.now()}`;
+          this.customConnections.push({
+            from: fromNode.id,
+            to: node.id,
+            id: connectionId
+          });
+        }
+      }
+      
+      // Reset selection
+      this.selectedNodeForConnection = null;
+      this.tempConnectionLine = { from: null, to: null };
+    }
+    
+    // Re-render to show changes
+    setTimeout(() => {
+      if (this.viewMode === 'org') {
+        this.renderOrgChart();
+      } else {
+        this.renderFlowChart();
+      }
+    }, 10);
+  }
+
+  deleteConnection(connectionId: string): void {
+    this.customConnections = this.customConnections.filter(c => c.id !== connectionId);
+    setTimeout(() => {
+      if (this.viewMode === 'org') {
+        this.renderOrgChart();
+      } else {
+        this.renderFlowChart();
+      }
+    }, 10);
+  }
+
+  saveConnections(): void {
+    // Save connections to backend
+    this.http.post(`${this.apiUrl}/teams/charts/connections`, {
+      connections: this.customConnections
+    }).subscribe({
+      next: () => {
+        this.originalConnections = JSON.parse(JSON.stringify(this.customConnections));
+        
+        // Also save to localStorage as backup
+        localStorage.setItem('teamChartConnections', JSON.stringify({
+          connections: this.customConnections,
+          timestamp: new Date().toISOString()
+        }));
+        
+        // Show success notification
+        this.showNotification('teams.charts.connectionsSaved', 'success');
+        
+        // Re-render to show saved state
+        setTimeout(() => {
+          if (this.viewMode === 'org') {
+            this.renderOrgChart();
+          } else {
+            this.renderFlowChart();
+          }
+        }, 10);
+      },
+      error: (err) => {
+        console.error('Error saving connections', err);
+        this.showNotification('teams.charts.saveError', 'error');
+      }
+    });
+  }
+
+  resetConnections(): void {
+    this.customConnections = JSON.parse(JSON.stringify(this.originalConnections));
+    this.selectedNodeForConnection = null;
+    this.tempConnectionLine = { from: null, to: null };
+    setTimeout(() => {
+      if (this.viewMode === 'org') {
+        this.renderOrgChart();
+      } else {
+        this.renderFlowChart();
+      }
+    }, 10);
+  }
+
+  loadSavedConnections(): void {
+    const saved = localStorage.getItem('teamChartConnections');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        this.customConnections = data.connections || [];
+      } catch (e) {
+        console.error('Error loading saved connections', e);
+        this.customConnections = [];
+      }
+    } else {
+      this.customConnections = [];
+    }
+  }
+
+  showNotification(messageKey: string, type: 'success' | 'error' | 'info' = 'success'): void {
+    const message = this.translationService.translate(messageKey) || messageKey;
+    this.notification = { message, type };
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      this.notification = null;
+    }, 3000);
+  }
+
+  closeNotification(): void {
+    this.notification = null;
   }
 }
 

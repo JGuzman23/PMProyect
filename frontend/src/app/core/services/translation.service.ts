@@ -239,7 +239,16 @@ export class TranslationService {
           exitEdit: 'Salir de Edición',
           save: 'Guardar',
           reset: 'Restablecer',
-          dragToEdit: 'Arrastra los nodos para editarlos'
+          dragToEdit: 'Arrastra los nodos para editarlos',
+          editPositions: 'Editar Posiciones',
+          editConnections: 'Editar Conexiones',
+          exitConnectionEdit: 'Salir de Edición de Conexiones',
+          saveConnections: 'Guardar Conexiones',
+          resetConnections: 'Restablecer Conexiones',
+          clickNodesToConnect: 'Haz clic en los nodos para conectarlos',
+          connectionsSaved: 'Conexiones guardadas correctamente',
+          positionsSaved: 'Posiciones guardadas correctamente',
+          saveError: 'Error al guardar. Por favor, intenta de nuevo.'
         }
       },
       calendar: {
@@ -569,7 +578,16 @@ export class TranslationService {
           exitEdit: 'Exit Edit',
           save: 'Save',
           reset: 'Reset',
-          dragToEdit: 'Drag nodes to edit'
+          dragToEdit: 'Drag nodes to edit',
+          editPositions: 'Edit Positions',
+          editConnections: 'Edit Connections',
+          exitConnectionEdit: 'Exit Connection Edit',
+          saveConnections: 'Save Connections',
+          resetConnections: 'Reset Connections',
+          clickNodesToConnect: 'Click nodes to connect them',
+          connectionsSaved: 'Connections saved successfully',
+          positionsSaved: 'Positions saved successfully',
+          saveError: 'Error saving. Please try again.'
         }
       },
       calendar: {
@@ -884,7 +902,16 @@ export class TranslationService {
           exitEdit: 'Quitter l\'Édition',
           save: 'Enregistrer',
           reset: 'Réinitialiser',
-          dragToEdit: 'Glissez les nœuds pour les modifier'
+          dragToEdit: 'Glissez les nœuds pour les modifier',
+          editPositions: 'Modifier les Positions',
+          editConnections: 'Modifier les Connexions',
+          exitConnectionEdit: 'Quitter l\'Édition de Connexions',
+          saveConnections: 'Enregistrer les Connexions',
+          resetConnections: 'Réinitialiser les Connexions',
+          clickNodesToConnect: 'Cliquez sur les nœuds pour les connecter',
+          connectionsSaved: 'Connexions enregistrées avec succès',
+          positionsSaved: 'Positions enregistrées avec succès',
+          saveError: 'Erreur lors de l\'enregistrement. Veuillez réessayer.'
         }
       },
       calendar: {
@@ -1104,7 +1131,16 @@ export class TranslationService {
           exitEdit: 'Bearbeitung beenden',
           save: 'Speichern',
           reset: 'Zurücksetzen',
-          dragToEdit: 'Knoten ziehen zum Bearbeiten'
+          dragToEdit: 'Knoten ziehen zum Bearbeiten',
+          editPositions: 'Positionen bearbeiten',
+          editConnections: 'Verbindungen bearbeiten',
+          exitConnectionEdit: 'Verbindungsbearbeitung beenden',
+          saveConnections: 'Verbindungen speichern',
+          resetConnections: 'Verbindungen zurücksetzen',
+          clickNodesToConnect: 'Klicken Sie auf Knoten, um sie zu verbinden',
+          connectionsSaved: 'Verbindungen erfolgreich gespeichert',
+          positionsSaved: 'Positionen erfolgreich gespeichert',
+          saveError: 'Fehler beim Speichern. Bitte versuchen Sie es erneut.'
         }
       },
       calendar: {
@@ -1327,7 +1363,16 @@ export class TranslationService {
           exitEdit: 'Sair da Edição',
           save: 'Salvar',
           reset: 'Redefinir',
-          dragToEdit: 'Arraste os nós para editá-los'
+          dragToEdit: 'Arraste os nós para editá-los',
+          editPositions: 'Editar Posições',
+          editConnections: 'Editar Conexões',
+          exitConnectionEdit: 'Sair da Edição de Conexões',
+          saveConnections: 'Salvar Conexões',
+          resetConnections: 'Redefinir Conexões',
+          clickNodesToConnect: 'Clique nos nós para conectá-los',
+          connectionsSaved: 'Conexões salvas com sucesso',
+          positionsSaved: 'Posições salvas com sucesso',
+          saveError: 'Erro ao salvar. Por favor, tente novamente.'
         }
       },
       calendar: {
@@ -1549,7 +1594,16 @@ export class TranslationService {
           exitEdit: 'Esci dalla Modifica',
           save: 'Salva',
           reset: 'Ripristina',
-          dragToEdit: 'Trascina i nodi per modificarli'
+          dragToEdit: 'Trascina i nodi per modificarli',
+          editPositions: 'Modifica Posizioni',
+          editConnections: 'Modifica Connessioni',
+          exitConnectionEdit: 'Esci dalla Modifica Connessioni',
+          saveConnections: 'Salva Connessioni',
+          resetConnections: 'Ripristina Connessioni',
+          clickNodesToConnect: 'Clicca sui nodi per connetterli',
+          connectionsSaved: 'Connessioni salvate con successo',
+          positionsSaved: 'Posizioni salvate con successo',
+          saveError: 'Errore durante il salvataggio. Riprova.'
         }
       },
       calendar: {
