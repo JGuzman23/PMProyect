@@ -39,6 +39,7 @@ export class LoginComponent {
 
       this.authService.login(email, password).subscribe({
         next: () => {
+          this.authService.getMe().subscribe();
           this.router.navigate(['/']);
         },
         error: (err) => {
