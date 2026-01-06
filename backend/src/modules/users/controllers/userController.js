@@ -151,10 +151,6 @@ export const userController = {
         return res.status(404).json({ error: 'Avatar not found' });
       }
 
-      // Leer el archivo y convertirlo a base64
-      const fileBuffer = fs.readFileSync(avatarPath);
-      const base64Image = fileBuffer.toString('base64');
-      
       // Determinar el tipo MIME basado en la extensión del archivo
       const ext = path.extname(filename).toLowerCase();
       const mimeTypes = {
@@ -167,9 +163,9 @@ export const userController = {
       };
       const mimeType = mimeTypes[ext] || 'image/jpeg';
       
-      // Devolver como data URI en base64
-      const dataUri = `data:${mimeType};base64,${base64Image}`;
-      res.json({ image: dataUri });
+      // Enviar el archivo directamente (no base64)
+      res.setHeader('Content-Type', mimeType);
+      res.sendFile(avatarPath);
     } catch (error) {
       next(error);
     }
