@@ -47,6 +47,8 @@ export class ProfileEditComponent implements OnInit {
 
   loadProfile(): void {
     const currentUser = this.authService.currentUser;
+    console.log(currentUser);
+    
     if (currentUser) {
       this.profileForm = {
         firstName: currentUser.firstName || '',

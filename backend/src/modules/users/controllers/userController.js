@@ -83,7 +83,11 @@ export const userController = {
         return res.status(500).json({ error: 'Error de permisos al acceder al archivo' });
       }
 
-      const avatarUrl = `/api/uploads/avatars/${req.file.filename}`;
+      // Construir URL completa usando variable de entorno ruta_data_avatar
+      const baseUrl = process.env.ruta_data_avatar || process.env.RUTA_DATA_AVATAR || 'https://api.signops.pro';
+      // Asegurar que la URL base no termine con /
+      const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+      const avatarUrl = `${cleanBaseUrl}/api/users/avatar/${req.file.filename}`;
       const user = await userService.update(req.params.id, req.companyId, { avatar: avatarUrl });
       
       console.log('✓ Avatar subido exitosamente:', {
