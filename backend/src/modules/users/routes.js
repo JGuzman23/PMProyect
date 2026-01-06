@@ -70,6 +70,9 @@ const upload = multer({
 
 router.use(authMiddleware);
 
+// Avatar endpoint must be before /:id route
+router.get('/avatar/:filename', userController.getAvatar);
+
 router.get('/', userController.getAll);
 router.get('/:id', userController.getById);
 router.post('/', userController.create);

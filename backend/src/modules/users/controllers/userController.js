@@ -120,6 +120,25 @@ export const userController = {
     } catch (error) {
       next(error);
     }
+  },
+
+  async getAvatar(req, res, next) {
+    try {
+      const { filename } = req.params;
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const avatarPath = path.join(__dirname, '../../../uploads/avatars', filename);
+
+      // Verificar que el archivo existe
+      if (!fs.existsSync(avatarPath)) {
+        return res.status(404).json({ error: 'Avatar not found' });
+      }
+
+      // Enviar el archivo
+      res.sendFile(avatarPath);
+    } catch (error) {
+      next(error);
+    }
   }
 };
 

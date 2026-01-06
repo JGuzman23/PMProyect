@@ -144,15 +144,16 @@ export class TeamListComponent implements OnInit {
     }
     if (user.avatar) {
       const avatarPath = user.avatar;
-      if (avatarPath.startsWith('http')) {
+      // If already a full URL, return as is
+      if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
         return avatarPath;
       }
-      // Construir URL completa: remover /api y agregar la ruta del avatar
-      const baseUrl = this.apiUrl.replace('/api', '');
-      // Asegurar que avatarPath comience con /
-      const normalizedPath = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`;
-      const fullUrl = `${baseUrl}${normalizedPath}`;
-      return fullUrl;
+      // Extract filename from path (could be /api/uploads/avatars/filename.jpg or /uploads/avatars/filename.jpg)
+      const filename = avatarPath.split('/').pop();
+      if (filename) {
+        // Use API endpoint: /api/users/avatar/:filename
+        return `${this.apiUrl}/users/avatar/${filename}`;
+      }
     }
     return null;
   }

@@ -632,12 +632,16 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
     }
     if (node.avatar) {
       const avatarPath = node.avatar;
-      if (avatarPath.startsWith('http')) {
+      // If already a full URL, return as is
+      if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
         return avatarPath;
       }
-      const baseUrl = this.apiUrl.replace('/api', '');
-      const normalizedPath = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`;
-      return `${baseUrl}${normalizedPath}`;
+      // Extract filename from path (could be /api/uploads/avatars/filename.jpg or /uploads/avatars/filename.jpg)
+      const filename = avatarPath.split('/').pop();
+      if (filename) {
+        // Use API endpoint: /api/users/avatar/:filename
+        return `${this.apiUrl}/users/avatar/${filename}`;
+      }
     }
     return null;
   }
