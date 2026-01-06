@@ -83,7 +83,7 @@ export const userController = {
         return res.status(500).json({ error: 'Error de permisos al acceder al archivo' });
       }
 
-      const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+      const avatarUrl = `/api/uploads/avatars/${req.file.filename}`;
       const user = await userService.update(req.params.id, req.companyId, { avatar: avatarUrl });
       
       console.log('✓ Avatar subido exitosamente:', {
