@@ -3,8 +3,7 @@ import mongoose from 'mongoose';
 const teamChartSettingsSchema = new mongoose.Schema({
   companyId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   chartPositions: {
     orgNodes: [{
