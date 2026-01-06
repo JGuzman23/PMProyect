@@ -217,10 +217,29 @@ export class TranslationService {
         roleLabel: 'Rol',
         confirmDelete: '¿Estás seguro de eliminar este usuario?',
         positionPlaceholder: 'Ej: Desarrollador, Gerente, etc.',
+        viewCharts: 'Ver Gráficos',
         role: {
           admin: 'Administrador',
           manager: 'Manager',
           member: 'Miembro'
+        },
+        charts: {
+          title: 'Gráficos del Equipo',
+          orgChart: 'Organigrama',
+          flowChart: 'Diagrama de Flujo',
+          totalMembers: 'Total de Miembros',
+          admins: 'Administradores',
+          managers: 'Gerentes',
+          noData: 'No hay datos',
+          noDataDescription: 'No hay miembros activos en el equipo para mostrar.',
+          orgChartDescription: 'Vista jerárquica del equipo organizado por roles',
+          flowChartDescription: 'Vista de red mostrando las conexiones entre miembros del equipo',
+          legend: 'Leyenda',
+          editMode: 'Modo Edición',
+          exitEdit: 'Salir de Edición',
+          save: 'Guardar',
+          reset: 'Restablecer',
+          dragToEdit: 'Arrastra los nodos para editarlos'
         }
       },
       calendar: {
@@ -528,10 +547,29 @@ export class TranslationService {
         roleLabel: 'Role',
         confirmDelete: 'Are you sure you want to delete this user?',
         positionPlaceholder: 'E.g: Developer, Manager, etc.',
+        viewCharts: 'View Charts',
         role: {
           admin: 'Administrator',
           manager: 'Manager',
           member: 'Member'
+        },
+        charts: {
+          title: 'Team Charts',
+          orgChart: 'Organizational Chart',
+          flowChart: 'Flowchart',
+          totalMembers: 'Total Members',
+          admins: 'Administrators',
+          managers: 'Managers',
+          noData: 'No data available',
+          noDataDescription: 'There are no active team members to display.',
+          orgChartDescription: 'Hierarchical view of the team organized by roles',
+          flowChartDescription: 'Network view showing connections between team members',
+          legend: 'Legend',
+          editMode: 'Edit Mode',
+          exitEdit: 'Exit Edit',
+          save: 'Save',
+          reset: 'Reset',
+          dragToEdit: 'Drag nodes to edit'
         }
       },
       calendar: {
@@ -824,10 +862,29 @@ export class TranslationService {
         roleLabel: 'Rôle',
         confirmDelete: 'Êtes-vous sûr de vouloir supprimer cet utilisateur?',
         positionPlaceholder: 'Ex: Développeur, Gestionnaire, etc.',
+        viewCharts: 'Voir les Graphiques',
         role: {
           admin: 'Administrateur',
           manager: 'Gestionnaire',
           member: 'Membre'
+        },
+        charts: {
+          title: 'Graphiques de l\'Équipe',
+          orgChart: 'Organigramme',
+          flowChart: 'Diagramme de Flux',
+          totalMembers: 'Total des Membres',
+          admins: 'Administrateurs',
+          managers: 'Gestionnaires',
+          noData: 'Aucune donnée',
+          noDataDescription: 'Il n\'y a pas de membres actifs dans l\'équipe à afficher.',
+          orgChartDescription: 'Vue hiérarchique de l\'équipe organisée par rôles',
+          flowChartDescription: 'Vue réseau montrant les connexions entre les membres de l\'équipe',
+          legend: 'Légende',
+          editMode: 'Mode Édition',
+          exitEdit: 'Quitter l\'Édition',
+          save: 'Enregistrer',
+          reset: 'Réinitialiser',
+          dragToEdit: 'Glissez les nœuds pour les modifier'
         }
       },
       calendar: {
@@ -1025,10 +1082,29 @@ export class TranslationService {
         roleLabel: 'Rolle',
         confirmDelete: 'Sind Sie sicher, dass Sie diesen Benutzer löschen möchten?',
         positionPlaceholder: 'z.B: Entwickler, Manager, etc.',
+        viewCharts: 'Diagramme anzeigen',
         role: {
           admin: 'Administrator',
           manager: 'Manager',
           member: 'Mitglied'
+        },
+        charts: {
+          title: 'Team-Diagramme',
+          orgChart: 'Organigramm',
+          flowChart: 'Flussdiagramm',
+          totalMembers: 'Gesamtmitglieder',
+          admins: 'Administratoren',
+          managers: 'Manager',
+          noData: 'Keine Daten verfügbar',
+          noDataDescription: 'Es gibt keine aktiven Teammitglieder zum Anzeigen.',
+          orgChartDescription: 'Hierarchische Ansicht des Teams, organisiert nach Rollen',
+          flowChartDescription: 'Netzwerkansicht, die Verbindungen zwischen Teammitgliedern zeigt',
+          legend: 'Legende',
+          editMode: 'Bearbeitungsmodus',
+          exitEdit: 'Bearbeitung beenden',
+          save: 'Speichern',
+          reset: 'Zurücksetzen',
+          dragToEdit: 'Knoten ziehen zum Bearbeiten'
         }
       },
       calendar: {
@@ -1229,10 +1305,29 @@ export class TranslationService {
         roleLabel: 'Função',
         confirmDelete: 'Tem certeza de que deseja excluir este usuário?',
         positionPlaceholder: 'Ex: Desenvolvedor, Gerente, etc.',
+        viewCharts: 'Ver Gráficos',
         role: {
           admin: 'Administrador',
           manager: 'Gerente',
           member: 'Membro'
+        },
+        charts: {
+          title: 'Gráficos da Equipe',
+          orgChart: 'Organograma',
+          flowChart: 'Fluxograma',
+          totalMembers: 'Total de Membros',
+          admins: 'Administradores',
+          managers: 'Gerentes',
+          noData: 'Sem dados',
+          noDataDescription: 'Não há membros ativos na equipe para exibir.',
+          orgChartDescription: 'Visão hierárquica da equipe organizada por funções',
+          flowChartDescription: 'Visão de rede mostrando conexões entre membros da equipe',
+          legend: 'Legenda',
+          editMode: 'Modo de Edição',
+          exitEdit: 'Sair da Edição',
+          save: 'Salvar',
+          reset: 'Redefinir',
+          dragToEdit: 'Arraste os nós para editá-los'
         }
       },
       calendar: {
@@ -1432,10 +1527,29 @@ export class TranslationService {
         roleLabel: 'Ruolo',
         confirmDelete: 'Sei sicuro di voler eliminare questo utente?',
         positionPlaceholder: 'Es: Sviluppatore, Manager, ecc.',
+        viewCharts: 'Visualizza Grafici',
         role: {
           admin: 'Amministratore',
           manager: 'Manager',
           member: 'Membro'
+        },
+        charts: {
+          title: 'Grafici del Team',
+          orgChart: 'Organigramma',
+          flowChart: 'Diagramma di Flusso',
+          totalMembers: 'Totale Membri',
+          admins: 'Amministratori',
+          managers: 'Manager',
+          noData: 'Nessun dato disponibile',
+          noDataDescription: 'Non ci sono membri attivi del team da visualizzare.',
+          orgChartDescription: 'Vista gerarchica del team organizzata per ruoli',
+          flowChartDescription: 'Vista di rete che mostra le connessioni tra i membri del team',
+          legend: 'Legenda',
+          editMode: 'Modalità Modifica',
+          exitEdit: 'Esci dalla Modifica',
+          save: 'Salva',
+          reset: 'Ripristina',
+          dragToEdit: 'Trascina i nodi per modificarli'
         }
       },
       calendar: {

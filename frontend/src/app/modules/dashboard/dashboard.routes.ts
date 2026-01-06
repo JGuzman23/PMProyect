@@ -48,6 +48,10 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('../teams/components/team-list/team-list.component').then(m => m.TeamListComponent)
       },
       {
+        path: 'teams/charts',
+        loadComponent: () => import('../teams/components/team-charts/team-charts.component').then(m => m.TeamChartsComponent)
+      },
+      {
         path: 'admin',
         loadComponent: () => import('../admin/components/admin-panel/admin-panel.component').then(m => m.AdminPanelComponent)
       },
