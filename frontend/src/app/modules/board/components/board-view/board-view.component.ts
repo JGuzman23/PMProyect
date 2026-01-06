@@ -1230,8 +1230,11 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       this.groupAttachmentsByStatus();
     }
 
-    // Subir archivo al servidor
-    this.http.post(`${this.apiUrl}/tasks/upload`, formData).subscribe({
+    // Subir archivo al servidor con timeout extendido para archivos grandes
+    this.http.post(`${this.apiUrl}/tasks/upload`, formData, {
+      reportProgress: true,
+      observe: 'body'
+    }).subscribe({
       next: (response: any) => {
         // Actualizar el attachment con la URL del servidor
         const index = this.attachments.findIndex(a => a._id === tempId);
@@ -1264,7 +1267,17 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         // Remover el preview si falla la subida
         this.attachments = this.attachments.filter(a => a._id !== tempId);
         this.uploadingFiles = false;
-        alert('Error al subir el archivo. Por favor, intente nuevamente.');
+        
+        // Mostrar mensaje de error más específico
+        let errorMessage = 'Error al subir el archivo. Por favor, intente nuevamente.';
+        if (err.error?.message) {
+          errorMessage = err.error.message;
+        } else if (err.error?.error === 'File too large') {
+          errorMessage = 'El archivo excede el tamaño máximo permitido de 25 MB';
+        } else if (err.status === 0 || err.status === 504) {
+          errorMessage = 'Timeout: El archivo es muy grande o la conexión es lenta. Intente con un archivo más pequeño.';
+        }
+        alert(errorMessage);
       }
     });
   }

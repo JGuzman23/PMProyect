@@ -33,6 +33,20 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // Handle Multer errors
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        error: 'File too large',
+        message: 'El archivo excede el tamaño máximo permitido de 25 MB'
+      });
+    }
+    return res.status(400).json({
+      error: 'Upload error',
+      message: err.message
+    });
+  }
+
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
