@@ -67,14 +67,18 @@ export class ProfileEditComponent implements OnInit {
       if ((currentUser as any).avatar) {
         const avatarPath = (currentUser as any).avatar;
 
-        if (avatarPath.startsWith("http")) {
+        // If it's already base64 (data URI), use it directly
+        if (avatarPath.startsWith("data:image/")) {
+          this.avatarUrl = avatarPath;
+        } else if (avatarPath.startsWith("http://") || avatarPath.startsWith("https://")) {
           this.avatarUrl = avatarPath;
         } else {
-          const baseUrl = this.apiUrl.replace("/api", "");
-          this.avatarUrl = `${baseUrl}${avatarPath}`;
+          // For relative paths, extract filename and use API endpoint
+          const filename = avatarPath.split('/').pop();
+          if (filename) {
+            this.avatarUrl = `${this.apiUrl}/users/avatar/${filename}`;
+          }
         }
-
-       
       }
 
       this.error = "";
@@ -161,14 +165,33 @@ export class ProfileEditComponent implements OnInit {
 
             if (response && response.avatar) {
               const avatarPath = response.avatar;
-              const baseUrl = this.apiUrl.replace("/api", "");
-              this.avatarUrl = `${baseUrl}${avatarPath}`;
+              
+              // If it's already base64 (data URI), use it directly
+              if (avatarPath.startsWith("data:image/")) {
+                this.avatarUrl = avatarPath;
+              } else if (avatarPath.startsWith("http://") || avatarPath.startsWith("https://")) {
+                this.avatarUrl = avatarPath;
+              } else {
+                // For relative paths, extract filename and use API endpoint
+                const filename = avatarPath.split('/').pop();
+                if (filename) {
+                  this.avatarUrl = `${this.apiUrl}/users/avatar/${filename}`;
+                }
+              }
+              
               this.avatarPreview = null;
               this.selectedFile = null;
 
               // Actualizar el usuario en el servicio de autenticación
               this.authService.getMe().subscribe({
                 next: () => {
+                  // Update avatarUrl from the updated user
+                  const updatedUser = this.authService.currentUser;
+                  if (updatedUser?.avatar) {
+                    if (updatedUser.avatar.startsWith("data:image/")) {
+                      this.avatarUrl = updatedUser.avatar;
+                    }
+                  }
                   this.success = this.translationService.translate(
                     "profile.avatarUpdatedSuccessfully"
                   );

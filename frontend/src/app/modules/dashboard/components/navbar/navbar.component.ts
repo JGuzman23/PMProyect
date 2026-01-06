@@ -51,15 +51,19 @@ export class NavbarComponent implements OnInit {
     }
     if (this.currentUser?.avatar) {
       const avatarPath = this.currentUser.avatar;
-      if (avatarPath.startsWith('http')) {
+      // If it's already base64 (data URI), return it directly
+      if (avatarPath.startsWith('data:image/')) {
         return avatarPath;
       }
-      // Construir URL completa: remover /api y agregar la ruta del avatar
-      const baseUrl = this.apiUrl.replace('/api', '');
-      // Asegurar que avatarPath comience con /
-      const normalizedPath = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`;
-      const fullUrl = `${baseUrl}${normalizedPath}`;
-      return fullUrl;
+      // If it's a full URL, return it
+      if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+        return avatarPath;
+      }
+      // For relative paths, extract filename and use API endpoint
+      const filename = avatarPath.split('/').pop();
+      if (filename) {
+        return `${this.apiUrl}/users/avatar/${filename}`;
+      }
     }
     return null;
   }
