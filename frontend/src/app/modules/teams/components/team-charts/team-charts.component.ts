@@ -54,6 +54,7 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
   orgNodes: ChartNode[] = [];
   flowNodes: ChartNode[] = [];
   avatarErrors: { [userId: string]: boolean } = {};
+  avatarCache: { [userId: string]: string } = {}; // Cache for base64 avatars
   
   // Edit mode state - unified edit mode
   isEditMode: boolean = false;
@@ -119,6 +120,15 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
     this.http.get<User[]>(`${this.apiUrl}/users`).subscribe({
       next: (users) => {
         this.users = users.filter(u => u.isActive);
+        // Load avatars in base64 for all users
+        this.users.forEach(user => {
+          if (user.avatar && !user.avatar.startsWith('data:image/')) {
+            this.loadAvatarBase64ForUser(user);
+          } else if (user.avatar && user.avatar.startsWith('data:image/')) {
+            // If already base64, cache it
+            this.avatarCache[user._id] = user.avatar;
+          }
+        });
         this.organizeData();
         // Load saved positions and connections from backend
         this.loadChartSettings();
@@ -514,26 +524,25 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
     group.appendChild(circle);
 
     // Avatar image (if available)
-    const avatarUrl = this.getAvatarUrl(node);
-    if (avatarUrl && !this.avatarErrors[node.id]) {
-      const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-      image.setAttribute('href', avatarUrl);
-      image.setAttribute('x', (avatarX - avatarSize / 2).toString());
-      image.setAttribute('y', (avatarY - avatarSize / 2).toString());
-      image.setAttribute('width', avatarSize.toString());
-      image.setAttribute('height', avatarSize.toString());
-      image.setAttribute('clip-path', `circle(${avatarSize / 2}px at ${avatarX}px ${avatarY}px)`);
-      image.addEventListener('error', () => {
-        this.avatarErrors[node.id] = true;
-        // Re-render on error
-        if (this.viewMode === 'org') {
-          this.renderOrgChart();
-        } else {
-          this.renderFlowChart();
-        }
-      });
-      group.appendChild(image);
-    } else {
+    if (node.avatar && !this.avatarErrors[node.id]) {
+      // Check if we have the base64 in cache
+      if (this.avatarCache[node.id]) {
+        const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        image.setAttribute('href', this.avatarCache[node.id]);
+        image.setAttribute('x', (avatarX - avatarSize / 2).toString());
+        image.setAttribute('y', (avatarY - avatarSize / 2).toString());
+        image.setAttribute('width', avatarSize.toString());
+        image.setAttribute('height', avatarSize.toString());
+        image.setAttribute('clip-path', `circle(${avatarSize / 2}px at ${avatarX}px ${avatarY}px)`);
+        group.appendChild(image);
+      } else {
+        // Load avatar in base64
+        this.loadAvatarBase64(node);
+      }
+    }
+    
+    // Show initials if no avatar or if avatar failed to load
+    if (!node.avatar || this.avatarErrors[node.id] || !this.avatarCache[node.id]) {
       // Show initials if no avatar
       const initials = this.getInitialsFromName(node.name);
       const initialsText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -626,24 +635,113 @@ export class TeamChartsComponent implements OnInit, AfterViewInit {
     }, 100);
   }
 
-  getAvatarUrl(node: ChartNode): string | null {
-    if (this.avatarErrors[node.id]) {
-      return null;
+  loadAvatarBase64ForUser(user: User): void {
+    if (!user.avatar || this.avatarErrors[user._id] || this.avatarCache[user._id]) {
+      return;
     }
-    if (node.avatar) {
-      const avatarPath = node.avatar;
-      // If already a full URL (starts with http:// or https://), return as is
-      if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-        return avatarPath;
-      }
-      // If it's a relative path, extract filename and use API endpoint
-      const filename = avatarPath.split('/').pop();
-      if (filename) {
-        // Use API endpoint: /api/users/avatar/:filename
-        return `${this.apiUrl}/users/avatar/${filename}`;
-      }
+
+    let filename: string | null = null;
+    const avatarPath = user.avatar;
+
+    // Extract filename from URL or path
+    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+      filename = avatarPath.split('/').pop() || null;
+    } else {
+      filename = avatarPath.split('/').pop() || null;
     }
-    return null;
+
+    if (!filename) {
+      return;
+    }
+
+    // Fetch avatar as base64 from API
+    this.http.get<{ image: string }>(`${this.apiUrl}/users/avatar/${filename}`).subscribe({
+      next: (response) => {
+        if (response.image) {
+          this.avatarCache[user._id] = response.image;
+          // Update the user's avatar in the users array
+          const userIndex = this.users.findIndex(u => u._id === user._id);
+          if (userIndex !== -1) {
+            this.users[userIndex] = { ...this.users[userIndex], avatar: response.image };
+          }
+          // Re-render charts if they are already rendered
+          setTimeout(() => {
+            if (this.viewMode === 'org') {
+              this.renderOrgChart();
+            } else {
+              this.renderFlowChart();
+            }
+          }, 0);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading avatar:', err);
+        this.avatarErrors[user._id] = true;
+      }
+    });
+  }
+
+  loadAvatarBase64(node: ChartNode): void {
+    if (!node.avatar || this.avatarErrors[node.id] || this.avatarCache[node.id]) {
+      return;
+    }
+
+    let filename: string | null = null;
+    const avatarPath = node.avatar;
+
+    // If it's already a data URI (base64), use it directly
+    if (avatarPath.startsWith('data:image/')) {
+      this.avatarCache[node.id] = avatarPath;
+      // Re-render to show the avatar
+      setTimeout(() => {
+        if (this.viewMode === 'org') {
+          this.renderOrgChart();
+        } else {
+          this.renderFlowChart();
+        }
+      }, 0);
+      return;
+    }
+
+    // Extract filename from URL or path
+    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+      filename = avatarPath.split('/').pop() || null;
+    } else {
+      filename = avatarPath.split('/').pop() || null;
+    }
+
+    if (!filename) {
+      return;
+    }
+
+    // Fetch avatar as base64 from API
+    this.http.get<{ image: string }>(`${this.apiUrl}/users/avatar/${filename}`).subscribe({
+      next: (response) => {
+        if (response.image) {
+          this.avatarCache[node.id] = response.image;
+          // Re-render to show the avatar
+          setTimeout(() => {
+            if (this.viewMode === 'org') {
+              this.renderOrgChart();
+            } else {
+              this.renderFlowChart();
+            }
+          }, 0);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading avatar:', err);
+        this.avatarErrors[node.id] = true;
+        // Re-render to show initials
+        setTimeout(() => {
+          if (this.viewMode === 'org') {
+            this.renderOrgChart();
+          } else {
+            this.renderFlowChart();
+          }
+        }, 0);
+      }
+    });
   }
 
   onAvatarError(userId: string): void {

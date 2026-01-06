@@ -37,6 +37,7 @@ export class TeamListComponent implements OnInit {
     position: ''
   };
   avatarErrors: { [userId: string]: boolean } = {};
+  avatarCache: { [userId: string]: string } = {}; // Cache for base64 avatars
 
   private apiUrl = environment.apiUrl;
 
@@ -53,6 +54,15 @@ export class TeamListComponent implements OnInit {
     this.http.get<User[]>(`${this.apiUrl}/users`).subscribe({
       next: (users) => {
         this.users = users;
+        // Load avatars in base64 for all users
+        users.forEach(user => {
+          if (user.avatar && !user.avatar.startsWith('data:image/')) {
+            this.loadAvatarBase64(user);
+          } else if (user.avatar && user.avatar.startsWith('data:image/')) {
+            // If already base64, cache it
+            this.avatarCache[user._id] = user.avatar;
+          }
+        });
       },
       error: (err) => {
         console.error('Error loading users', err);
@@ -144,18 +154,63 @@ export class TeamListComponent implements OnInit {
     }
     if (user.avatar) {
       const avatarPath = user.avatar;
-      // If already a full URL (starts with http:// or https://), return as is
-      if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+      
+      // If it's already a data URI (base64), use it directly
+      if (avatarPath.startsWith('data:image/')) {
+        this.avatarCache[user._id] = avatarPath;
         return avatarPath;
       }
-      // If it's a relative path, extract filename and use API endpoint
-      const filename = avatarPath.split('/').pop();
-      if (filename) {
-        // Use API endpoint: /api/users/avatar/:filename
-        return `${this.apiUrl}/users/avatar/${filename}`;
+
+      // Check cache first
+      if (this.avatarCache[user._id]) {
+        return this.avatarCache[user._id];
       }
+
+      // Load avatar in base64 if not in cache
+      this.loadAvatarBase64(user);
+      
+      // Return null while loading (will update when loaded)
+      return null;
     }
     return null;
+  }
+
+  loadAvatarBase64(user: User): void {
+    if (!user.avatar || this.avatarErrors[user._id] || this.avatarCache[user._id]) {
+      return;
+    }
+
+    let filename: string | null = null;
+    const avatarPath = user.avatar;
+
+    // Extract filename from URL or path
+    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+      filename = avatarPath.split('/').pop() || null;
+    } else {
+      filename = avatarPath.split('/').pop() || null;
+    }
+
+    if (!filename) {
+      return;
+    }
+
+    // Fetch avatar as base64 from API
+    this.http.get<{ image: string }>(`${this.apiUrl}/users/avatar/${filename}`).subscribe({
+      next: (response) => {
+        if (response.image) {
+          this.avatarCache[user._id] = response.image;
+          // Trigger change detection by updating the user object
+          const userIndex = this.users.findIndex(u => u._id === user._id);
+          if (userIndex !== -1) {
+            this.users[userIndex] = { ...this.users[userIndex] };
+          }
+        }
+      },
+      error: (err) => {
+        console.error('Error loading avatar:', err);
+        this.avatarErrors[user._id] = true;
+      }
+    });
   }
 
   onAvatarError(userId: string): void {

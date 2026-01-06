@@ -1,33 +1,40 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { HttpClient, HttpEventType } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { environment } from '../../../../../environments/environment';
-import { AuthService, User } from '../../../../core/services/auth.service';
-import { TranslationService } from '../../../../core/services/translation.service';
-import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
-import { PasswordEditModalComponent } from '../password-edit-modal/password-edit-modal.component';
+import { Component, OnInit, ViewChild, ElementRef } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { HttpClient, HttpEventType } from "@angular/common/http";
+import { Router, RouterLink } from "@angular/router";
+import { FormsModule } from "@angular/forms";
+import { environment } from "../../../../../environments/environment";
+import { AuthService, User } from "../../../../core/services/auth.service";
+import { TranslationService } from "../../../../core/services/translation.service";
+import { TranslatePipe } from "../../../../core/pipes/translate.pipe";
+import { PasswordEditModalComponent } from "../password-edit-modal/password-edit-modal.component";
 
 @Component({
-  selector: 'app-profile-edit',
+  selector: "app-profile-edit",
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TranslatePipe, PasswordEditModalComponent],
-  templateUrl: './profile-edit.component.html'
+  imports: [
+    CommonModule,
+    RouterLink,
+    FormsModule,
+    TranslatePipe,
+    PasswordEditModalComponent,
+  ],
+  templateUrl: "./profile-edit.component.html",
 })
 export class ProfileEditComponent implements OnInit {
-  @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild("fileInput", { static: false })
+  fileInput!: ElementRef<HTMLInputElement>;
 
   profileForm = {
-    firstName: '',
-    lastName: '',
-    email: ''
+    firstName: "",
+    lastName: "",
+    email: "",
   };
   showPasswordModal = false;
   loading = false;
   uploadingAvatar = false;
-  error: string = '';
-  success: string = '';
+  error: string = "";
+  success: string = "";
   avatarUrl: string | null = null;
   avatarPreview: string | null = null;
   selectedFile: File | null = null;
@@ -48,27 +55,30 @@ export class ProfileEditComponent implements OnInit {
   loadProfile(): void {
     const currentUser = this.authService.currentUser;
     console.log(currentUser);
-    
+
     if (currentUser) {
       this.profileForm = {
-        firstName: currentUser.firstName || '',
-        lastName: currentUser.lastName || '',
-        email: currentUser.email || ''
+        firstName: currentUser.firstName || "",
+        lastName: currentUser.lastName || "",
+        email: currentUser.email || "",
       };
-      
+ 
       // Cargar avatar si existe
       if ((currentUser as any).avatar) {
         const avatarPath = (currentUser as any).avatar;
-        if (avatarPath.startsWith('http')) {
+
+        if (avatarPath.startsWith("http")) {
           this.avatarUrl = avatarPath;
         } else {
-          const baseUrl = this.apiUrl.replace('/api', '');
+          const baseUrl = this.apiUrl.replace("/api", "");
           this.avatarUrl = `${baseUrl}${avatarPath}`;
         }
+
+       
       }
-      
-      this.error = '';
-      this.success = '';
+
+      this.error = "";
+      this.success = "";
     }
   }
 
@@ -77,35 +87,42 @@ export class ProfileEditComponent implements OnInit {
     if (currentUser) {
       return `${currentUser.firstName[0]}${currentUser.lastName[0]}`.toUpperCase();
     }
-    return 'U';
+    return "U";
+  }
+
+  getImage(){
+    
+   
   }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      
+
       // Validar que sea una imagen
-      if (!file.type.startsWith('image/')) {
-        this.error = this.translationService.translate('profile.invalidImageType');
+      if (!file.type.startsWith("image/")) {
+        this.error = this.translationService.translate(
+          "profile.invalidImageType"
+        );
         return;
       }
-      
+
       // Validar tamaño (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        this.error = this.translationService.translate('profile.imageTooLarge');
+        this.error = this.translationService.translate("profile.imageTooLarge");
         return;
       }
-      
+
       this.selectedFile = file;
-      
+
       // Crear preview
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.avatarPreview = e.target.result;
       };
       reader.readAsDataURL(file);
-      
+
       // Subir inmediatamente
       this.uploadAvatar();
     }
@@ -117,92 +134,106 @@ export class ProfileEditComponent implements OnInit {
 
   uploadAvatar(): void {
     if (!this.selectedFile) return;
-    
+
     this.uploadingAvatar = true;
-    this.error = '';
-    
+    this.error = "";
+
     const formData = new FormData();
-    formData.append('avatar', this.selectedFile);
-    
+    formData.append("avatar", this.selectedFile);
+
     const currentUser = this.authService.currentUser;
     if (!currentUser) {
-      this.error = this.translationService.translate('profile.userNotFound');
+      this.error = this.translationService.translate("profile.userNotFound");
       this.uploadingAvatar = false;
       return;
     }
-    
-    this.http.post(`${this.apiUrl}/users/${currentUser.id}/avatar`, formData, {
-      reportProgress: true,
-      observe: 'events'
-    }).subscribe({
-      next: (event: any) => {
-        if (event.type === HttpEventType.Response) {
-          this.uploadingAvatar = false;
-          const response = event.body;
-          
-          if (response && response.avatar) {
-            const avatarPath = response.avatar;
-            const baseUrl = this.apiUrl.replace('/api', '');
-            this.avatarUrl = `${baseUrl}${avatarPath}`;
-            this.avatarPreview = null;
-            this.selectedFile = null;
-            
-            // Actualizar el usuario en el servicio de autenticación
-            this.authService.getMe().subscribe({
-              next: () => {
-                this.success = this.translationService.translate('profile.avatarUpdatedSuccessfully');
-                setTimeout(() => {
-                  this.success = '';
-                }, 3000);
-              },
-              error: (err) => {
-                console.error('Error refreshing user data', err);
-              }
-            });
+
+    this.http
+      .post(`${this.apiUrl}/users/${currentUser.id}/avatar`, formData, {
+        reportProgress: true,
+        observe: "events",
+      })
+      .subscribe({
+        next: (event: any) => {
+          if (event.type === HttpEventType.Response) {
+            this.uploadingAvatar = false;
+            const response = event.body;
+
+            if (response && response.avatar) {
+              const avatarPath = response.avatar;
+              const baseUrl = this.apiUrl.replace("/api", "");
+              this.avatarUrl = `${baseUrl}${avatarPath}`;
+              this.avatarPreview = null;
+              this.selectedFile = null;
+
+              // Actualizar el usuario en el servicio de autenticación
+              this.authService.getMe().subscribe({
+                next: () => {
+                  this.success = this.translationService.translate(
+                    "profile.avatarUpdatedSuccessfully"
+                  );
+                  setTimeout(() => {
+                    this.success = "";
+                  }, 3000);
+                },
+                error: (err) => {
+                  console.error("Error refreshing user data", err);
+                },
+              });
+            }
           }
-        }
-      },
-      error: (err) => {
-        this.uploadingAvatar = false;
-        this.error = err.error?.message || err.error?.error || this.translationService.translate('profile.errorUpdatingAvatar');
-        this.avatarPreview = null;
-        this.selectedFile = null;
-      }
-    });
+        },
+        error: (err) => {
+          this.uploadingAvatar = false;
+          this.error =
+            err.error?.message ||
+            err.error?.error ||
+            this.translationService.translate("profile.errorUpdatingAvatar");
+          this.avatarPreview = null;
+          this.selectedFile = null;
+        },
+      });
   }
 
   removeAvatar(): void {
     const currentUser = this.authService.currentUser;
     if (!currentUser) return;
-    
+
     this.uploadingAvatar = true;
-    this.error = '';
-    
-    this.http.delete(`${this.apiUrl}/users/${currentUser.id}/avatar`).subscribe({
-      next: () => {
-        this.uploadingAvatar = false;
-        this.avatarUrl = null;
-        this.avatarPreview = null;
-        this.selectedFile = null;
-        
-        // Actualizar el usuario en el servicio de autenticación
-        this.authService.getMe().subscribe({
-          next: () => {
-            this.success = this.translationService.translate('profile.avatarRemovedSuccessfully');
-            setTimeout(() => {
-              this.success = '';
-            }, 3000);
-          },
-          error: (err) => {
-            console.error('Error refreshing user data', err);
-          }
-        });
-      },
-      error: (err) => {
-        this.uploadingAvatar = false;
-        this.error = err.error?.message || err.error?.error || this.translationService.translate('profile.errorRemovingAvatar');
-      }
-    });
+    this.error = "";
+
+    this.http
+      .delete(`${this.apiUrl}/users/${currentUser.id}/avatar`)
+      .subscribe({
+        next: () => {
+          this.uploadingAvatar = false;
+          this.avatarUrl = null;
+          this.avatarPreview = null;
+          this.selectedFile = null;
+
+          // Actualizar el usuario en el servicio de autenticación
+          this.authService.getMe().subscribe({
+            next: () => {
+              this.success = this.translationService.translate(
+                "profile.avatarRemovedSuccessfully"
+              );
+              setTimeout(() => {
+                this.success = "";
+              }, 3000);
+            },
+            error: (err) => {
+              console.error("Error refreshing user data", err);
+            },
+          });
+        },
+        error: (err) => {
+          this.uploadingAvatar = false;
+          this.error =
+            err.error?.message ||
+            err.error?.error ||
+            this.translationService.translate("profile.errorRemovingAvatar");
+        },
+      });
   }
 
   openPasswordModal(): void {
@@ -218,36 +249,40 @@ export class ProfileEditComponent implements OnInit {
   }
 
   saveProfile(): void {
-    this.error = '';
-    this.success = '';
+    this.error = "";
+    this.success = "";
 
     // Validaciones
     if (!this.profileForm.firstName || !this.profileForm.firstName.trim()) {
-      this.error = this.translationService.translate('profile.firstNameRequired');
+      this.error = this.translationService.translate(
+        "profile.firstNameRequired"
+      );
       return;
     }
 
     if (!this.profileForm.lastName || !this.profileForm.lastName.trim()) {
-      this.error = this.translationService.translate('profile.lastNameRequired');
+      this.error = this.translationService.translate(
+        "profile.lastNameRequired"
+      );
       return;
     }
 
     if (!this.profileForm.email || !this.profileForm.email.trim()) {
-      this.error = this.translationService.translate('profile.emailRequired');
+      this.error = this.translationService.translate("profile.emailRequired");
       return;
     }
 
     // Validar email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.profileForm.email)) {
-      this.error = this.translationService.translate('profile.invalidEmail');
+      this.error = this.translationService.translate("profile.invalidEmail");
       return;
     }
 
     this.loading = true;
     const currentUser = this.authService.currentUser;
     if (!currentUser) {
-      this.error = this.translationService.translate('profile.userNotFound');
+      this.error = this.translationService.translate("profile.userNotFound");
       this.loading = false;
       return;
     }
@@ -255,32 +290,38 @@ export class ProfileEditComponent implements OnInit {
     const updateData = {
       firstName: this.profileForm.firstName.trim(),
       lastName: this.profileForm.lastName.trim(),
-      email: this.profileForm.email.trim()
+      email: this.profileForm.email.trim(),
     };
 
-    this.http.put<User>(`${this.apiUrl}/users/${currentUser.id}`, updateData).subscribe({
-      next: () => {
-        this.loading = false;
-        this.success = this.translationService.translate('profile.updatedSuccessfully');
-        
-        // Actualizar el usuario en el servicio de autenticación
-        this.authService.getMe().subscribe({
-          next: () => {
-            // Limpiar el mensaje de éxito después de un breve delay
-            setTimeout(() => {
-              this.success = '';
-            }, 3000);
-          },
-          error: (err) => {
-            console.error('Error refreshing user data', err);
-          }
-        });
-      },
-      error: (err) => {
-        this.loading = false;
-        this.error = err.error?.message || err.error?.error || this.translationService.translate('profile.errorUpdating');
-      }
-    });
+    this.http
+      .put<User>(`${this.apiUrl}/users/${currentUser.id}`, updateData)
+      .subscribe({
+        next: () => {
+          this.loading = false;
+          this.success = this.translationService.translate(
+            "profile.updatedSuccessfully"
+          );
+
+          // Actualizar el usuario en el servicio de autenticación
+          this.authService.getMe().subscribe({
+            next: () => {
+              // Limpiar el mensaje de éxito después de un breve delay
+              setTimeout(() => {
+                this.success = "";
+              }, 3000);
+            },
+            error: (err) => {
+              console.error("Error refreshing user data", err);
+            },
+          });
+        },
+        error: (err) => {
+          this.loading = false;
+          this.error =
+            err.error?.message ||
+            err.error?.error ||
+            this.translationService.translate("profile.errorUpdating");
+        },
+      });
   }
 }
-

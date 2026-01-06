@@ -138,8 +138,25 @@ export const userController = {
         return res.status(404).json({ error: 'Avatar not found' });
       }
 
-      // Enviar el archivo
-      res.sendFile(avatarPath);
+      // Leer el archivo y convertirlo a base64
+      const fileBuffer = fs.readFileSync(avatarPath);
+      const base64Image = fileBuffer.toString('base64');
+      
+      // Determinar el tipo MIME basado en la extensión del archivo
+      const ext = path.extname(filename).toLowerCase();
+      const mimeTypes = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp',
+        '.svg': 'image/svg+xml'
+      };
+      const mimeType = mimeTypes[ext] || 'image/jpeg';
+      
+      // Devolver como data URI en base64
+      const dataUri = `data:${mimeType};base64,${base64Image}`;
+      res.json({ image: dataUri });
     } catch (error) {
       next(error);
     }
