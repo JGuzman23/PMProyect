@@ -69,7 +69,15 @@ export const authController = {
           
           // If we have a filename, try to load the file
           if (filename && !avatarBase64) {
-            const avatarFilePath = path.join(__dirname, '../../../uploads/avatars', filename);
+            // Use absolute path for uploads directory (works in Docker with volumes)
+            // Try /app/uploads first (Docker), then fallback to process.cwd()/uploads
+            let uploadsBasePath;
+            if (fs.existsSync('/app/uploads')) {
+              uploadsBasePath = '/app/uploads';
+            } else {
+              uploadsBasePath = path.join(process.cwd(), 'uploads');
+            }
+            const avatarFilePath = path.join(uploadsBasePath, 'avatars', filename);
             
             if (fs.existsSync(avatarFilePath)) {
               const fileBuffer = fs.readFileSync(avatarFilePath);

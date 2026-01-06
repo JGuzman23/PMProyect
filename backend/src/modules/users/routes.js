@@ -12,7 +12,15 @@ const __dirname = path.dirname(__filename);
 const router = express.Router();
 
 // Asegurar que el directorio de avatares existe
-const avatarsPath = path.join(__dirname, '../../../uploads/avatars');
+// Use absolute path for uploads directory (works in Docker with volumes)
+// Try /app/uploads first (Docker), then fallback to relative path
+let uploadsBasePath;
+if (fs.existsSync('/app/uploads')) {
+  uploadsBasePath = '/app/uploads';
+} else {
+  uploadsBasePath = path.join(__dirname, '../../../uploads');
+}
+const avatarsPath = path.join(uploadsBasePath, 'avatars');
 
 // Función para asegurar que el directorio existe con permisos correctos
 const ensureDirectoryExists = (dirPath) => {

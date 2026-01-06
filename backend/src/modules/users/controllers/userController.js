@@ -129,12 +129,25 @@ export const userController = {
   async getAvatar(req, res, next) {
     try {
       const { filename } = req.params;
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      const avatarPath = path.join(__dirname, '../../../uploads/avatars', filename);
+      
+      // Use absolute path for uploads directory (works in Docker with volumes)
+      // In Docker, uploads are mounted at /app/uploads
+      // In local development, it's relative to the project root
+      // Try /app/uploads first (Docker), then fallback to process.cwd()/uploads
+      let uploadsBasePath;
+      if (fs.existsSync('/app/uploads')) {
+        uploadsBasePath = '/app/uploads';
+      } else {
+        uploadsBasePath = path.join(process.cwd(), 'uploads');
+      }
+      const avatarPath = path.join(uploadsBasePath, 'avatars', filename);
 
       // Verificar que el archivo existe
       if (!fs.existsSync(avatarPath)) {
+        console.error(`Avatar file not found: ${avatarPath}`);
+        console.error(`Current working directory: ${process.cwd()}`);
+        console.error(`Uploads base path: ${uploadsBasePath}`);
+        console.error(`Looking for file: ${filename}`);
         return res.status(404).json({ error: 'Avatar not found' });
       }
 
