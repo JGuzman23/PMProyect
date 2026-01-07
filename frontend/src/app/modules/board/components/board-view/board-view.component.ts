@@ -178,7 +178,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     dueDate: '',
     clientId: '',
     agentIds: [] as string[],
-    agentNames: [] as string[]
+    agentNames: [] as string[],
+    columnId: ''
   };
   attachments: Attachment[] = [];
   attachmentsByStatus: { [statusId: string]: Attachment[] } = {};
@@ -545,6 +546,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     if (task) {
       this.selectedTask = task;
       const clientId = typeof task.clientId === 'object' ? task.clientId._id : task.clientId || '';
+      const columnId = typeof task.columnId === 'object' ? task.columnId._id : task.columnId || '';
       this.taskForm = {
         title: task.title,
         description: task.description || '',
@@ -553,7 +555,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
         clientId: clientId,
         agentIds: task.agentIds ? [...task.agentIds] : [],
-        agentNames: task.agentNames ? [...task.agentNames] : []
+        agentNames: task.agentNames ? [...task.agentNames] : [],
+        columnId: columnId
       };
       if (clientId) {
         this.selectedClient = this.clients.find(c => c._id === clientId) || null;
@@ -600,7 +603,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         dueDate: '',
         clientId: '',
         agentIds: [],
-        agentNames: []
+        agentNames: [],
+        columnId: ''
       };
       this.selectedClient = null;
       this.attachments = [];
@@ -641,6 +645,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     if (this.selectedTask) {
       // Restaurar valores originales
       const clientId = typeof this.selectedTask.clientId === 'object' ? this.selectedTask.clientId._id : this.selectedTask.clientId || '';
+      const columnId = typeof this.selectedTask.columnId === 'object' ? this.selectedTask.columnId._id : this.selectedTask.columnId || '';
       this.taskForm = {
         title: this.selectedTask.title,
         description: this.selectedTask.description || '',
@@ -649,7 +654,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         dueDate: this.selectedTask.dueDate ? new Date(this.selectedTask.dueDate).toISOString().split('T')[0] : '',
         clientId: clientId,
         agentIds: this.selectedTask.agentIds ? [...this.selectedTask.agentIds] : [],
-        agentNames: this.selectedTask.agentNames ? [...this.selectedTask.agentNames] : []
+        agentNames: this.selectedTask.agentNames ? [...this.selectedTask.agentNames] : [],
+        columnId: columnId
       };
       if (clientId) {
         this.selectedClient = this.clients.find(c => c._id === clientId) || null;
@@ -1087,8 +1093,11 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       // Adjuntos - se manejan directamente en el componente task-modal
       // No incluirlos aquí para evitar sobrescribir los adjuntos existentes
       
-      // NO enviar columnId a menos que se esté moviendo la tarea (eso se hace con drag & drop)
-      // El columnId solo debe cambiar cuando se arrastra la tarea, no cuando se edita
+      // ColumnId - permitir edición desde el modal
+      const oldColumnId = typeof oldTask.columnId === 'object' ? oldTask.columnId._id : oldTask.columnId || '';
+      if (this.taskForm.columnId && this.taskForm.columnId !== oldColumnId) {
+        taskData.columnId = this.taskForm.columnId;
+      }
     } else {
       // Para nueva tarea, enviar todos los campos necesarios
       const columnId = this.columns[this.selectedColumnIndex]._id || this.columns[this.selectedColumnIndex].name;

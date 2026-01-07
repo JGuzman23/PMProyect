@@ -120,6 +120,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
   showAgentDropdown = false;
   showClientDropdown = false;
   showPriorityDropdown = false;
+  showStatusDropdown = false;
   showAttachmentTitleModal = false;
   pendingFile: File | null = null;
   attachmentTitle = '';
@@ -142,7 +143,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
     dueDate: '',
     clientId: '',
     agentIds: [] as string[],
-    agentNames: [] as string[]
+    agentNames: [] as string[],
+    columnId: ''
   };
   
   attachments: Attachment[] = [];
@@ -157,10 +159,12 @@ export class TaskModalComponent implements OnInit, OnChanges {
   agentSearchTerm = '';
   assigneeSearchTerm = '';
   prioritySearchTerm = '';
+  statusSearchTerm = '';
   filteredClients: Client[] = [];
   filteredAgents: Agent[] = [];
   filteredUsers: User[] = [];
   filteredPriorities: { value: string; label: string }[] = [];
+  filteredColumns: Column[] = [];
 
   private apiUrl = environment.apiUrl;
 
@@ -172,6 +176,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.updateFilteredPriorities();
+    this.updateFilteredColumns();
     if (this.task) {
       this.loadTaskData();
     }
@@ -187,6 +192,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
     if (!this.task) return;
     
     const clientId = typeof this.task.clientId === 'object' ? this.task.clientId._id : this.task.clientId || '';
+    const columnId = typeof this.task.columnId === 'object' ? this.task.columnId._id : this.task.columnId || '';
     this.taskForm = {
       title: this.task.title || '',
       description: this.task.description || '',
@@ -195,7 +201,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
       dueDate: this.task.dueDate || '',
       clientId: clientId,
       agentIds: this.task.agentIds ? [...this.task.agentIds] : [],
-      agentNames: this.task.agentNames ? [...this.task.agentNames] : []
+      agentNames: this.task.agentNames ? [...this.task.agentNames] : [],
+      columnId: columnId
     };
     
     if (clientId) {
@@ -219,6 +226,13 @@ export class TaskModalComponent implements OnInit, OnChanges {
     this.isEditMode = false;
   }
 
+  getCurrentColumnName(): string {
+    const columnId = this.taskForm.columnId || (this.task && (typeof this.task.columnId === 'object' ? this.task.columnId._id : this.task.columnId)) || '';
+    if (!columnId) return '';
+    const column = this.columns.find(c => c._id === columnId);
+    return column ? column.name : '';
+  }
+
   resetForm(): void {
     this.taskForm = {
       title: '',
@@ -228,7 +242,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
       dueDate: '',
       clientId: '',
       agentIds: [],
-      agentNames: []
+      agentNames: [],
+      columnId: ''
     };
     this.selectedClient = null;
     this.attachments = [];
@@ -458,6 +473,17 @@ export class TaskModalComponent implements OnInit, OnChanges {
     });
   }
 
+  updateFilteredColumns(): void {
+    if (!this.statusSearchTerm.trim()) {
+      this.filteredColumns = this.columns;
+      return;
+    }
+    const search = this.statusSearchTerm.toLowerCase();
+    this.filteredColumns = this.columns.filter(column =>
+      column.name.toLowerCase().includes(search)
+    );
+  }
+
   updateFilteredPriorities(): void {
     const priorities = [
       { value: 'low', label: 'Baja' },
@@ -491,6 +517,10 @@ export class TaskModalComponent implements OnInit, OnChanges {
     if (!target.closest('.priority-dropdown-container')) {
       this.showPriorityDropdown = false;
       this.prioritySearchTerm = '';
+    }
+    if (!target.closest('.status-dropdown-container')) {
+      this.showStatusDropdown = false;
+      this.statusSearchTerm = '';
     }
     if (!target.closest('.task-actions-dropdown-container')) {
       this.showTaskActionsDropdown = false;
