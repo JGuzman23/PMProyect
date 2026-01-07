@@ -178,6 +178,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   attachments: Attachment[] = [];
   attachmentsByStatus: { [statusId: string]: Attachment[] } = {};
   uploadingFiles = false;
+  // Notification state
+  notification: { message: string; type: 'success' | 'error' | 'info' } | null = null;
   uploadingAttachmentIds: Set<string> = new Set(); // Track which attachments are being uploaded
   pendingStatusId: string | null = null;
   comments: Comment[] = [];
@@ -1278,10 +1280,12 @@ export class BoardViewComponent implements OnInit, OnDestroy {
             uploadedAt: response.uploadedAt || new Date().toISOString()
           };
           this.uploadingAttachmentIds.delete(tempId); // Remove from uploading set
-          this.uploadingAttachmentIds.delete(tempId); // Remove from uploading set
           this.groupAttachmentsByStatus();
         }
         this.uploadingFiles = false;
+        
+        // Mostrar notificación de éxito
+        this.showNotification('tasks.fileUploadedSuccessfully', 'success');
       },
       error: (err) => {
         console.error('Error uploading file', err);
@@ -1306,6 +1310,20 @@ export class BoardViewComponent implements OnInit, OnDestroy {
 
   isAttachmentUploading(attachment: Attachment): boolean {
     return attachment._id ? this.uploadingAttachmentIds.has(attachment._id) : false;
+  }
+
+  showNotification(messageKey: string, type: 'success' | 'error' | 'info' = 'success'): void {
+    const message = this.translationService.translate(messageKey) || messageKey;
+    this.notification = { message, type };
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      this.notification = null;
+    }, 3000);
+  }
+
+  closeNotification(): void {
+    this.notification = null;
   }
 
   removeAttachment(statusId: string, index: number): void {

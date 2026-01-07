@@ -126,6 +126,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
   uploadingFiles = false;
   uploadingAttachmentIds: Set<string> = new Set(); // Track which attachments are being uploaded
   pendingStatusId: string | null = null;
+  // Notification state
+  notification: { message: string; type: 'success' | 'error' | 'info' } | null = null;
   loadingUsers = false;
   loadingClients = false;
   showEmojiPicker = false;
@@ -1109,6 +1111,9 @@ export class TaskModalComponent implements OnInit, OnChanges {
         }
         this.uploadingFiles = false;
         
+        // Mostrar notificación de éxito
+        this.showNotification('tasks.fileUploadedSuccessfully', 'success');
+        
         // Recargar la tarea para obtener los datos actualizados
         if (this.task) {
           this.http.get<Task>(`${this.apiUrl}/tasks/${this.task._id}`).subscribe({
@@ -1175,6 +1180,20 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
   isAttachmentUploading(attachment: Attachment): boolean {
     return attachment._id ? this.uploadingAttachmentIds.has(attachment._id) : false;
+  }
+
+  showNotification(messageKey: string, type: 'success' | 'error' | 'info' = 'success'): void {
+    const message = this.translationService.translate(messageKey) || messageKey;
+    this.notification = { message, type };
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      this.notification = null;
+    }, 3000);
+  }
+
+  closeNotification(): void {
+    this.notification = null;
   }
 
   removeAttachment(statusId: string, index: number): void {
