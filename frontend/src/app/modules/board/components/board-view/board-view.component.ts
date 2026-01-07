@@ -128,6 +128,11 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   users: User[] = [];
   clients: Client[] = [];
   loading = true;
+  isEditingBoard = false;
+  boardForm = {
+    name: '',
+    description: ''
+  };
   loadingUsers = false;
   loadingClients = false;
   showTaskModal = false;
@@ -364,6 +369,11 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       next: (board) => {
         console.log('Board loaded:', board);
         this.board = board;
+        // Inicializar formulario con los datos del board
+        this.boardForm = {
+          name: board.name || '',
+          description: board.description || ''
+        };
         this.loadStatuses();
       },
       error: (err) => {
@@ -1324,6 +1334,51 @@ export class BoardViewComponent implements OnInit, OnDestroy {
 
   closeNotification(): void {
     this.notification = null;
+  }
+
+  enableBoardEdit(): void {
+    if (this.board) {
+      this.boardForm = {
+        name: this.board.name || '',
+        description: this.board.description || ''
+      };
+      this.isEditingBoard = true;
+    }
+  }
+
+  cancelBoardEdit(): void {
+    if (this.board) {
+      this.boardForm = {
+        name: this.board.name || '',
+        description: this.board.description || ''
+      };
+    }
+    this.isEditingBoard = false;
+  }
+
+  saveBoard(): void {
+    if (!this.board || !this.boardId) return;
+    
+    if (!this.boardForm.name.trim()) {
+      this.showNotification('boards.nameRequired', 'error');
+      return;
+    }
+
+    this.http.put<Board>(`${this.apiUrl}/boards/${this.boardId}`, {
+      name: this.boardForm.name.trim(),
+      description: this.boardForm.description.trim()
+    }).subscribe({
+      next: (updatedBoard) => {
+        this.board = updatedBoard;
+        this.isEditingBoard = false;
+        this.showNotification('boards.updatedSuccessfully', 'success');
+      },
+      error: (err) => {
+        console.error('Error updating board', err);
+        const errorMessage = err.error?.message || err.error?.error || this.translationService.translate('boards.errorUpdating');
+        this.showNotification(errorMessage, 'error');
+      }
+    });
   }
 
   removeAttachment(statusId: string, index: number): void {

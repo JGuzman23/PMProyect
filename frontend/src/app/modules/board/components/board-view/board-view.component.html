@@ -32,8 +32,54 @@
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-2 sm:mb-4">
       <!-- Board Title and Description -->
       <div class="flex-1 min-w-0">
-        <h2 class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">{{ board?.name }}</h2>
-        <p class="text-xs sm:text-sm md:text-base text-gray-600">{{ board?.description }}</p>
+        <!-- Modo edición -->
+        <div *ngIf="isEditingBoard" class="space-y-2">
+          <input
+            type="text"
+            [(ngModel)]="boardForm.name"
+            [placeholder]="'boards.name' | translate"
+            class="w-full text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 border-2 border-indigo-500 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <textarea
+            [(ngModel)]="boardForm.description"
+            [placeholder]="'boards.description' | translate"
+            rows="2"
+            class="w-full text-xs sm:text-sm md:text-base text-gray-600 border-2 border-indigo-500 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          ></textarea>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="saveBoard()"
+              class="px-3 py-1.5 bg-indigo-600 text-white text-xs sm:text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {{ 'common.save' | translate }}
+            </button>
+            <button
+              type="button"
+              (click)="cancelBoardEdit()"
+              class="px-3 py-1.5 bg-gray-300 text-gray-700 text-xs sm:text-sm rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              {{ 'common.cancel' | translate }}
+            </button>
+          </div>
+        </div>
+        <!-- Modo visualización -->
+        <div *ngIf="!isEditingBoard">
+          <div class="flex items-start gap-2">
+            <h2 class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-1 sm:mb-2 flex-1">{{ board?.name }}</h2>
+            <button
+              type="button"
+              (click)="enableBoardEdit()"
+              class="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+              [title]="'boards.editBoard' | translate"
+            >
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+          </div>
+          <p class="text-xs sm:text-sm md:text-base text-gray-600">{{ board?.description || ('boards.noDescription' | translate) }}</p>
+        </div>
       </div>
 
       <!-- Filter Options -->

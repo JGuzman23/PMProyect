@@ -141,7 +141,8 @@ export class TranslationService {
         menu: 'Menú',
         noResults: 'No se encontraron resultados',
         view: 'Ver',
-        remove: 'Eliminar'
+        remove: 'Eliminar',
+        select: 'Seleccionar'
       },
       footer: {
         createdBy: 'Creado por',
@@ -436,7 +437,11 @@ export class TranslationService {
         taskPrefix: 'Prefijo de ID de Tareas',
         taskPrefixHint: 'Ej: PROJ, TASK, DEV',
         taskPrefixPlaceholder: 'PROJ',
-        taskPrefixDescription: 'Este prefijo se usará para generar IDs automáticos de tareas (ej: PROJ-001, PROJ-002)'
+        taskPrefixDescription: 'Este prefijo se usará para generar IDs automáticos de tareas (ej: PROJ-001, PROJ-002)',
+        editBoard: 'Editar Tablero',
+        nameRequired: 'El nombre del tablero es requerido',
+        updatedSuccessfully: 'Tablero actualizado correctamente',
+        errorUpdating: 'Error al actualizar el tablero'
       },
       admin: {
         projects: 'Proyectos',
@@ -482,7 +487,8 @@ export class TranslationService {
         no: 'No',
         confirm: 'Confirm',
         view: 'View',
-        remove: 'Remove'
+        remove: 'Remove',
+        select: 'Select'
       },
       footer: {
         createdBy: 'Created by',
@@ -777,7 +783,11 @@ export class TranslationService {
         taskPrefix: 'Task ID Prefix',
         taskPrefixHint: 'E.g: PROJ, TASK, DEV',
         taskPrefixPlaceholder: 'PROJ',
-        taskPrefixDescription: 'This prefix will be used to generate automatic task IDs (e.g: PROJ-001, PROJ-002)'
+        taskPrefixDescription: 'This prefix will be used to generate automatic task IDs (e.g: PROJ-001, PROJ-002)',
+        editBoard: 'Edit Board',
+        nameRequired: 'Board name is required',
+        updatedSuccessfully: 'Board updated successfully',
+        errorUpdating: 'Error updating board'
       },
       admin: {
         projects: 'Projects',
@@ -821,7 +831,8 @@ export class TranslationService {
         status: 'Statut',
         yes: 'Oui',
         no: 'Non',
-        confirm: 'Confirmer'
+        confirm: 'Confirmer',
+        select: 'Sélectionner'
       },
       footer: {
         createdBy: 'Créé par',
@@ -1050,7 +1061,8 @@ export class TranslationService {
         status: 'Status',
         yes: 'Ja',
         no: 'Nein',
-        confirm: 'Bestätigen'
+        confirm: 'Bestätigen',
+        select: 'Auswählen'
       },
       footer: {
         createdBy: 'Erstellt von',
@@ -1282,7 +1294,8 @@ export class TranslationService {
         status: 'Status',
         yes: 'Sim',
         no: 'Não',
-        confirm: 'Confirmar'
+        confirm: 'Confirmar',
+        select: 'Selecionar'
       },
       footer: {
         createdBy: 'Criado por',
@@ -1513,7 +1526,8 @@ export class TranslationService {
         status: 'Stato',
         yes: 'Sì',
         no: 'No',
-        confirm: 'Conferma'
+        confirm: 'Conferma',
+        select: 'Seleziona'
       },
       footer: {
         createdBy: 'Creato da',
