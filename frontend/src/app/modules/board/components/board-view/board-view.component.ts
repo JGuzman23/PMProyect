@@ -178,6 +178,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   attachments: Attachment[] = [];
   attachmentsByStatus: { [statusId: string]: Attachment[] } = {};
   uploadingFiles = false;
+  uploadingAttachmentIds: Set<string> = new Set(); // Track which attachments are being uploaded
   pendingStatusId: string | null = null;
   comments: Comment[] = [];
   activityLog: ActivityLog[] = [];
@@ -1211,6 +1212,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         _id: tempId
       };
       this.attachments.push(previewAttachment);
+      this.uploadingAttachmentIds.add(tempId); // Mark as uploading
       this.groupAttachmentsByStatus();
     };
     
@@ -1229,6 +1231,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         _id: tempId
       };
       this.attachments.push(previewAttachment);
+      this.uploadingAttachmentIds.add(tempId); // Mark as uploading
       this.groupAttachmentsByStatus();
     }
 
@@ -1274,6 +1277,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
             statusName: response.statusName || statusName,
             uploadedAt: response.uploadedAt || new Date().toISOString()
           };
+          this.uploadingAttachmentIds.delete(tempId); // Remove from uploading set
+          this.uploadingAttachmentIds.delete(tempId); // Remove from uploading set
           this.groupAttachmentsByStatus();
         }
         this.uploadingFiles = false;
@@ -1282,6 +1287,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         console.error('Error uploading file', err);
         // Remover el preview si falla la subida
         this.attachments = this.attachments.filter(a => a._id !== tempId);
+        this.uploadingAttachmentIds.delete(tempId); // Remove from uploading set
         this.uploadingFiles = false;
         
         // Mostrar mensaje de error más específico
@@ -1296,6 +1302,10 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         alert(errorMessage);
       }
     });
+  }
+
+  isAttachmentUploading(attachment: Attachment): boolean {
+    return attachment._id ? this.uploadingAttachmentIds.has(attachment._id) : false;
   }
 
   removeAttachment(statusId: string, index: number): void {

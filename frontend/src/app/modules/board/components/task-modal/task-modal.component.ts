@@ -124,6 +124,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
   pendingFile: File | null = null;
   attachmentTitle = '';
   uploadingFiles = false;
+  uploadingAttachmentIds: Set<string> = new Set(); // Track which attachments are being uploaded
   pendingStatusId: string | null = null;
   loadingUsers = false;
   loadingClients = false;
@@ -1040,6 +1041,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
         _id: tempId
       };
       this.attachments.push(previewAttachment);
+      this.uploadingAttachmentIds.add(tempId); // Mark as uploading
       this.groupAttachmentsByStatus();
     };
     
@@ -1057,6 +1059,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
         _id: tempId
       };
       this.attachments.push(previewAttachment);
+      this.uploadingAttachmentIds.add(tempId); // Mark as uploading
       this.groupAttachmentsByStatus();
     }
 
@@ -1101,6 +1104,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
             uploadedAt: response.uploadedAt || new Date().toISOString(),
             _id: response._id || tempId
           };
+          this.uploadingAttachmentIds.delete(tempId); // Remove from uploading set
           this.groupAttachmentsByStatus();
         }
         this.uploadingFiles = false;
@@ -1121,6 +1125,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
       error: (err) => {
         console.error('Error uploading file', err);
         this.attachments = this.attachments.filter(a => a._id !== tempId);
+        this.uploadingAttachmentIds.delete(tempId); // Remove from uploading set
         this.uploadingFiles = false;
         
         // Mostrar mensaje de error más específico
@@ -1166,6 +1171,10 @@ export class TaskModalComponent implements OnInit, OnChanges {
         console.error('Error downloading file', error);
         window.open(attachment.url, '_blank');
       });
+  }
+
+  isAttachmentUploading(attachment: Attachment): boolean {
+    return attachment._id ? this.uploadingAttachmentIds.has(attachment._id) : false;
   }
 
   removeAttachment(statusId: string, index: number): void {

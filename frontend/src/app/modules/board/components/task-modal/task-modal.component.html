@@ -250,7 +250,16 @@
                       *ngFor="let attachment of getAttachmentsForStatus(column._id || ''); let i = index"
                       class="relative group"
                     >
-                      <div class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white">
+                      <!-- Skeleton loader mientras se sube -->
+                      <div *ngIf="isAttachmentUploading(attachment)" class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-gray-100 animate-pulse">
+                        <div class="w-full h-full flex flex-col items-center justify-center p-2">
+                          <div class="w-8 h-8 bg-gray-300 rounded mb-2 animate-pulse"></div>
+                          <div class="w-16 h-3 bg-gray-300 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                      
+                      <!-- Contenido normal cuando no está subiendo -->
+                      <div *ngIf="!isAttachmentUploading(attachment)" class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white">
                         <img
                           *ngIf="isImageFile(attachment.url || '', attachment.name)"
                           [src]="attachment.url"
@@ -266,7 +275,7 @@
                           <span class="text-xs text-gray-600 text-center truncate w-full">{{ attachment.name }}</span>
                         </div>
                       </div>
-                      <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                      <div *ngIf="!isAttachmentUploading(attachment)" class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                         <button
                           type="button"
                           (click)="downloadAttachment(attachment)"
@@ -289,7 +298,8 @@
                         </button>
                       </div>
                       <div class="mt-1 text-xs text-gray-600 truncate" [title]="attachment.title || attachment.name">
-                        {{ attachment.title || attachment.name }}
+                        <span *ngIf="isAttachmentUploading(attachment)" class="text-blue-600 italic">{{ 'tasks.uploading' | translate }}...</span>
+                        <span *ngIf="!isAttachmentUploading(attachment)">{{ attachment.title || attachment.name }}</span>
                       </div>
                     </div>
                   </div>
@@ -959,7 +969,16 @@
                       *ngFor="let attachment of getAttachmentsForStatus(column._id || ''); let i = index"
                       class="relative group"
                     >
-                      <div class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white">
+                      <!-- Skeleton loader mientras se sube -->
+                      <div *ngIf="isAttachmentUploading(attachment)" class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-gray-100 animate-pulse">
+                        <div class="w-full h-full flex flex-col items-center justify-center p-2">
+                          <div class="w-8 h-8 bg-gray-300 rounded mb-2 animate-pulse"></div>
+                          <div class="w-16 h-3 bg-gray-300 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                      
+                      <!-- Contenido normal cuando no está subiendo -->
+                      <div *ngIf="!isAttachmentUploading(attachment)" class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white">
                         <img
                           *ngIf="isImageFile(attachment.url || '', attachment.name)"
                           [src]="attachment.url"
@@ -975,7 +994,7 @@
                           <span class="text-xs text-gray-600 text-center truncate w-full">{{ attachment.name }}</span>
                         </div>
                       </div>
-                      <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                      <div *ngIf="!isAttachmentUploading(attachment)" class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                         <button
                           type="button"
                           (click)="downloadAttachment(attachment)"
@@ -998,9 +1017,10 @@
                         </button>
                       </div>
                       <div class="mt-1 text-xs text-gray-600 truncate font-medium" [title]="attachment.title || attachment.name">
-                        {{ attachment.title || attachment.name }}
+                        <span *ngIf="isAttachmentUploading(attachment)" class="text-blue-600 italic">{{ 'tasks.uploading' | translate }}...</span>
+                        <span *ngIf="!isAttachmentUploading(attachment)">{{ attachment.title || attachment.name }}</span>
                       </div>
-                      <div class="text-xs text-gray-500">
+                      <div *ngIf="!isAttachmentUploading(attachment)" class="text-xs text-gray-500">
                         {{ formatFileSize(attachment.size) }}
                       </div>
                     </div>
