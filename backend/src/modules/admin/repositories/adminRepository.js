@@ -29,24 +29,24 @@ export const adminRepository = {
   },
 
   // Board Statuses
-  async findAllStatuses(companyId, projectId = null) {
+  async findAllStatuses(companyId, boardId = null) {
     const query = { companyId };
-    if (projectId) {
-      query.projectId = projectId;
+    if (boardId) {
+      query.boardId = boardId;
     }
     return await BoardStatus.find(query)
-      .populate('projectId', 'name')
+      .populate('boardId', 'name')
       .sort({ order: 1 });
   },
 
   async findStatusById(id, companyId) {
     return await BoardStatus.findOne({ _id: id, companyId })
-      .populate('projectId', 'name');
+      .populate('boardId', 'name');
   },
 
   async createStatus(statusData) {
     const status = new BoardStatus(statusData);
-    return await status.save().then(s => s.populate('projectId', 'name'));
+    return await status.save().then(s => s.populate('boardId', 'name'));
   },
 
   async updateStatus(id, companyId, updateData) {
@@ -54,7 +54,17 @@ export const adminRepository = {
       { _id: id, companyId },
       updateData,
       { new: true }
-    ).populate('projectId', 'name');
+    ).populate('boardId', 'name');
+  },
+
+  async updateStatusOrder(statuses) {
+    const bulkOps = statuses.map((status, index) => ({
+      updateOne: {
+        filter: { _id: status._id },
+        update: { $set: { order: index } }
+      }
+    }));
+    return await BoardStatus.bulkWrite(bulkOps);
   },
 
   async deleteStatus(id, companyId) {

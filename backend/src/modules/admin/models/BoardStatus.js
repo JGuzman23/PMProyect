@@ -16,9 +16,9 @@ const boardStatusSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  projectId: {
+  boardId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Project',
+    ref: 'Board',
     required: true,
     index: true
   },
@@ -34,7 +34,7 @@ const boardStatusSchema = new mongoose.Schema({
   timestamps: true
 });
 
-boardStatusSchema.index({ companyId: 1, projectId: 1 });
+boardStatusSchema.index({ companyId: 1, boardId: 1 });
 
 export const BoardStatus = mongoose.model('BoardStatus', boardStatusSchema);
 

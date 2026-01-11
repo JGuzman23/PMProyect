@@ -38,8 +38,8 @@ export const adminService = {
   },
 
   // Board Statuses
-  async getAllStatuses(companyId, projectId = null) {
-    return await adminRepository.findAllStatuses(companyId, projectId);
+  async getAllStatuses(companyId, boardId = null) {
+    return await adminRepository.findAllStatuses(companyId, boardId);
   },
 
   async getStatusById(id, companyId) {
@@ -51,8 +51,8 @@ export const adminService = {
   },
 
   async createStatus(data, companyId) {
-    if (!data.projectId) {
-      throw new Error('Project ID is required');
+    if (!data.boardId) {
+      throw new Error('Board ID is required');
     }
     return await adminRepository.createStatus({
       ...data,
@@ -66,6 +66,21 @@ export const adminService = {
       throw new Error('Status not found');
     }
     return status;
+  },
+
+  async updateStatusOrder(statuses, companyId) {
+    // Verificar que todos los estados pertenezcan a la compañía
+    const statusIds = statuses.map(s => s._id);
+    const existingStatuses = await adminRepository.findAllStatuses(companyId);
+    const existingIds = existingStatuses.map(s => s._id.toString());
+    
+    for (const id of statusIds) {
+      if (!existingIds.includes(id.toString())) {
+        throw new Error('One or more statuses not found');
+      }
+    }
+    
+    return await adminRepository.updateStatusOrder(statuses);
   },
 
   async deleteStatus(id, companyId) {

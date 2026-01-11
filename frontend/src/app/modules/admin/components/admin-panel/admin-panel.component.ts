@@ -10,9 +10,13 @@ interface Label {
   color: string;
 }
 
-interface Project {
+interface Board {
   _id: string;
   name: string;
+  projectId: {
+    _id: string;
+    name: string;
+  };
 }
 
 interface BoardStatus {
@@ -21,7 +25,7 @@ interface BoardStatus {
   color: string;
   isDefault: boolean;
   order: number;
-  projectId: {
+  boardId: {
     _id: string;
     name: string;
   };
@@ -36,14 +40,14 @@ interface BoardStatus {
 export class AdminPanelComponent implements OnInit {
   labels: Label[] = [];
   statuses: BoardStatus[] = [];
-  projects: Project[] = [];
-  selectedProjectId: string = '';
+  boards: Board[] = [];
+  selectedBoardId: string = '';
   showLabelModal = false;
   showStatusModal = false;
   selectedLabel: Label | null = null;
   selectedStatus: BoardStatus | null = null;
   labelForm = { name: '', color: '#3B82F6' };
-  statusForm = { name: '', color: '#94A3B8', isDefault: false, order: 0, projectId: '' };
+  statusForm = { name: '', color: '#94A3B8', isDefault: false, order: 0, boardId: '' };
   error = '';
 
   private apiUrl = environment.apiUrl;
@@ -52,24 +56,23 @@ export class AdminPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadLabels();
-    this.loadProjects();
-    this.loadStatuses();
+    this.loadBoards();
   }
 
-  loadProjects(): void {
-    this.http.get<Project[]>(`${this.apiUrl}/projects`).subscribe({
-      next: (projects) => {
-        this.projects = projects;
-        if (projects.length > 0 && !this.selectedProjectId) {
-          this.selectedProjectId = projects[0]._id;
+  loadBoards(): void {
+    this.http.get<Board[]>(`${this.apiUrl}/boards`).subscribe({
+      next: (boards) => {
+        this.boards = boards;
+        if (boards.length > 0 && !this.selectedBoardId) {
+          this.selectedBoardId = boards[0]._id;
           this.loadStatuses();
         }
       },
-      error: (err) => console.error('Error loading projects', err)
+      error: (err) => console.error('Error loading boards', err)
     });
   }
 
-  onProjectChange(): void {
+  onBoardChange(): void {
     this.loadStatuses();
   }
 
@@ -83,12 +86,12 @@ export class AdminPanelComponent implements OnInit {
   }
 
   loadStatuses(): void {
-    const url = this.selectedProjectId 
-      ? `${this.apiUrl}/admin/statuses?projectId=${this.selectedProjectId}`
+    const url = this.selectedBoardId 
+      ? `${this.apiUrl}/admin/statuses?boardId=${this.selectedBoardId}`
       : `${this.apiUrl}/admin/statuses`;
     this.http.get<BoardStatus[]>(url).subscribe({
       next: (statuses) => {
-        this.statuses = statuses;
+        this.statuses = statuses.sort((a, b) => a.order - b.order);
       },
       error: (err) => console.error('Error loading statuses', err)
     });
@@ -148,8 +151,8 @@ export class AdminPanelComponent implements OnInit {
       name: '', 
       color: '#94A3B8', 
       isDefault: false, 
-      order: 0, 
-      projectId: this.selectedProjectId || '' 
+      order: this.statuses.length, 
+      boardId: this.selectedBoardId || '' 
     };
     this.error = '';
     this.showStatusModal = true;
@@ -162,7 +165,7 @@ export class AdminPanelComponent implements OnInit {
       color: status.color,
       isDefault: status.isDefault,
       order: status.order,
-      projectId: status.projectId?._id || ''
+      boardId: status.boardId?._id || ''
     };
     this.error = '';
     this.showStatusModal = true;
@@ -180,8 +183,8 @@ export class AdminPanelComponent implements OnInit {
       return;
     }
 
-    if (!this.statusForm.projectId) {
-      this.error = 'Debes seleccionar un proyecto';
+    if (!this.statusForm.boardId) {
+      this.error = 'Debes seleccionar un board';
       return;
     }
 

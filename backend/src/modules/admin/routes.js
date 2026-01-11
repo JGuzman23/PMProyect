@@ -17,10 +17,12 @@ router.delete('/labels/:id', adminController.deleteLabel);
 router.get('/statuses', adminController.getAllStatuses);
 router.get('/statuses/:id', adminController.getStatusById);
 router.post('/statuses', adminController.createStatus);
+router.put('/statuses/order', adminController.updateStatusOrder);
 router.put('/statuses/:id', adminController.updateStatus);
 router.delete('/statuses/:id', adminController.deleteStatus);
 
 export default router;
+
 
 
 

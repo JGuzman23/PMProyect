@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { TranslationService } from '../../../../core/services/translation.service';
 
 interface Project {
   _id: string;
@@ -29,7 +31,7 @@ interface Project {
 @Component({
   selector: 'app-project-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './project-list.component.html'
 })
 export class ProjectListComponent implements OnInit {
@@ -46,7 +48,10 @@ export class ProjectListComponent implements OnInit {
 
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    public translationService: TranslationService
+  ) {}
 
   ngOnInit(): void {
     this.loadProjects();
@@ -101,7 +106,7 @@ export class ProjectListComponent implements OnInit {
 
   saveProject(): void {
     if (!this.projectForm.name) {
-      this.error = 'El nombre del proyecto es requerido';
+      this.error = this.translationService.translate('projects.nameRequired');
       return;
     }
 
@@ -116,7 +121,7 @@ export class ProjectListComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error updating project', err);
-          this.error = err.error?.error || err.error?.message || 'Error al actualizar el proyecto';
+          this.error = err.error?.error || err.error?.message || this.translationService.translate('projects.errorUpdating');
         }
       });
     } else {
@@ -128,14 +133,14 @@ export class ProjectListComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error creating project', err);
-          this.error = err.error?.error || err.error?.message || 'Error al crear el proyecto';
+          this.error = err.error?.error || err.error?.message || this.translationService.translate('projects.errorCreating');
         }
       });
     }
   }
 
   deleteProject(id: string): void {
-    if (!confirm('¿Estás seguro de que deseas eliminar este proyecto?')) {
+    if (!confirm(this.translationService.translate('projects.confirmDelete'))) {
       return;
     }
 
@@ -145,7 +150,7 @@ export class ProjectListComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error deleting project', err);
-        alert('Error al eliminar el proyecto');
+        alert(this.translationService.translate('projects.errorDeleting'));
       }
     });
   }
@@ -164,16 +169,7 @@ export class ProjectListComponent implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    switch (status) {
-      case 'active':
-        return 'Activo';
-      case 'completed':
-        return 'Completado';
-      case 'archived':
-        return 'Archivado';
-      default:
-        return status;
-    }
+    return this.translationService.translate(`projects.status.${status}`) || status;
   }
 }
 

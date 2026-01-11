@@ -61,6 +61,9 @@ export class ClientListComponent implements OnInit {
   // Export
   exportFormat: 'csv' | 'excel' = 'csv';
 
+  // Expanded rows
+  expandedRows: Set<string> = new Set();
+
   private apiUrl = environment.apiUrl;
 
   constructor(
@@ -118,12 +121,26 @@ export class ClientListComponent implements OnInit {
       // Buscar por NIF/CIF (taxId)
       const taxId = client.taxId ? client.taxId.toLowerCase() : '';
 
+      // Buscar por agentes (PMs) asignados
+      let agentMatch = false;
+      if (client.agents && client.agents.length > 0) {
+        agentMatch = client.agents.some(agent => {
+          const agentName = agent.name ? agent.name.toLowerCase() : '';
+          const agentEmail = agent.email ? agent.email.toLowerCase() : '';
+          const agentPhone = agent.phone ? agent.phone.toLowerCase() : '';
+          return agentName.includes(searchLower) ||
+                 agentEmail.includes(searchLower) ||
+                 agentPhone.includes(searchLower);
+        });
+      }
+
       return fullName.includes(searchLower) ||
              email.includes(searchLower) ||
              phone.includes(searchLower) ||
              company.includes(searchLower) ||
              document.includes(searchLower) ||
-             taxId.includes(searchLower);
+             taxId.includes(searchLower) ||
+             agentMatch;
     });
     
     this.currentPage = 1;
@@ -296,6 +313,18 @@ export class ClientListComponent implements OnInit {
 
   isSorted(column: string): boolean {
     return this.sortColumn === column;
+  }
+
+  toggleExpand(clientId: string): void {
+    if (this.expandedRows.has(clientId)) {
+      this.expandedRows.delete(clientId);
+    } else {
+      this.expandedRows.add(clientId);
+    }
+  }
+
+  isExpanded(clientId: string): boolean {
+    return this.expandedRows.has(clientId);
   }
 
   exportToCSV(): void {

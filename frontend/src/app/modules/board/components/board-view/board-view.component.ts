@@ -385,16 +385,16 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   }
 
   loadStatuses(): void {
-    if (!this.board?.projectId?._id) {
-      // Si no hay proyecto, usar las columnas del board
-      console.log('No project ID, using board columns:', this.board!.columns);
+    if (!this.board?._id) {
+      // Si no hay board, usar las columnas del board
+      console.log('No board ID, using board columns:', this.board!.columns);
       this.columns = this.board!.columns.map(col => ({ ...col, tasks: [] }));
       this.loadTasks();
       return;
     }
 
-    // Cargar estados del proyecto
-    this.http.get<any[]>(`${this.apiUrl}/admin/statuses?projectId=${this.board.projectId._id}`).subscribe({
+    // Cargar estados del board
+    this.http.get<any[]>(`${this.apiUrl}/admin/statuses?boardId=${this.board._id}`).subscribe({
       next: (statuses) => {
         console.log('Statuses loaded:', statuses);
         if (statuses.length > 0) {
@@ -2073,6 +2073,17 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.showStatusModal = true;
   }
 
+  openStatusCreateModal(): void {
+    this.selectedStatus = null;
+    this.statusForm = {
+      name: '',
+      color: '#94A3B8',
+      order: this.columns.length
+    };
+    this.statusError = '';
+    this.showStatusModal = true;
+  }
+
   closeStatusModal(): void {
     this.showStatusModal = false;
     this.selectedStatus = null;
@@ -2085,13 +2096,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.selectedStatus || !this.selectedStatus._id) {
-      this.statusError = this.translationService.translate('admin.cannotIdentifyStatus');
-      return;
-    }
-
-    if (!this.board?.projectId?._id) {
-      this.statusError = this.translationService.translate('admin.cannotIdentifyProject');
+    if (!this.board?._id) {
+      this.statusError = this.translationService.translate('admin.cannotIdentifyBoard');
       return;
     }
 
@@ -2101,19 +2107,34 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       name: this.statusForm.name,
       color: this.statusForm.color,
       order: this.statusForm.order,
-      projectId: this.board.projectId._id
+      boardId: this.board._id
     };
 
-    this.http.put(`${this.apiUrl}/admin/statuses/${this.selectedStatus._id}`, statusData).subscribe({
-      next: () => {
-        this.loadStatuses(); // Recargar estados para actualizar el board
-        this.closeStatusModal();
-      },
-      error: (err) => {
-        console.error('Error updating status', err);
-        this.statusError = err.error?.error || err.error?.message || this.translationService.translate('admin.errorUpdatingStatus');
-      }
-    });
+    if (this.selectedStatus && this.selectedStatus._id) {
+      // Actualizar estado existente
+      this.http.put(`${this.apiUrl}/admin/statuses/${this.selectedStatus._id}`, statusData).subscribe({
+        next: () => {
+          this.loadStatuses(); // Recargar estados para actualizar el board
+          this.closeStatusModal();
+        },
+        error: (err) => {
+          console.error('Error updating status', err);
+          this.statusError = err.error?.error || err.error?.message || this.translationService.translate('admin.errorUpdatingStatus');
+        }
+      });
+    } else {
+      // Crear nuevo estado
+      this.http.post(`${this.apiUrl}/admin/statuses`, statusData).subscribe({
+        next: () => {
+          this.loadStatuses(); // Recargar estados para actualizar el board
+          this.closeStatusModal();
+        },
+        error: (err) => {
+          console.error('Error creating status', err);
+          this.statusError = err.error?.error || err.error?.message || this.translationService.translate('admin.errorCreatingStatus');
+        }
+      });
+    }
   }
 }
 

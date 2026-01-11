@@ -121,6 +121,7 @@ export class TranslationService {
         delete: 'Eliminar',
         edit: 'Editar',
         create: 'Crear',
+        update: 'Actualizar',
         new: 'Nuevo',
         loading: 'Cargando...',
         close: 'Cerrar',
@@ -413,6 +414,7 @@ export class TranslationService {
         agents: 'Agentes',
       },
       boards: {
+        board: 'Board',
         newBoard: 'Nuevo Tablero',
         createNewBoard: 'Crear Nuevo Tablero',
         noBoardsYet: 'No hay tableros creados aún',
@@ -445,6 +447,31 @@ export class TranslationService {
         updatedSuccessfully: 'Tablero actualizado correctamente',
         errorUpdating: 'Error al actualizar el tablero'
       },
+      projects: {
+        title: 'Proyectos',
+        newProject: 'Nuevo Proyecto',
+        editProject: 'Editar Proyecto',
+        noProjects: 'No hay proyectos creados aún',
+        createFirst: 'Crear tu primer proyecto',
+        noDescription: 'Sin descripción',
+        owner: 'Propietario',
+        members: 'miembro(s)',
+        name: 'Nombre',
+        description: 'Descripción',
+        color: 'Color',
+        namePlaceholder: 'Nombre del proyecto',
+        descriptionPlaceholder: 'Descripción del proyecto',
+        nameRequired: 'El nombre del proyecto es requerido',
+        confirmDelete: '¿Estás seguro de que deseas eliminar este proyecto?',
+        errorCreating: 'Error al crear el proyecto',
+        errorUpdating: 'Error al actualizar el proyecto',
+        errorDeleting: 'Error al eliminar el proyecto',
+        status: {
+          active: 'Activo',
+          completed: 'Completado',
+          archived: 'Archivado'
+        }
+      },
       admin: {
         projects: 'Proyectos',
         boardStatuses: 'Estados del Tablero',
@@ -452,6 +479,7 @@ export class TranslationService {
         selectProject: 'Seleccionar un proyecto',
         newStatus: 'Nuevo Estado',
         editStatus: 'Editar Estado',
+        createStatus: 'Crear Estado',
         statusName: 'Nombre',
         statusColor: 'Color',
         defaultStatus: 'Estado por defecto',
@@ -460,7 +488,15 @@ export class TranslationService {
         statusNameRequired: 'El nombre del estado es requerido',
         cannotIdentifyStatus: 'Error: No se puede identificar el estado',
         cannotIdentifyProject: 'Error: No se puede identificar el proyecto',
-        errorUpdatingStatus: 'Error al actualizar el estado'
+        cannotIdentifyBoard: 'Error: No se puede identificar el board',
+        errorUpdatingStatus: 'Error al actualizar el estado',
+        errorCreatingStatus: 'Error al crear el estado',
+        allBoards: 'Todos los boards',
+        selectBoardToView: 'Selecciona un board para ver o crear estados del tablero',
+        selectBoard: 'Selecciona un board',
+        noStatusesForBoard: 'No hay estados creados para este board',
+        mustSelectBoard: 'Debes seleccionar un board',
+        confirmDeleteStatus: '¿Estás seguro de eliminar este estado?'
       }
     };
 
@@ -472,6 +508,7 @@ export class TranslationService {
         delete: 'Delete',
         edit: 'Edit',
         create: 'Create',
+        update: 'Update',
         new: 'New',
         loading: 'Loading...',
         close: 'Close',
@@ -761,6 +798,7 @@ export class TranslationService {
         agents: 'Agents',
       },
       boards: {
+        board: 'Board',
         newBoard: 'New Board',
         createNewBoard: 'Create New Board',
         noBoardsYet: 'No boards created yet',
@@ -793,6 +831,31 @@ export class TranslationService {
         updatedSuccessfully: 'Board updated successfully',
         errorUpdating: 'Error updating board'
       },
+      projects: {
+        title: 'Projects',
+        newProject: 'New Project',
+        editProject: 'Edit Project',
+        noProjects: 'No projects created yet',
+        createFirst: 'Create your first project',
+        noDescription: 'No description',
+        owner: 'Owner',
+        members: 'member(s)',
+        name: 'Name',
+        description: 'Description',
+        color: 'Color',
+        namePlaceholder: 'Project name',
+        descriptionPlaceholder: 'Project description',
+        nameRequired: 'Project name is required',
+        confirmDelete: 'Are you sure you want to delete this project?',
+        errorCreating: 'Error creating project',
+        errorUpdating: 'Error updating project',
+        errorDeleting: 'Error deleting project',
+        status: {
+          active: 'Active',
+          completed: 'Completed',
+          archived: 'Archived'
+        }
+      },
       admin: {
         projects: 'Projects',
         boardStatuses: 'Board Statuses',
@@ -800,6 +863,7 @@ export class TranslationService {
         selectProject: 'Select a project',
         newStatus: 'New Status',
         editStatus: 'Edit Status',
+        createStatus: 'Create Status',
         statusName: 'Name',
         statusColor: 'Color',
         defaultStatus: 'Default status',
@@ -808,7 +872,15 @@ export class TranslationService {
         statusNameRequired: 'Status name is required',
         cannotIdentifyStatus: 'Error: Cannot identify the status',
         cannotIdentifyProject: 'Error: Cannot identify the project',
-        errorUpdatingStatus: 'Error updating status'
+        cannotIdentifyBoard: 'Error: Cannot identify the board',
+        errorUpdatingStatus: 'Error updating status',
+        errorCreatingStatus: 'Error creating status',
+        allBoards: 'All boards',
+        selectBoardToView: 'Select a board to view or create board statuses',
+        selectBoard: 'Select a board',
+        noStatusesForBoard: 'No statuses created for this board',
+        mustSelectBoard: 'You must select a board',
+        confirmDeleteStatus: 'Are you sure you want to delete this status?'
       }
     };
 
@@ -820,6 +892,7 @@ export class TranslationService {
         delete: 'Supprimer',
         edit: 'Modifier',
         create: 'Créer',
+        update: 'Mettre à jour',
         new: 'Nouveau',
         loading: 'Chargement...',
         close: 'Fermer',
@@ -1024,6 +1097,31 @@ export class TranslationService {
         noComments: 'Pas encore de commentaires',
         addComment: 'Ajouter un commentaire'
       },
+      projects: {
+        title: 'Projets',
+        newProject: 'Nouveau Projet',
+        editProject: 'Modifier le Projet',
+        noProjects: 'Aucun projet créé pour le moment',
+        createFirst: 'Créer votre premier projet',
+        noDescription: 'Aucune description',
+        owner: 'Propriétaire',
+        members: 'membre(s)',
+        name: 'Nom',
+        description: 'Description',
+        color: 'Couleur',
+        namePlaceholder: 'Nom du projet',
+        descriptionPlaceholder: 'Description du projet',
+        nameRequired: 'Le nom du projet est requis',
+        confirmDelete: 'Êtes-vous sûr de vouloir supprimer ce projet?',
+        errorCreating: 'Erreur lors de la création du projet',
+        errorUpdating: 'Erreur lors de la mise à jour du projet',
+        errorDeleting: 'Erreur lors de la suppression du projet',
+        status: {
+          active: 'Actif',
+          completed: 'Terminé',
+          archived: 'Archivé'
+        }
+      },
       admin: {
         projects: 'Projets',
         boardStatuses: 'Statuts du Tableau',
@@ -1031,6 +1129,7 @@ export class TranslationService {
         selectProject: 'Sélectionner un projet',
         newStatus: 'Nouveau Statut',
         editStatus: 'Modifier le Statut',
+        createStatus: 'Créer un Statut',
         statusName: 'Nom',
         statusColor: 'Couleur',
         defaultStatus: 'Statut par défaut',
@@ -1039,7 +1138,15 @@ export class TranslationService {
         statusNameRequired: 'Le nom du statut est requis',
         cannotIdentifyStatus: 'Erreur: Impossible d\'identifier le statut',
         cannotIdentifyProject: 'Erreur: Impossible d\'identifier le projet',
-        errorUpdatingStatus: 'Erreur lors de la mise à jour du statut'
+        cannotIdentifyBoard: 'Erreur: Impossible d\'identifier le tableau',
+        errorUpdatingStatus: 'Erreur lors de la mise à jour du statut',
+        errorCreatingStatus: 'Erreur lors de la création du statut',
+        allBoards: 'Tous les tableaux',
+        selectBoardToView: 'Sélectionnez un tableau pour voir ou créer des statuts de tableau',
+        selectBoard: 'Sélectionnez un tableau',
+        noStatusesForBoard: 'Aucun statut créé pour ce tableau',
+        mustSelectBoard: 'Vous devez sélectionner un tableau',
+        confirmDeleteStatus: 'Êtes-vous sûr de vouloir supprimer ce statut?'
       }
     };
 
@@ -1051,6 +1158,7 @@ export class TranslationService {
         delete: 'Löschen',
         edit: 'Bearbeiten',
         create: 'Erstellen',
+        update: 'Aktualisieren',
         new: 'Neu',
         loading: 'Lädt...',
         close: 'Schließen',
@@ -1258,6 +1366,31 @@ export class TranslationService {
         phone: 'Telefon',
         agents: 'Agenten',
       },
+      projects: {
+        title: 'Projekte',
+        newProject: 'Neues Projekt',
+        editProject: 'Projekt bearbeiten',
+        noProjects: 'Noch keine Projekte erstellt',
+        createFirst: 'Erstellen Sie Ihr erstes Projekt',
+        noDescription: 'Keine Beschreibung',
+        owner: 'Eigentümer',
+        members: 'Mitglied(er)',
+        name: 'Name',
+        description: 'Beschreibung',
+        color: 'Farbe',
+        namePlaceholder: 'Projektname',
+        descriptionPlaceholder: 'Projektbeschreibung',
+        nameRequired: 'Der Projektname ist erforderlich',
+        confirmDelete: 'Sind Sie sicher, dass Sie dieses Projekt löschen möchten?',
+        errorCreating: 'Fehler beim Erstellen des Projekts',
+        errorUpdating: 'Fehler beim Aktualisieren des Projekts',
+        errorDeleting: 'Fehler beim Löschen des Projekts',
+        status: {
+          active: 'Aktiv',
+          completed: 'Abgeschlossen',
+          archived: 'Archiviert'
+        }
+      },
       admin: {
         projects: 'Projekte',
         boardStatuses: 'Board-Status',
@@ -1265,6 +1398,7 @@ export class TranslationService {
         selectProject: 'Projekt auswählen',
         newStatus: 'Neuer Status',
         editStatus: 'Status bearbeiten',
+        createStatus: 'Status erstellen',
         statusName: 'Name',
         statusColor: 'Farbe',
         defaultStatus: 'Standardstatus',
@@ -1273,7 +1407,15 @@ export class TranslationService {
         statusNameRequired: 'Der Statusname ist erforderlich',
         cannotIdentifyStatus: 'Fehler: Status kann nicht identifiziert werden',
         cannotIdentifyProject: 'Fehler: Projekt kann nicht identifiziert werden',
-        errorUpdatingStatus: 'Fehler beim Aktualisieren des Status'
+        cannotIdentifyBoard: 'Fehler: Board kann nicht identifiziert werden',
+        errorUpdatingStatus: 'Fehler beim Aktualisieren des Status',
+        errorCreatingStatus: 'Fehler beim Erstellen des Status',
+        allBoards: 'Alle Boards',
+        selectBoardToView: 'Wählen Sie ein Board aus, um Board-Status anzuzeigen oder zu erstellen',
+        selectBoard: 'Board auswählen',
+        noStatusesForBoard: 'Keine Status für dieses Board erstellt',
+        mustSelectBoard: 'Sie müssen ein Board auswählen',
+        confirmDeleteStatus: 'Sind Sie sicher, dass Sie diesen Status löschen möchten?'
       }
     };
 
@@ -1285,6 +1427,7 @@ export class TranslationService {
         delete: 'Excluir',
         edit: 'Editar',
         create: 'Criar',
+        update: 'Atualizar',
         new: 'Novo',
         loading: 'Carregando...',
         close: 'Fechar',
@@ -1491,6 +1634,31 @@ export class TranslationService {
         email: 'Email',
         phone: 'Telefone',
       },
+      projects: {
+        title: 'Projetos',
+        newProject: 'Novo Projeto',
+        editProject: 'Editar Projeto',
+        noProjects: 'Nenhum projeto criado ainda',
+        createFirst: 'Crie seu primeiro projeto',
+        noDescription: 'Sem descrição',
+        owner: 'Proprietário',
+        members: 'membro(s)',
+        name: 'Nome',
+        description: 'Descrição',
+        color: 'Cor',
+        namePlaceholder: 'Nome do projeto',
+        descriptionPlaceholder: 'Descrição do projeto',
+        nameRequired: 'O nome do projeto é obrigatório',
+        confirmDelete: 'Tem certeza de que deseja excluir este projeto?',
+        errorCreating: 'Erro ao criar o projeto',
+        errorUpdating: 'Erro ao atualizar o projeto',
+        errorDeleting: 'Erro ao excluir o projeto',
+        status: {
+          active: 'Ativo',
+          completed: 'Concluído',
+          archived: 'Arquivado'
+        }
+      },
       admin: {
         projects: 'Projetos',
         boardStatuses: 'Status do Quadro',
@@ -1498,6 +1666,7 @@ export class TranslationService {
         selectProject: 'Selecionar um projeto',
         newStatus: 'Novo Status',
         editStatus: 'Editar Status',
+        createStatus: 'Criar Status',
         statusName: 'Nome',
         statusColor: 'Cor',
         defaultStatus: 'Status padrão',
@@ -1506,7 +1675,15 @@ export class TranslationService {
         statusNameRequired: 'O nome do status é obrigatório',
         cannotIdentifyStatus: 'Erro: Não é possível identificar o status',
         cannotIdentifyProject: 'Erro: Não é possível identificar o projeto',
-        errorUpdatingStatus: 'Erro ao atualizar o status'
+        cannotIdentifyBoard: 'Erro: Não é possível identificar o quadro',
+        errorUpdatingStatus: 'Erro ao atualizar o status',
+        errorCreatingStatus: 'Erro ao criar o status',
+        allBoards: 'Todos os quadros',
+        selectBoardToView: 'Selecione um quadro para ver ou criar status do quadro',
+        selectBoard: 'Selecione um quadro',
+        noStatusesForBoard: 'Nenhum status criado para este quadro',
+        mustSelectBoard: 'Você deve selecionar um quadro',
+        confirmDeleteStatus: 'Tem certeza de que deseja excluir este status?'
       }
     };
 
@@ -1518,6 +1695,7 @@ export class TranslationService {
         delete: 'Elimina',
         edit: 'Modifica',
         create: 'Crea',
+        update: 'Aggiorna',
         new: 'Nuovo',
         loading: 'Caricamento...',
         close: 'Chiudi',
@@ -1725,6 +1903,31 @@ export class TranslationService {
         phone: 'Telefono',
         agents: 'Agenti',
       },
+      projects: {
+        title: 'Progetti',
+        newProject: 'Nuovo Progetto',
+        editProject: 'Modifica Progetto',
+        noProjects: 'Nessun progetto creato ancora',
+        createFirst: 'Crea il tuo primo progetto',
+        noDescription: 'Nessuna descrizione',
+        owner: 'Proprietario',
+        members: 'membro/i',
+        name: 'Nome',
+        description: 'Descrizione',
+        color: 'Colore',
+        namePlaceholder: 'Nome del progetto',
+        descriptionPlaceholder: 'Descrizione del progetto',
+        nameRequired: 'Il nome del progetto è obbligatorio',
+        confirmDelete: 'Sei sicuro di voler eliminare questo progetto?',
+        errorCreating: 'Errore durante la creazione del progetto',
+        errorUpdating: 'Errore durante l\'aggiornamento del progetto',
+        errorDeleting: 'Errore durante l\'eliminazione del progetto',
+        status: {
+          active: 'Attivo',
+          completed: 'Completato',
+          archived: 'Archiviato'
+        }
+      },
       admin: {
         projects: 'Progetti',
         boardStatuses: 'Stati della Bacheca',
@@ -1732,6 +1935,7 @@ export class TranslationService {
         selectProject: 'Seleziona un progetto',
         newStatus: 'Nuovo Stato',
         editStatus: 'Modifica Stato',
+        createStatus: 'Crea Stato',
         statusName: 'Nome',
         statusColor: 'Colore',
         defaultStatus: 'Stato predefinito',
@@ -1740,7 +1944,15 @@ export class TranslationService {
         statusNameRequired: 'Il nome dello stato è obbligatorio',
         cannotIdentifyStatus: 'Errore: Impossibile identificare lo stato',
         cannotIdentifyProject: 'Errore: Impossibile identificare il progetto',
-        errorUpdatingStatus: 'Errore durante l\'aggiornamento dello stato'
+        cannotIdentifyBoard: 'Errore: Impossibile identificare la bacheca',
+        errorUpdatingStatus: 'Errore durante l\'aggiornamento dello stato',
+        errorCreatingStatus: 'Errore durante la creazione dello stato',
+        allBoards: 'Tutte le bacheche',
+        selectBoardToView: 'Seleziona una bacheca per visualizzare o creare stati della bacheca',
+        selectBoard: 'Seleziona una bacheca',
+        noStatusesForBoard: 'Nessuno stato creato per questa bacheca',
+        mustSelectBoard: 'Devi selezionare una bacheca',
+        confirmDeleteStatus: 'Sei sicuro di voler eliminare questo stato?'
       }
     };
   }

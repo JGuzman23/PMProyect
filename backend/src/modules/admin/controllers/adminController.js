@@ -50,8 +50,8 @@ export const adminController = {
   // Board Statuses
   async getAllStatuses(req, res, next) {
     try {
-      const projectId = req.query.projectId || null;
-      const statuses = await adminService.getAllStatuses(req.companyId, projectId);
+      const boardId = req.query.boardId || null;
+      const statuses = await adminService.getAllStatuses(req.companyId, boardId);
       res.json(statuses);
     } catch (error) {
       next(error);
@@ -89,6 +89,19 @@ export const adminController = {
     try {
       await adminService.deleteStatus(req.params.id, req.companyId);
       res.json({ message: 'Status deleted successfully' });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateStatusOrder(req, res, next) {
+    try {
+      const { statuses } = req.body;
+      if (!Array.isArray(statuses)) {
+        return res.status(400).json({ error: 'Statuses must be an array' });
+      }
+      await adminService.updateStatusOrder(statuses, req.companyId);
+      res.json({ message: 'Status order updated successfully' });
     } catch (error) {
       next(error);
     }

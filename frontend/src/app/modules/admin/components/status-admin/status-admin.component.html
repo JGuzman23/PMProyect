@@ -1,65 +1,71 @@
 <div class="max-w-7xl mx-auto px-2 sm:px-4">
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
-    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Estados del Tablero</h2>
+    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ 'admin.boardStatuses' | translate }}</h2>
   </div>
 
   <div class="bg-white shadow rounded-lg p-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-      <h3 class="text-xl font-semibold text-gray-900">Estados del Tablero</h3>
+      <h3 class="text-xl font-semibold text-gray-900">{{ 'admin.boardStatuses' | translate }}</h3>
       <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
         <select
-          [(ngModel)]="selectedProjectId"
-          (change)="onProjectChange()"
+          [(ngModel)]="selectedBoardId"
+          (change)="onBoardChange()"
           class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
         >
-          <option value="">Todos los proyectos</option>
-          <option *ngFor="let project of projects" [value]="project._id">{{ project.name }}</option>
+          <option value="">{{ 'admin.allBoards' | translate }}</option>
+          <option *ngFor="let board of boards" [value]="board._id">{{ board.name }} ({{ board.projectId?.name }})</option>
         </select>
         <button
           (click)="openStatusModal()"
           class="inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-          [disabled]="!selectedProjectId"
+          [disabled]="!selectedBoardId"
         >
-          + Nuevo Estado
+          + {{ 'admin.newStatus' | translate }}
         </button>
       </div>
     </div>
-    <div *ngIf="!selectedProjectId" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700 text-sm">
-      Selecciona un proyecto para ver o crear estados del tablero
+    <div *ngIf="!selectedBoardId" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700 text-sm">
+      {{ 'admin.selectBoardToView' | translate }}
     </div>
-    <div class="space-y-2">
+    <div class="space-y-2" cdkDropList (cdkDropListDropped)="dropStatus($event)">
       <div
         *ngFor="let status of statuses"
-        class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+        cdkDrag
+        class="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-move"
       >
-        <div class="flex items-center space-x-3">
-          <div
-            class="w-4 h-4 rounded-full"
-            [style.background-color]="status.color"
-          ></div>
+        <div class="flex items-center space-x-3 flex-1">
+          <div class="flex items-center space-x-2">
+            <svg class="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+            </svg>
+            <div
+              class="w-4 h-4 rounded-full"
+              [style.background-color]="status.color"
+            ></div>
+          </div>
           <div class="flex flex-col">
             <span class="text-sm font-medium text-gray-900">{{ status.name }}</span>
-            <span class="text-xs text-gray-500">{{ status.projectId?.name }}</span>
+            <span class="text-xs text-gray-500">{{ status.boardId?.name }}</span>
           </div>
-          <span *ngIf="status.isDefault" class="text-xs text-gray-500">(Por defecto)</span>
+          <span *ngIf="status.isDefault" class="text-xs text-gray-500">({{ 'admin.defaultStatus' | translate }})</span>
         </div>
         <div class="flex space-x-2">
           <button
             (click)="editStatus(status)"
             class="text-indigo-600 hover:text-indigo-900 text-sm"
           >
-            Editar
+            {{ 'common.edit' | translate }}
           </button>
           <button
             (click)="deleteStatus(status._id)"
             class="text-red-600 hover:text-red-900 text-sm"
           >
-            Eliminar
+            {{ 'common.delete' | translate }}
           </button>
         </div>
       </div>
-      <div *ngIf="statuses.length === 0 && selectedProjectId" class="text-center py-8 text-gray-500 text-sm">
-        No hay estados creados para este proyecto
+      <div *ngIf="statuses.length === 0 && selectedBoardId" class="text-center py-8 text-gray-500 text-sm">
+        {{ 'admin.noStatusesForBoard' | translate }}
       </div>
     </div>
   </div>
@@ -72,27 +78,27 @@
   >
     <div class="relative mx-auto p-4 sm:p-5 border w-full max-w-md sm:w-96 shadow-lg rounded-md bg-white my-auto" (click)="$event.stopPropagation()">
       <h3 class="text-lg font-bold text-gray-900 mb-4">
-        {{ selectedStatus ? 'Editar Estado' : 'Nuevo Estado' }}
+        {{ selectedStatus ? ('admin.editStatus' | translate) : ('admin.newStatus' | translate) }}
       </h3>
       <form (ngSubmit)="saveStatus()">
         <div *ngIf="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           {{ error }}
         </div>
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Proyecto <span class="text-red-500">*</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'boards.board' | translate }} <span class="text-red-500">*</span></label>
           <select
-            [(ngModel)]="statusForm.projectId"
-            name="projectId"
+            [(ngModel)]="statusForm.boardId"
+            name="boardId"
             required
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             [disabled]="!!selectedStatus"
           >
-            <option value="">Selecciona un proyecto</option>
-            <option *ngFor="let project of projects" [value]="project._id">{{ project.name }}</option>
+            <option value="">{{ 'admin.selectBoard' | translate }}</option>
+            <option *ngFor="let board of boards" [value]="board._id">{{ board.name }} ({{ board.projectId?.name }})</option>
           </select>
         </div>
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Nombre <span class="text-red-500">*</span></label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'admin.statusName' | translate }} <span class="text-red-500">*</span></label>
           <input
             type="text"
             [(ngModel)]="statusForm.name"
@@ -102,7 +108,7 @@
           />
         </div>
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Color</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'admin.statusColor' | translate }}</label>
           <input
             type="color"
             [(ngModel)]="statusForm.color"
@@ -119,7 +125,7 @@
               name="isDefault"
               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
             />
-            <span class="ml-2 text-sm text-gray-700">Estado por defecto</span>
+            <span class="ml-2 text-sm text-gray-700">{{ 'admin.defaultStatus' | translate }}</span>
           </label>
         </div>
         <div class="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-3 sm:gap-0">
@@ -128,14 +134,14 @@
             (click)="closeStatusModal()"
             class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
           >
-            Cancelar
+            {{ 'common.cancel' | translate }}
           </button>
           <button
             type="submit"
-            [disabled]="!statusForm.name || !statusForm.projectId"
+            [disabled]="!statusForm.name || !statusForm.boardId"
             class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Guardar
+            {{ 'common.save' | translate }}
           </button>
         </div>
       </form>
