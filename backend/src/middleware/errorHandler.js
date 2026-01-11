@@ -38,7 +38,7 @@ export const errorHandler = (err, req, res, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         error: 'File too large',
-        message: 'El archivo excede el tamaño máximo permitido de 25 MB'
+        message: 'El archivo excede el tamaño máximo permitido de 512 MB'
       });
     }
     return res.status(400).json({

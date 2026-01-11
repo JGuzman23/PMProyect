@@ -47,7 +47,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 25 * 1024 * 1024 // 25MB
+    fileSize: 512 * 1024 * 1024 // 512MB
   }
 });
 
@@ -67,7 +67,7 @@ router.post('/upload', (req, res, next) => {
         if (err.code === 'LIMIT_FILE_SIZE') {
           return res.status(400).json({ 
             error: 'File too large', 
-            message: 'El archivo excede el tamaño máximo permitido de 25 MB' 
+            message: 'El archivo excede el tamaño máximo permitido de 512 MB' 
           });
         }
         return res.status(400).json({ 
