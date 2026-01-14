@@ -1,1 +1,69 @@
 /* FullCalendar Styles - Los estilos se incluyen automáticamente en v6 */
+
+/* Estilos personalizados para los botones del calendario */
+:host ::ng-deep .fc-button {
+  background-color: #4F46E5 !important;
+  border-color: #4F46E5 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .fc-button:hover {
+  background-color: #4338CA !important;
+  border-color: #4338CA !important;
+}
+
+:host ::ng-deep .fc-button:active,
+:host ::ng-deep .fc-button:focus {
+  background-color: #4338CA !important;
+  border-color: #4338CA !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3) !important;
+}
+
+:host ::ng-deep .fc-button-primary {
+  background-color: #4F46E5 !important;
+  border-color: #4F46E5 !important;
+}
+
+:host ::ng-deep .fc-button-primary:hover {
+  background-color: #4338CA !important;
+  border-color: #4338CA !important;
+}
+
+:host ::ng-deep .fc-button-primary:not(:disabled):active,
+:host ::ng-deep .fc-button-primary:not(:disabled).fc-button-active {
+  background-color: #4338CA !important;
+  border-color: #4338CA !important;
+}
+
+/* Botón "today" activo */
+:host ::ng-deep .fc-today-button {
+  background-color: #4F46E5 !important;
+  border-color: #4F46E5 !important;
+}
+
+:host ::ng-deep .fc-today-button:hover {
+  background-color: #4338CA !important;
+  border-color: #4338CA !important;
+}
+
+/* Botones de navegación (prev, next) */
+:host ::ng-deep .fc-prev-button,
+:host ::ng-deep .fc-next-button {
+  background-color: #4F46E5 !important;
+  border-color: #4F46E5 !important;
+}
+
+:host ::ng-deep .fc-prev-button:hover,
+:host ::ng-deep .fc-next-button:hover {
+  background-color: #4338CA !important;
+  border-color: #4338CA !important;
+}
+
+
+
+
+/* Botón de vista activo */
+:host ::ng-deep .fc-button-active {
+  background-color: #4338CA !important;
+  border-color: #4338CA !important;
+}

@@ -280,7 +280,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
 
   getBoardInitial(task: Task): string {
     if (!task.boardId) return '';
-    console.log(task.boardId);
+  
     let boardId: string;
     if (typeof task.boardId === 'string') {
       boardId = task.boardId;
@@ -292,7 +292,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     if (!board || !board.name) return '';
     
     // Obtener la primera letra del nombre del board en mayúscula
-    return board.name;
+    return board.name.trim().charAt(0).toUpperCase();
   }
 
   updateCalendarEvents(): void {
@@ -300,7 +300,6 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
       const taskDate = new Date(task.dueDate);
       const color = this.getTaskStatusColor(task);
       const boardInitial = this.getBoardInitial(task);
-      console.log(boardInitial);
       const title = boardInitial ? `[${boardInitial}] ${task.title}` : task.title;
       
       return {
