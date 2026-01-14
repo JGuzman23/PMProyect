@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -123,6 +123,8 @@ interface Board {
   templateUrl: './board-view.component.html'
 })
 export class BoardViewComponent implements OnInit, OnDestroy {
+  @ViewChild('boardScrollContainer', { static: false }) boardScrollContainer!: ElementRef<HTMLDivElement>;
+  
   board: Board | null = null;
   columns: Column[] = [];
   users: User[] = [];
@@ -139,6 +141,11 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   selectedTask: Task | null = null;
   selectedColumnIndex = 0;
   isDragging = false;
+  
+  // Propiedades para scroll horizontal con mouse
+  isScrolling = false;
+  scrollStartX = 0;
+  scrollLeft = 0;
   showAssigneeDropdown = false;
   showAgentDropdown = false;
   showClientDropdown = false;
@@ -1027,6 +1034,72 @@ export class BoardViewComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     // Cleanup if needed
+    this.removeScrollListeners();
+  }
+
+  // Métodos para scroll horizontal con mouse
+  onBoardMouseDown(event: MouseEvent): void {
+    // Solo activar scroll si no se está haciendo drag de una tarea
+    if (this.isDragging) {
+      return;
+    }
+    
+    // No activar scroll si el clic es en una tarea, botón u otro elemento interactivo
+    const target = event.target as HTMLElement;
+    if (target.closest('cdk-drag') || 
+        target.closest('button') || 
+        target.closest('input') || 
+        target.closest('select') || 
+        target.closest('textarea') ||
+        target.closest('a') ||
+        target.closest('.task-card')) {
+      return;
+    }
+    
+    const container = this.boardScrollContainer?.nativeElement;
+    if (!container) return;
+
+    this.isScrolling = true;
+    const rect = container.getBoundingClientRect();
+    this.scrollStartX = event.clientX - rect.left;
+    this.scrollLeft = container.scrollLeft;
+    container.style.cursor = 'grabbing';
+    container.style.userSelect = 'none';
+    
+    event.preventDefault();
+  }
+
+  onBoardMouseMove(event: MouseEvent): void {
+    if (!this.isScrolling || this.isDragging) return;
+    
+    const container = this.boardScrollContainer?.nativeElement;
+    if (!container) return;
+
+    event.preventDefault();
+    const rect = container.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const walk = (x - this.scrollStartX) * 2; // Velocidad del scroll (ajustable)
+    container.scrollLeft = this.scrollLeft - walk;
+  }
+
+  onBoardMouseUp(): void {
+    if (!this.isScrolling) return;
+    
+    const container = this.boardScrollContainer?.nativeElement;
+    if (container) {
+      container.style.cursor = 'grab';
+      container.style.userSelect = '';
+    }
+    
+    this.isScrolling = false;
+  }
+
+  onBoardMouseLeave(): void {
+    this.onBoardMouseUp();
+  }
+
+  private removeScrollListeners(): void {
+    this.onBoardMouseUp();
   }
 
   saveTask(): void {

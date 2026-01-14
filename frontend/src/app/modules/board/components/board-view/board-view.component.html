@@ -324,7 +324,17 @@
     </button>
   </div>
 
-  <div *ngIf="!loading && board && columns.length > 0" class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-180px)]" cdkDropListGroup style="height: calc(100vh - 180px);">
+  <div 
+    *ngIf="!loading && board && columns.length > 0" 
+    #boardScrollContainer
+    class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-180px)] cursor-grab active:cursor-grabbing" 
+    cdkDropListGroup 
+    style="height: calc(100vh - 180px);"
+    (mousedown)="onBoardMouseDown($event)"
+    (mousemove)="onBoardMouseMove($event)"
+    (mouseup)="onBoardMouseUp()"
+    (mouseleave)="onBoardMouseLeave()"
+  >
     <div class="flex gap-2 sm:gap-3 md:gap-4 px-1 sm:px-2 md:px-4 pb-4 min-w-max">
     <div
       *ngFor="let column of columns; let i = index"
