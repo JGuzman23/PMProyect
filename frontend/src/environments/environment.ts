@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://signops.pro/api'
+  apiUrl: 'https://api.signops.pro/api'
 };
 
 
