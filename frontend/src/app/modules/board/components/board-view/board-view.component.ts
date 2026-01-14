@@ -146,6 +146,10 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   isScrolling = false;
   scrollStartX = 0;
   scrollLeft = 0;
+  autoScrollInterval: any = null;
+  private lastMouseX = 0;
+  private dragStartX = 0;
+  private lastTouchX = 0;
   showAssigneeDropdown = false;
   showAgentDropdown = false;
   showClientDropdown = false;
@@ -499,10 +503,90 @@ export class BoardViewComponent implements OnInit, OnDestroy {
 
   onDragStarted(): void {
     this.isDragging = true;
+    // Guardar la posición inicial del mouse/touch cuando se inicia el drag
+    this.dragStartX = this.lastTouchX || this.lastMouseX;
+    // Iniciar el intervalo de scroll automático cuando se comienza a arrastrar una tarea
+    this.startAutoScroll();
   }
 
   onDragEnded(): void {
     this.isDragging = false;
+    // Detener el scroll automático cuando se termina de arrastrar
+    this.stopAutoScroll();
+    this.onBoardMouseUp();
+  }
+
+  startAutoScroll(): void {
+    // Limpiar cualquier intervalo existente
+    this.stopAutoScroll();
+    
+    // Crear un intervalo que se ejecute cada 16ms (aproximadamente 60fps)
+    this.autoScrollInterval = setInterval(() => {
+      if (!this.isDragging) {
+        this.stopAutoScroll();
+        return;
+      }
+
+      const container = this.boardScrollContainer?.nativeElement;
+      if (!container) {
+        this.stopAutoScroll();
+        return;
+      }
+
+      // Verificar y hacer scroll basado en la dirección del arrastre
+      this.checkAndScroll(container);
+    }, 16);
+  }
+
+  stopAutoScroll(): void {
+    if (this.autoScrollInterval) {
+      clearInterval(this.autoScrollInterval);
+      this.autoScrollInterval = null;
+    }
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onGlobalMouseMove(event: MouseEvent): void {
+    // Guardar la posición del mouse para usar en el scroll automático
+    this.lastMouseX = event.clientX;
+    this.lastTouchX = event.clientX; // También actualizar touch para consistencia
+  }
+
+  @HostListener('document:touchmove', ['$event'])
+  onGlobalTouchMove(event: TouchEvent): void {
+    // Guardar la posición del touch para usar en el scroll automático
+    if (event.touches && event.touches.length > 0) {
+      this.lastTouchX = event.touches[0].clientX;
+      this.lastMouseX = event.touches[0].clientX; // También actualizar mouse para consistencia
+    }
+  }
+
+  checkAndScroll(container: HTMLElement): void {
+    if (!this.isDragging) return;
+
+    const rect = container.getBoundingClientRect();
+    // Usar la posición del touch si está disponible (mobile), sino usar mouse
+    const currentX = this.lastTouchX || this.lastMouseX;
+    const scrollThreshold = 100; // Distancia desde el borde para activar scroll
+    const maxScrollSpeed = 20; // Velocidad máxima del scroll
+
+    // Calcular la distancia desde el borde
+    const distanceFromLeft = currentX - rect.left;
+    const distanceFromRight = rect.right - currentX;
+
+    // Solo hacer scroll si el touch/mouse está cerca del borde
+    // Scroll en la misma dirección del borde: si estás cerca del borde izquierdo, scroll hacia la izquierda
+    // Si estás cerca del borde derecho, scroll hacia la derecha
+    if (distanceFromLeft < scrollThreshold && distanceFromLeft > 0) {
+      // Cerca del borde izquierdo: scroll hacia la izquierda
+      const speed = maxScrollSpeed * (1 - distanceFromLeft / scrollThreshold);
+      container.scrollLeft -= speed;
+    }
+    else if (distanceFromRight < scrollThreshold && distanceFromRight > 0) {
+      // Cerca del borde derecho: scroll hacia la derecha
+      const speed = maxScrollSpeed * (1 - distanceFromRight / scrollThreshold);
+      container.scrollLeft += speed;
+    }
   }
 
   drop(event: CdkDragDrop<Task[]>, columnIndex: number): void {
@@ -1035,24 +1119,18 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Cleanup if needed
     this.removeScrollListeners();
+    this.stopAutoScroll();
   }
 
   // Métodos para scroll horizontal con mouse
   onBoardMouseDown(event: MouseEvent): void {
-    // Solo activar scroll si no se está haciendo drag de una tarea
-    if (this.isDragging) {
-      return;
-    }
-    
-    // No activar scroll si el clic es en una tarea, botón u otro elemento interactivo
+    // No activar scroll si el clic es en un botón u otro elemento interactivo (excepto tareas)
     const target = event.target as HTMLElement;
-    if (target.closest('cdk-drag') || 
-        target.closest('button') || 
+    if (target.closest('button') && !target.closest('cdk-drag') && !target.closest('.task-card') ||
         target.closest('input') || 
         target.closest('select') || 
         target.closest('textarea') ||
-        target.closest('a') ||
-        target.closest('.task-card')) {
+        target.closest('a')) {
       return;
     }
     
@@ -1063,23 +1141,31 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     const rect = container.getBoundingClientRect();
     this.scrollStartX = event.clientX - rect.left;
     this.scrollLeft = container.scrollLeft;
-    container.style.cursor = 'grabbing';
-    container.style.userSelect = 'none';
+    
+    // Solo cambiar cursor si no se está arrastrando una tarea
+    if (!this.isDragging) {
+      container.style.cursor = 'grabbing';
+      container.style.userSelect = 'none';
+    }
     
     event.preventDefault();
   }
 
   onBoardMouseMove(event: MouseEvent): void {
-    if (!this.isScrolling || this.isDragging) return;
+    if (!this.isScrolling) return;
     
     const container = this.boardScrollContainer?.nativeElement;
     if (!container) return;
 
-    event.preventDefault();
     const rect = container.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const walk = (x - this.scrollStartX) * 2; // Velocidad del scroll (ajustable)
     container.scrollLeft = this.scrollLeft - walk;
+    
+    // Si se está arrastrando una tarea, no prevenir el comportamiento por defecto
+    if (!this.isDragging) {
+      event.preventDefault();
+    }
   }
 
   onBoardMouseUp(): void {
