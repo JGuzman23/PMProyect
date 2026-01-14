@@ -292,7 +292,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     if (!board || !board.name) return '';
     
     // Obtener la primera letra del nombre del board en mayúscula
-    return board.name.trim().charAt(0).toUpperCase();
+    return board.name;
   }
 
   updateCalendarEvents(): void {
