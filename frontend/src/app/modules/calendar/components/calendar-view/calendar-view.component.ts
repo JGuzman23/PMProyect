@@ -1,10 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { TaskModalComponent } from '../../../board/components/task-modal/task-modal.component';
-import { TranslationService } from '../../../../core/services/translation.service';
+import { TranslationService, Language } from '../../../../core/services/translation.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { FullCalendarModule } from '@fullcalendar/angular';
+import { CalendarOptions, EventInput, EventApi, DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import esLocale from '@fullcalendar/core/locales/es';
+import enLocale from '@fullcalendar/core/locales/en-gb';
+import frLocale from '@fullcalendar/core/locales/fr';
+import deLocale from '@fullcalendar/core/locales/de';
+import ptLocale from '@fullcalendar/core/locales/pt';
+import itLocale from '@fullcalendar/core/locales/it';
+import { Subscription } from 'rxjs';
 
 interface Attachment {
   url: string;
@@ -43,6 +55,13 @@ interface Client {
   isActive: boolean;
 }
 
+interface Board {
+  _id: string;
+  name: string;
+  description?: string;
+  projectId?: string | { _id: string };
+}
+
 interface Column {
   _id?: string;
   name: string;
@@ -60,6 +79,7 @@ interface Task {
   assignees: User[];
   attachments?: Attachment[];
   columnId?: string;
+  boardId?: string | Board;
   projectId?: string | { _id: string };
   clientId?: string | Client;
   agentIds?: string[];
@@ -73,99 +93,94 @@ interface Task {
 @Component({
   selector: 'app-calendar-view',
   standalone: true,
-  imports: [CommonModule, DatePipe, TaskModalComponent, TranslatePipe],
-  templateUrl: './calendar-view.component.html'
+  imports: [CommonModule, DatePipe, TaskModalComponent, TranslatePipe, FullCalendarModule],
+  templateUrl: './calendar-view.component.html',
+  styleUrls: ['./calendar-view.component.css']
 })
-export class CalendarViewComponent implements OnInit {
-  viewMode: 'month' | 'week' = 'month';
-  currentDate = new Date();
+export class CalendarViewComponent implements OnInit, OnDestroy {
+  @ViewChild('fullcalendar') calendarComponent: any;
+  
+  private languageSubscription?: Subscription;
+  private localeMap: { [key in Language]: any } = {
+    'es': esLocale,
+    'en': enLocale,
+    'fr': frLocale,
+    'de': deLocale,
+    'pt': ptLocale,
+    'it': itLocale
+  };
+  
+  calendarOptions: CalendarOptions = {
+    initialView: 'dayGridMonth',
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek'
+    },
+    editable: true,
+    droppable: false,
+    selectable: false,
+    eventClick: this.handleEventClick.bind(this),
+    eventDrop: this.handleEventDrop.bind(this),
+    eventResize: this.handleEventResize.bind(this),
+    locale: esLocale, // Valor por defecto, se actualizará en ngOnInit
+    firstDay: 1,
+    height: 'auto',
+    events: []
+  };
+  
   tasks: Task[] = [];
-  weekDays: string[] = [];
-  hours = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
   selectedTask: Task | null = null;
   showTaskModal = false;
   statuses: BoardStatus[] = [];
   columns: Column[] = [];
   users: User[] = [];
   clients: Client[] = [];
+  boards: Board[] = [];
   private apiUrl = environment.apiUrl;
   staticFilesUrl = environment.apiUrl.replace('/api', '');
 
   constructor(private http: HttpClient, public translationService: TranslationService) {
-    this.updateWeekDays();
-    this.translationService.getCurrentLanguage().subscribe(() => {
-      this.updateWeekDays();
-    });
-  }
-
-  updateWeekDays(): void {
-    this.weekDays = this.translationService.translateArray('calendar.daysShort');
-  }
-
-  get currentMonth(): Date {
-    return new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
-  }
-
-  get weekStart(): Date {
-    const date = new Date(this.currentDate);
-    const day = date.getDay();
-    const diff = date.getDate() - day;
-    return new Date(date.setDate(diff));
-  }
-
-  get weekEnd(): Date {
-    const date = new Date(this.weekStart);
-    return new Date(date.setDate(date.getDate() + 6));
-  }
-
-  get weekDates(): Date[] {
-    const dates: Date[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(this.weekStart);
-      date.setDate(date.getDate() + i);
-      dates.push(date);
-    }
-    return dates;
-  }
-
-  get calendarDays(): any[] {
-    const year = this.currentDate.getFullYear();
-    const month = this.currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    const days: any[] = [];
-
-    // Previous month days
-    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-      const date = new Date(year, month, -i);
-      days.push({ date, isCurrentMonth: false });
-    }
-
-    // Current month days
-    for (let i = 1; i <= daysInMonth; i++) {
-      const date = new Date(year, month, i);
-      days.push({ date, isCurrentMonth: true });
-    }
-
-    // Next month days to fill the grid
-    const remainingDays = 42 - days.length;
-    for (let i = 1; i <= remainingDays; i++) {
-      const date = new Date(year, month + 1, i);
-      days.push({ date, isCurrentMonth: false });
-    }
-
-    return days;
   }
 
   ngOnInit(): void {
+    // Inicializar el locale con el idioma actual
+    const currentLang = this.translationService.getCurrentLanguageValue();
+    this.updateCalendarLocale(currentLang);
+    
     this.loadStatuses();
     this.loadUsers();
     this.loadClients();
+    this.loadBoards();
     // Cargar tareas después de usuarios para poder normalizar assignees
     this.loadTasks();
+    
+    // Suscribirse a cambios de idioma
+    this.languageSubscription = this.translationService.getCurrentLanguage().subscribe(lang => {
+      this.updateCalendarLocale(lang);
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.languageSubscription) {
+      this.languageSubscription.unsubscribe();
+    }
+  }
+
+  updateCalendarLocale(lang: Language): void {
+    const locale = this.localeMap[lang];
+    if (locale && this.calendarComponent?.getApi) {
+      const calendarApi = this.calendarComponent.getApi();
+      if (calendarApi) {
+        calendarApi.setOption('locale', locale);
+      }
+    }
+    // También actualizar las opciones para futuras renderizaciones
+    this.calendarOptions = {
+      ...this.calendarOptions,
+      locale: locale
+    };
   }
 
   loadStatuses(): void {
@@ -214,6 +229,21 @@ export class CalendarViewComponent implements OnInit {
     });
   }
 
+  loadBoards(): void {
+    this.http.get<Board[]>(`${this.apiUrl}/boards`).subscribe({
+      next: (boards) => {
+        this.boards = boards;
+        // Actualizar eventos del calendario si ya hay tareas cargadas
+        if (this.tasks.length > 0) {
+          this.updateCalendarEvents();
+        }
+      },
+      error: (err) => {
+        console.error('Error loading boards', err);
+      }
+    });
+  }
+
   loadTasks(): void {
     this.http.get<Task[]>(`${this.apiUrl}/tasks`).subscribe({
       next: (tasks) => {
@@ -240,6 +270,7 @@ export class CalendarViewComponent implements OnInit {
             }))
           };
         });
+        this.updateCalendarEvents();
       },
       error: (err) => {
         console.error('Error loading tasks', err);
@@ -247,35 +278,93 @@ export class CalendarViewComponent implements OnInit {
     });
   }
 
-  getTasksForDate(date: Date): Task[] {
-    return this.tasks.filter(task => {
+  getBoardInitial(task: Task): string {
+    if (!task.boardId) return '';
+    console.log(task.boardId);
+    let boardId: string;
+    if (typeof task.boardId === 'string') {
+      boardId = task.boardId;
+    } else {
+      boardId = task.boardId._id;
+    }
+    
+    const board = this.boards.find(b => b._id === boardId);
+    if (!board || !board.name) return '';
+    
+    // Obtener la primera letra del nombre del board en mayúscula
+    return board.name;
+  }
+
+  updateCalendarEvents(): void {
+    const events: EventInput[] = this.tasks.map(task => {
       const taskDate = new Date(task.dueDate);
-      return taskDate.toDateString() === date.toDateString();
+      const color = this.getTaskStatusColor(task);
+      const boardInitial = this.getBoardInitial(task);
+      console.log(boardInitial);
+      const title = boardInitial ? `[${boardInitial}] ${task.title}` : task.title;
+      
+      return {
+        id: task._id,
+        title: title,
+        start: taskDate,
+        allDay: true,
+        backgroundColor: color,
+        borderColor: color,
+        textColor: '#ffffff',
+        extendedProps: {
+          task: task
+        }
+      };
     });
+    
+    this.calendarOptions.events = events;
   }
 
-  getTasksForDateAndHour(date: Date, hour: string): Task[] {
-    return this.tasks.filter(task => {
-      const taskDate = new Date(task.dueDate);
-      const taskHour = taskDate.getHours().toString().padStart(2, '0') + ':00';
-      return taskDate.toDateString() === date.toDateString() && taskHour === hour;
-    });
+  handleEventClick(clickInfo: EventClickArg): void {
+    const task = clickInfo.event.extendedProps['task'] as Task;
+    if (task) {
+      this.openTaskModal(task);
+    }
   }
 
-  previousMonth(): void {
-    this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
+  handleEventDrop(dropInfo: EventDropArg): void {
+    const task = dropInfo.event.extendedProps['task'] as Task;
+    if (!task) {
+      return;
+    }
+
+    const newDate = dropInfo.event.start;
+    if (!newDate) {
+      return;
+    }
+
+    // Mantener la hora original si existe
+    const originalDate = new Date(task.dueDate);
+    newDate.setHours(originalDate.getHours());
+    newDate.setMinutes(originalDate.getMinutes());
+    newDate.setSeconds(originalDate.getSeconds());
+
+    this.updateTaskDate(task._id, newDate);
   }
 
-  nextMonth(): void {
-    this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
-  }
+  handleEventResize(resizeInfo: any): void {
+    const task = resizeInfo.event.extendedProps['task'] as Task;
+    if (!task) {
+      return;
+    }
 
-  previousWeek(): void {
-    this.currentDate = new Date(this.currentDate.setDate(this.currentDate.getDate() - 7));
-  }
+    const newDate = resizeInfo.event.start;
+    if (!newDate) {
+      return;
+    }
 
-  nextWeek(): void {
-    this.currentDate = new Date(this.currentDate.setDate(this.currentDate.getDate() + 7));
+    // Mantener la hora original si existe
+    const originalDate = new Date(task.dueDate);
+    newDate.setHours(originalDate.getHours());
+    newDate.setMinutes(originalDate.getMinutes());
+    newDate.setSeconds(originalDate.getSeconds());
+
+    this.updateTaskDate(task._id, newDate);
   }
 
   openTaskModal(task: Task): void {
@@ -426,5 +515,53 @@ export class CalendarViewComponent implements OnInit {
     if (img) {
       img.style.display = 'none';
     }
+  }
+
+  updateTaskDate(taskId: string, newDate: Date): void {
+    const formattedDate = newDate.toISOString();
+    
+    // Update locally first
+    const index = this.tasks.findIndex(t => t._id === taskId);
+    if (index !== -1) {
+      this.tasks[index] = {
+        ...this.tasks[index],
+        dueDate: formattedDate
+      };
+      this.updateCalendarEvents();
+    }
+    
+    // Update in backend
+    this.http.put<Task>(`${this.apiUrl}/tasks/${taskId}`, { dueDate: formattedDate }).subscribe({
+      next: (updatedTask) => {
+        const taskIndex = this.tasks.findIndex(t => t._id === taskId);
+        if (taskIndex !== -1) {
+          const normalizedAssignees = (updatedTask.assignees || []).map(assignee => {
+            if (typeof assignee === 'string') {
+              return this.users.find(u => u._id === assignee) || assignee;
+            }
+            return assignee;
+          }).filter(a => a !== undefined) as User[];
+
+          this.tasks[taskIndex] = {
+            ...updatedTask,
+            assignees: normalizedAssignees,
+            attachments: (updatedTask.attachments || []).map(att => ({
+              ...att,
+              size: att.size || 0,
+              url: att.url && !att.url.startsWith('http') && !att.url.startsWith('data:') && att.url.startsWith('/')
+                ? `${this.staticFilesUrl}${att.url}`
+                : att.url || ''
+            }))
+          };
+          this.updateCalendarEvents();
+        } else {
+          this.loadTasks();
+        }
+      },
+      error: (err) => {
+        console.error('Error updating task date', err);
+        this.loadTasks();
+      }
+    });
   }
 }
