@@ -34,6 +34,7 @@ interface BoardStatus {
   name: string;
   color: string;
   projectId: string;
+  boardId?: string | { _id: string; name?: string };
 }
 
 interface User {
@@ -135,6 +136,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   showTaskModal = false;
   statuses: BoardStatus[] = [];
   columns: Column[] = [];
+  filteredColumns: Column[] = []; // Columnas filtradas por boardId de la tarea
   users: User[] = [];
   clients: Client[] = [];
   boards: Board[] = [];
@@ -380,7 +382,78 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
       }).filter(a => a !== undefined) as User[]
     };
     this.selectedTask = normalizedTask;
+    
+    // Filtrar las columnas según el boardId de la tarea
+    this.filterColumnsByBoard(task.boardId);
+    
     this.showTaskModal = true;
+  }
+
+  filterColumnsByBoard(boardId?: string | Board): void {
+    if (!boardId) {
+      // Si no hay boardId, usar todas las columnas
+      this.filteredColumns = this.columns;
+      return;
+    }
+
+    // Obtener el boardId como string
+    let targetBoardId: string;
+    if (typeof boardId === 'string') {
+      targetBoardId = boardId;
+    } else if (boardId && typeof boardId === 'object' && '_id' in boardId) {
+      targetBoardId = boardId._id;
+    } else {
+      this.filteredColumns = this.columns;
+      return;
+    }
+
+    // Si los estados ya tienen boardId, filtrarlos localmente
+    // Si no, cargarlos desde el servidor filtrados por boardId
+    const statusesWithBoardId = this.statuses.filter(s => s.boardId);
+    if (statusesWithBoardId.length > 0) {
+      // Filtrar los estados que pertenecen al board de la tarea
+      const boardStatuses = this.statuses.filter(status => {
+        if (!status.boardId) return false;
+        
+        let statusBoardId: string;
+        if (typeof status.boardId === 'string') {
+          statusBoardId = status.boardId;
+        } else if (status.boardId && typeof status.boardId === 'object' && '_id' in status.boardId) {
+          statusBoardId = status.boardId._id;
+        } else {
+          return false;
+        }
+        
+        return statusBoardId === targetBoardId;
+      });
+
+      // Convertir los estados filtrados a columnas
+      this.filteredColumns = boardStatuses.map(status => ({
+        _id: status._id,
+        name: status.name,
+        order: 0,
+        color: status.color,
+        tasks: []
+      })).sort((a, b) => a.order - b.order);
+    } else {
+      // Si los estados no tienen boardId, cargarlos filtrados desde el servidor
+      this.http.get<BoardStatus[]>(`${this.apiUrl}/admin/statuses?boardId=${targetBoardId}`).subscribe({
+        next: (statuses) => {
+          this.filteredColumns = statuses.map(status => ({
+            _id: status._id,
+            name: status.name,
+            order: 0,
+            color: status.color,
+            tasks: []
+          })).sort((a, b) => a.order - b.order);
+        },
+        error: (err) => {
+          console.error('Error loading statuses for board', err);
+          // Fallback: usar todas las columnas
+          this.filteredColumns = this.columns;
+        }
+      });
+    }
   }
 
   closeTaskModal(): void {
