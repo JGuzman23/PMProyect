@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { TranslationService } from '../../../../core/services/translation.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -21,8 +22,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    public translationService: TranslationService
+    public translationService: TranslationService,
+    private authService: AuthService
   ) {}
+
+  get isMember(): boolean {
+    return this.authService.currentUser?.role === 'member';
+  }
+
+  get canAccessAdmin(): boolean {
+    const role = this.authService.currentUser?.role;
+    // Solo permitir acceso a admin si NO es miembro
+    return role !== 'member' && role !== undefined;
+  }
 
   ngOnInit(): void {
     // Verificar ruta inicial

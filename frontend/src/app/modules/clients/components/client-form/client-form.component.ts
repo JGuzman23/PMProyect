@@ -18,7 +18,8 @@ interface Client {
   type: 'empresa' | 'persona';
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
+  phones?: string[];
   company?: string;
   taxId?: string;
   website?: string;
@@ -53,9 +54,8 @@ export class ClientFormComponent implements OnInit {
     type: 'persona',
     name: '',
     email: '',
-    phone: '',
+    phones: ['', ''],
     company: '',
-    taxId: '',
     website: '',
     agents: [],
     lastName: '',
@@ -93,13 +93,25 @@ export class ClientFormComponent implements OnInit {
     this.loading = true;
     this.http.get<Client>(`${this.apiUrl}/clients/${id}`).subscribe({
       next: (client) => {
+        // Convertir phone (string) o phones (array) a array de 2 elementos
+        let phones: string[] = ['', ''];
+        if (client.phones && Array.isArray(client.phones)) {
+          phones = [...client.phones];
+          // Asegurar que siempre hay 2 elementos
+          while (phones.length < 2) {
+            phones.push('');
+          }
+          phones = phones.slice(0, 2);
+        } else if (client.phone) {
+          phones[0] = client.phone;
+        }
+
         this.clientForm = {
           type: client.type || 'persona',
           name: client.name,
           email: client.email || '',
-          phone: client.phone || '',
+          phones: phones,
           company: client.company || '',
-          taxId: client.taxId || '',
           website: client.website || '',
           agents: client.agents ? [...client.agents] : [],
           lastName: client.lastName || '',
@@ -143,7 +155,6 @@ export class ClientFormComponent implements OnInit {
       this.clientForm.documentNumber = '';
     } else {
       this.clientForm.company = '';
-      this.clientForm.taxId = '';
       this.clientForm.website = '';
       this.clientForm.agents = [];
     }
@@ -186,11 +197,16 @@ export class ClientFormComponent implements OnInit {
     }
 
     // Preparar datos para enviar
+    // Filtrar teléfonos vacíos y enviar como array
+    const phones = (this.clientForm.phones || [])
+      .map((phone: string) => phone?.trim() || '')
+      .filter((phone: string) => phone !== '');
+
     const dataToSend: any = {
       type: this.clientForm.type,
       name: this.clientForm.name.trim(),
       email: this.clientForm.email?.trim() || '',
-      phone: this.clientForm.phone?.trim() || '',
+      phones: phones,
       address: this.clientForm.address || {},
       notes: this.clientForm.notes?.trim() || ''
     };
@@ -198,9 +214,6 @@ export class ClientFormComponent implements OnInit {
     // Si es tipo empresa
     if (dataToSend.type === 'empresa') {
       // Agregar campos específicos de empresa
-      if (this.clientForm.taxId) {
-        dataToSend.taxId = this.clientForm.taxId.trim();
-      }
       if (this.clientForm.website) {
         dataToSend.website = this.clientForm.website.trim();
       }

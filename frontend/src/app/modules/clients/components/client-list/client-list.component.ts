@@ -18,9 +18,9 @@ interface Client {
   type: 'empresa' | 'persona';
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
+  phones?: string[];
   company?: string;
-  taxId?: string;
   website?: string;
   agents?: Agent[];
   lastName?: string;
@@ -109,17 +109,15 @@ export class ClientListComponent implements OnInit {
       // Buscar por email
       const email = client.email ? client.email.toLowerCase() : '';
       
-      // Buscar por teléfono
-      const phone = client.phone ? client.phone.toLowerCase() : '';
-      
+      // Buscar por teléfonos
+      const phones = client.phones || (client.phone ? [client.phone] : []);
+      const phoneMatch = phones.some(phone => phone && phone.toLowerCase().includes(searchLower));
+
       // Buscar por empresa (si es tipo empresa)
       const company = client.company ? client.company.toLowerCase() : '';
       
       // Buscar por documento
       const document = client.documentNumber ? client.documentNumber.toLowerCase() : '';
-      
-      // Buscar por NIF/CIF (taxId)
-      const taxId = client.taxId ? client.taxId.toLowerCase() : '';
 
       // Buscar por agentes (PMs) asignados
       let agentMatch = false;
@@ -136,10 +134,9 @@ export class ClientListComponent implements OnInit {
 
       return fullName.includes(searchLower) ||
              email.includes(searchLower) ||
-             phone.includes(searchLower) ||
+             phoneMatch ||
              company.includes(searchLower) ||
              document.includes(searchLower) ||
-             taxId.includes(searchLower) ||
              agentMatch;
     });
     
@@ -275,8 +272,10 @@ export class ClientListComponent implements OnInit {
           bValue = (b.email || '').toLowerCase();
           break;
         case 'phone':
-          aValue = (a.phone || '').toLowerCase();
-          bValue = (b.phone || '').toLowerCase();
+          const aPhones = a.phones || (a.phone ? [a.phone] : []);
+          const bPhones = b.phones || (b.phone ? [b.phone] : []);
+          aValue = (aPhones[0] || '').toLowerCase();
+          bValue = (bPhones[0] || '').toLowerCase();
           break;
         case 'company':
           aValue = (a.company || '').toLowerCase();
@@ -351,11 +350,14 @@ export class ClientListComponent implements OnInit {
         ? this.translationService.translate('clients.active')
         : this.translationService.translate('clients.inactive');
 
+      const phones = client.phones || (client.phone ? [client.phone] : []);
+      const phoneDisplay = phones.filter(p => p && p.trim()).join(', ') || '';
+
       return [
         type,
         name,
         client.email || '',
-        client.phone || '',
+        phoneDisplay,
         companyInfo,
         status
       ];
@@ -408,11 +410,14 @@ export class ClientListComponent implements OnInit {
         ? this.translationService.translate('clients.active')
         : this.translationService.translate('clients.inactive');
 
+      const phones = client.phones || (client.phone ? [client.phone] : []);
+      const phoneDisplay = phones.filter(p => p && p.trim()).join(', ') || '';
+
       return [
         type,
         name,
         client.email || '',
-        client.phone || '',
+        phoneDisplay,
         companyInfo,
         status
       ];

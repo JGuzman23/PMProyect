@@ -54,9 +54,11 @@
             <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.email' | translate }}</label>
             <p class="text-sm text-gray-900">{{ client.email }}</p>
           </div>
-          <div *ngIf="client.phone">
+          <div *ngIf="(client.phones && client.phones.length > 0) || client.phone">
             <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.phone' | translate }}</label>
-            <p class="text-sm text-gray-900">{{ client.phone }}</p>
+            <div class="text-sm text-gray-900 space-y-1">
+              <p *ngFor="let phone of (client.phones || (client.phone ? [client.phone] : []))">{{ phone }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -68,10 +70,6 @@
           <div *ngIf="client.company">
             <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.companyName' | translate }}</label>
             <p class="text-sm text-gray-900">{{ client.company }}</p>
-          </div>
-          <div *ngIf="client.taxId">
-            <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.taxId' | translate }}</label>
-            <p class="text-sm text-gray-900">{{ client.taxId }}</p>
           </div>
           <div *ngIf="client.website">
             <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.website' | translate }}</label>

@@ -58,9 +58,9 @@ interface Client {
   type: 'empresa' | 'persona';
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
+  phones?: string[];
   company?: string;
-  taxId?: string;
   website?: string;
   agents?: Agent[];
   lastName?: string;

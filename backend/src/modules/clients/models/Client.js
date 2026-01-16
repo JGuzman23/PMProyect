@@ -22,6 +22,10 @@ const clientSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  phones: [{
+    type: String,
+    trim: true
+  }],
   companyId: {
     type: String,
     required: true,

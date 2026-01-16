@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { DashboardLayoutComponent } from './components/dashboard-layout/dashboard-layout.component';
+import { memberGuard } from '../../core/guards/member.guard';
 
 export const DASHBOARD_ROUTES: Routes = [
   {
@@ -53,18 +54,22 @@ export const DASHBOARD_ROUTES: Routes = [
       },
       {
         path: 'admin',
+        canActivate: [memberGuard],
         loadComponent: () => import('../admin/components/admin-panel/admin-panel.component').then(m => m.AdminPanelComponent)
       },
       {
         path: 'admin/projects',
+        canActivate: [memberGuard],
         loadComponent: () => import('../projects/components/project-list/project-list.component').then(m => m.ProjectListComponent)
       },
       {
         path: 'admin/statuses',
+        canActivate: [memberGuard],
         loadComponent: () => import('../admin/components/status-admin/status-admin.component').then(m => m.StatusAdminComponent)
       },
       {
         path: 'admin/teams',
+        canActivate: [memberGuard],
         loadComponent: () => import('../teams/components/team-list/team-list.component').then(m => m.TeamListComponent)
       },
       {

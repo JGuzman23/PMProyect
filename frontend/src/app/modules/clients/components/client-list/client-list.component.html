@@ -191,7 +191,11 @@
             </div>
           </td>
           <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">{{ client.email }}</td>
-          <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">{{ client.phone }}</td>
+          <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+            <div *ngIf="(client.phones && client.phones.length > 0) || client.phone" class="space-y-1">
+              <p *ngFor="let phone of (client.phones || (client.phone ? [client.phone] : []))">{{ phone }}</p>
+            </div>
+          </td>
           <td class="px-3 sm:px-6 py-4 text-sm text-gray-500 hidden lg:table-cell">
             <div *ngIf="client.type === 'empresa'" class="flex flex-col">
               <span>{{ client.company }}</span>
