@@ -1,10 +1,11 @@
 import { Component, Output, EventEmitter, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LanguageSelectorComponent } from '../../../../core/components/language-selector/language-selector.component';
 import { TranslationService } from '../../../../core/services/translation.service';
+import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
@@ -17,11 +18,21 @@ interface Task {
   columnId?: string;
 }
 
+interface Note {
+  _id: string;
+  title: string;
+  content: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, LanguageSelectorComponent, FormsModule, RouterLink],
-  templateUrl: './navbar.component.html'
+  imports: [CommonModule, LanguageSelectorComponent, FormsModule, RouterLink, RouterLinkActive, TranslatePipe],
+  templateUrl: './navbar.component.html',
+  styleUrls: ['./navbar.component.css']
 })
 export class NavbarComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
@@ -35,6 +46,18 @@ export class NavbarComponent implements OnInit {
   preventBlur = false;
   showUserMenu = false;
   avatarLoadError = false;
+  showNotesModal = false;
+  notes: Note[] = [];
+  notesLoading = false;
+  showEditNoteModal = false;
+  showCreateNoteSection = false;
+  selectedNote: Note | null = null;
+  newNoteTitle = '';
+  newNoteContent = '';
+  noteForm = {
+    title: '',
+    content: ''
+  };
   private searchSubject = new Subject<string>();
   private apiUrl = environment.apiUrl;
 
@@ -98,6 +121,9 @@ export class NavbarComponent implements OnInit {
         this.searching = false;
       }
     });
+    
+    // Cargar notas para mostrar el contador
+    this.loadNotes();
   }
 
   onSearch(): void {
@@ -217,6 +243,135 @@ export class NavbarComponent implements OnInit {
   logout(): void {
     this.showUserMenu = false;
     this.authService.logout();
+  }
+
+  toggleNotesModal(): void {
+    this.showNotesModal = !this.showNotesModal;
+    if (this.showNotesModal) {
+      this.loadNotes();
+    }
+  }
+
+  closeNotesModal(): void {
+    this.showNotesModal = false;
+    this.showEditNoteModal = false;
+    this.showCreateNoteSection = false;
+    this.selectedNote = null;
+    this.newNoteTitle = '';
+    this.newNoteContent = '';
+  }
+
+  toggleCreateNoteSection(): void {
+    this.showCreateNoteSection = !this.showCreateNoteSection;
+  }
+
+  loadNotes(): void {
+    this.notesLoading = true;
+    this.http.get<Note[]>(`${this.apiUrl}/notes`).subscribe({
+      next: (notes) => {
+        this.notes = notes;
+        this.notesLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading notes', err);
+        this.notesLoading = false;
+      }
+    });
+  }
+
+
+  openEditNoteModal(note: Note): void {
+    this.selectedNote = note;
+    this.noteForm = {
+      title: note.title,
+      content: note.content
+    };
+    this.showEditNoteModal = true;
+  }
+
+  closeEditNoteModal(): void {
+    this.showEditNoteModal = false;
+    this.selectedNote = null;
+    this.noteForm = { title: '', content: '' };
+  }
+
+  createNote(): void {
+    if (!this.newNoteTitle.trim()) {
+      alert(this.translationService.translate('notes.titleRequired'));
+      return;
+    }
+
+    const noteData = {
+      title: this.newNoteTitle,
+      content: this.newNoteContent
+    };
+
+    this.http.post<Note>(`${this.apiUrl}/notes`, noteData).subscribe({
+      next: (note) => {
+        this.notes.unshift(note);
+        this.newNoteTitle = '';
+        this.newNoteContent = '';
+        this.showCreateNoteSection = false;
+      },
+      error: (err) => {
+        console.error('Error creating note', err);
+        alert(this.translationService.translate('notes.createError'));
+      }
+    });
+  }
+
+  updateNote(): void {
+    if (!this.selectedNote || !this.noteForm.title.trim()) {
+      alert(this.translationService.translate('notes.titleRequired'));
+      return;
+    }
+
+    this.http.put<Note>(`${this.apiUrl}/notes/${this.selectedNote._id}`, this.noteForm).subscribe({
+      next: (note) => {
+        const index = this.notes.findIndex(n => n._id === note._id);
+        if (index !== -1) {
+          this.notes[index] = note;
+        }
+        this.closeEditNoteModal();
+      },
+      error: (err) => {
+        console.error('Error updating note', err);
+        alert(this.translationService.translate('notes.updateError'));
+      }
+    });
+  }
+
+  deleteNote(note: Note): void {
+    if (!confirm(this.translationService.translate('notes.deleteConfirm'))) {
+      return;
+    }
+
+    this.http.delete(`${this.apiUrl}/notes/${note._id}`).subscribe({
+      next: () => {
+        this.notes = this.notes.filter(n => n._id !== note._id);
+      },
+      error: (err) => {
+        console.error('Error deleting note', err);
+        alert(this.translationService.translate('notes.deleteError'));
+      }
+    });
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  getStickyNoteClass(index: number): string {
+    const colors = [
+      'sticky-note-yellow',
+      'sticky-note-pink',
+      'sticky-note-blue',
+      'sticky-note-green',
+      'sticky-note-purple',
+      'sticky-note-orange'
+    ];
+    return colors[index % colors.length];
   }
 }
 

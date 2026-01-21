@@ -206,7 +206,8 @@ export class TranslationService {
         clients: 'Clientes',
         teams: 'Equipos',
         administration: 'Administración',
-        boardStatuses: 'Estados del Tablero'
+        boardStatuses: 'Estados del Tablero',
+        notes: 'Mis Notas'
       },
       teams: {
         title: 'Equipos',
@@ -259,6 +260,22 @@ export class TranslationService {
         week: 'Semana',
         days: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
         daysShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+      },
+      notes: {
+        title: 'Mis Notas',
+        create: 'Crear Nota',
+        edit: 'Editar Nota',
+        content: 'Contenido',
+        noNotes: 'No tienes notas aún. Crea una nueva nota para comenzar.',
+        titleRequired: 'El título es obligatorio',
+        createError: 'Error al crear la nota',
+        updateError: 'Error al actualizar la nota',
+        deleteError: 'Error al eliminar la nota',
+        deleteConfirm: '¿Estás seguro de que deseas eliminar esta nota?',
+        createdSuccessfully: 'Nota creada exitosamente',
+        updatedSuccessfully: 'Nota actualizada exitosamente',
+        deletedSuccessfully: 'Nota eliminada exitosamente',
+        loadError: 'Error al cargar las notas'
       },
       clients: {
         title: 'Clientes',
@@ -649,6 +666,22 @@ export class TranslationService {
         days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
         daysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
       },
+      notes: {
+        title: 'My Notes',
+        create: 'Create Note',
+        edit: 'Edit Note',
+        content: 'Content',
+        noNotes: 'You don\'t have any notes yet. Create a new note to get started.',
+        titleRequired: 'Title is required',
+        createError: 'Error creating note',
+        updateError: 'Error updating note',
+        deleteError: 'Error deleting note',
+        deleteConfirm: 'Are you sure you want to delete this note?',
+        createdSuccessfully: 'Note created successfully',
+        updatedSuccessfully: 'Note updated successfully',
+        deletedSuccessfully: 'Note deleted successfully',
+        loadError: 'Error loading notes'
+      },
       clients: {
         title: 'Clients',
         newClient: 'New Client',
@@ -970,7 +1003,8 @@ export class TranslationService {
         clients: 'Clients',
         teams: 'Équipes',
         administration: 'Administration',
-        boardStatuses: 'Statuts du Tableau'
+        boardStatuses: 'Statuts du Tableau',
+        notes: 'Mes Notes'
       },
       teams: {
         title: 'Équipes',
@@ -1023,6 +1057,18 @@ export class TranslationService {
         week: 'Semaine',
         days: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
         daysShort: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+      },
+      notes: {
+        title: 'Mes Notes',
+        create: 'Créer une Note',
+        edit: 'Modifier la Note',
+        content: 'Contenu',
+        noNotes: 'Vous n\'avez pas encore de notes. Créez une nouvelle note pour commencer.',
+        titleRequired: 'Le titre est obligatoire',
+        createError: 'Erreur lors de la création de la note',
+        updateError: 'Erreur lors de la mise à jour de la note',
+        deleteError: 'Erreur lors de la suppression de la note',
+        deleteConfirm: 'Êtes-vous sûr de vouloir supprimer cette note?'
       },
       clients: {
         title: 'Clients',
@@ -1238,7 +1284,8 @@ export class TranslationService {
         clients: 'Kunden',
         teams: 'Teams',
         administration: 'Verwaltung',
-        boardStatuses: 'Board-Status'
+        boardStatuses: 'Board-Status',
+        notes: 'Meine Notizen'
       },
       teams: {
         title: 'Teams',
@@ -1291,6 +1338,22 @@ export class TranslationService {
         week: 'Woche',
         days: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
         daysShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
+      },
+      notes: {
+        title: 'Meine Notizen',
+        create: 'Notiz erstellen',
+        edit: 'Notiz bearbeiten',
+        content: 'Inhalt',
+        noNotes: 'Sie haben noch keine Notizen. Erstellen Sie eine neue Notiz, um zu beginnen.',
+        titleRequired: 'Der Titel ist erforderlich',
+        createError: 'Fehler beim Erstellen der Notiz',
+        updateError: 'Fehler beim Aktualisieren der Notiz',
+        deleteError: 'Fehler beim Löschen der Notiz',
+        deleteConfirm: 'Sind Sie sicher, dass Sie diese Notiz löschen möchten?',
+        createdSuccessfully: 'Notiz erfolgreich erstellt',
+        updatedSuccessfully: 'Notiz erfolgreich aktualisiert',
+        deletedSuccessfully: 'Notiz erfolgreich gelöscht',
+        loadError: 'Fehler beim Laden der Notizen'
       },
       clients: {
         title: 'Kunden',
@@ -1509,7 +1572,8 @@ export class TranslationService {
         clients: 'Clientes',
         teams: 'Equipes',
         administration: 'Administração',
-        boardStatuses: 'Status do Quadro'
+        boardStatuses: 'Status do Quadro',
+        notes: 'Minhas Notas'
       },
       teams: {
         title: 'Equipes',
@@ -1562,6 +1626,18 @@ export class TranslationService {
         week: 'Semana',
         days: ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'],
         daysShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+      },
+      notes: {
+        title: 'Minhas Notas',
+        create: 'Criar Nota',
+        edit: 'Editar Nota',
+        content: 'Conteúdo',
+        noNotes: 'Você ainda não tem notas. Crie uma nova nota para começar.',
+        titleRequired: 'O título é obrigatório',
+        createError: 'Erro ao criar a nota',
+        updateError: 'Erro ao atualizar a nota',
+        deleteError: 'Erro ao excluir a nota',
+        deleteConfirm: 'Tem certeza de que deseja excluir esta nota?'
       },
       clients: {
         title: 'Clientes',
@@ -1779,7 +1855,8 @@ export class TranslationService {
         clients: 'Clienti',
         teams: 'Squadre',
         administration: 'Amministrazione',
-        boardStatuses: 'Stati della Bacheca'
+        boardStatuses: 'Stati della Bacheca',
+        notes: 'Le Mie Note'
       },
       teams: {
         title: 'Squadre',
@@ -1832,6 +1909,18 @@ export class TranslationService {
         week: 'Settimana',
         days: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'],
         daysShort: ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
+      },
+      notes: {
+        title: 'Le Mie Note',
+        create: 'Crea Nota',
+        edit: 'Modifica Nota',
+        content: 'Contenuto',
+        noNotes: 'Non hai ancora note. Crea una nuova nota per iniziare.',
+        titleRequired: 'Il titolo è obbligatorio',
+        createError: 'Errore durante la creazione della nota',
+        updateError: 'Errore durante l\'aggiornamento della nota',
+        deleteError: 'Errore durante l\'eliminazione della nota',
+        deleteConfirm: 'Sei sicuro di voler eliminare questa nota?'
       },
       clients: {
         title: 'Clienti',

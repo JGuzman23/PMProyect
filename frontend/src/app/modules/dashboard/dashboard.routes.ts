@@ -75,6 +75,10 @@ export const DASHBOARD_ROUTES: Routes = [
       {
         path: 'profile/edit',
         loadComponent: () => import('../profile/components/profile-edit/profile-edit.component').then(m => m.ProfileEditComponent)
+      },
+      {
+        path: 'notes',
+        loadComponent: () => import('../notes/components/notes-list/notes-list.component').then(m => m.NotesListComponent)
       }
     ]
   }
