@@ -276,6 +276,14 @@ export class TaskModalComponent implements OnInit, OnChanges {
   }
 
   onSave(): void {
+    // Validar que el título no esté vacío
+    if (!this.taskForm.title || !this.taskForm.title.trim()) {
+      this.showNotification(
+        this.translationService.translate('tasks.titleRequired') || 'El título es requerido',
+        'error'
+      );
+      return;
+    }
     this.save.emit(this.taskForm);
   }
 
