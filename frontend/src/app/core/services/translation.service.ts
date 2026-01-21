@@ -434,6 +434,9 @@ export class TranslationService {
         email: 'Email',
         phone: 'Teléfono',
         agents: 'Agentes',
+        preview: 'Vista previa',
+        previewNotAvailable: 'Preview no disponible',
+        pdfNotSupported: 'Tu navegador no soporta la visualización de PDFs.',
       },
       boards: {
         board: 'Board',
@@ -839,6 +842,9 @@ export class TranslationService {
         email: 'Email',
         phone: 'Phone',
         agents: 'Agents',
+        preview: 'Preview',
+        previewNotAvailable: 'Preview not available',
+        pdfNotSupported: 'Your browser does not support PDF viewing.',
       },
       boards: {
         board: 'Board',
@@ -1153,7 +1159,10 @@ export class TranslationService {
         attachments: 'Pièces jointes',
         comments: 'Commentaires',
         noComments: 'Pas encore de commentaires',
-        addComment: 'Ajouter un commentaire'
+        addComment: 'Ajouter un commentaire',
+        preview: 'Aperçu',
+        previewNotAvailable: 'Aperçu non disponible',
+        pdfNotSupported: 'Votre navigateur ne prend pas en charge l\'affichage des PDF.',
       },
       projects: {
         title: 'Projets',
@@ -1442,6 +1451,9 @@ export class TranslationService {
         email: 'Email',
         phone: 'Telefon',
         agents: 'Agenten',
+        preview: 'Vorschau',
+        previewNotAvailable: 'Vorschau nicht verfügbar',
+        pdfNotSupported: 'Ihr Browser unterstützt die PDF-Anzeige nicht.',
       },
       projects: {
         title: 'Projekte',
@@ -1725,6 +1737,9 @@ export class TranslationService {
         addComment: 'Adicionar comentário',
         email: 'Email',
         phone: 'Telefone',
+        preview: 'Visualização',
+        previewNotAvailable: 'Visualização não disponível',
+        pdfNotSupported: 'Seu navegador não suporta a visualização de PDFs.',
       },
       projects: {
         title: 'Projetos',
@@ -2009,6 +2024,9 @@ export class TranslationService {
         email: 'Email',
         phone: 'Telefono',
         agents: 'Agenti',
+        preview: 'Anteprima',
+        previewNotAvailable: 'Anteprima non disponibile',
+        pdfNotSupported: 'Il tuo browser non supporta la visualizzazione dei PDF.',
       },
       projects: {
         title: 'Progetti',

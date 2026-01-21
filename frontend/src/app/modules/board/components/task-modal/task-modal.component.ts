@@ -1409,6 +1409,13 @@ export class TaskModalComponent implements OnInit, OnChanges {
     return this.translationService.translate('tasks.pdfNotSupported') || 'Tu navegador no soporta la visualización de PDFs.';
   }
 
+  getPreviewTooltip(attachment: Attachment): string {
+    if (this.canPreview(attachment)) {
+      return this.translationService.translate('tasks.preview') || 'Preview';
+    }
+    return this.translationService.translate('tasks.previewNotAvailable') || 'Preview no disponible';
+  }
+
 
   getFileIcon(name: string): string {
     const extension = name.toLowerCase().substring(name.lastIndexOf('.') + 1);

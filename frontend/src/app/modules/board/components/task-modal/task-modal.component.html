@@ -640,6 +640,7 @@
                       [class.cursor-pointer]="canPreview(attachment)"
                       [class.hover:opacity-90]="canPreview(attachment)"
                       (click)="canPreview(attachment) && openPreview(attachment)"
+                      [title]="getPreviewTooltip(attachment)"
                       class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white transition-opacity"
                     >
                       <img
@@ -1595,6 +1596,7 @@
                       [class.cursor-pointer]="canPreview(attachment)"
                       [class.hover:opacity-90]="canPreview(attachment)"
                       (click)="canPreview(attachment) && openPreview(attachment)"
+                      [title]="getPreviewTooltip(attachment)"
                       class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white transition-opacity"
                     >
                       <img
