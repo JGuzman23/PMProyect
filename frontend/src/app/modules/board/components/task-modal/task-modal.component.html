@@ -564,10 +564,21 @@
                    class="hidden"
                    multiple
                  />
+                <div
+                  (dragover)="onDragOver($event, column._id || '')"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event, column._id || '')"
+                  [class.border-indigo-500]="dragOverStatusId === column._id"
+                  [class.bg-indigo-100]="dragOverStatusId === column._id"
+                  [class.border-4]="dragOverStatusId === column._id"
+                  class="w-full px-3 py-2 border-2 border-dashed rounded-md transition-all mb-3"
+                  [class.border-gray-400]="dragOverStatusId !== column._id"
+                  [class.border-indigo-500]="dragOverStatusId === column._id"
+                >
                 <button
                   type="button"
                   (click)="triggerFileInput(column._id || '')"
-                  class="w-full px-3 py-2 border-2 border-dashed border-gray-400 rounded-md text-gray-700 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center space-x-2 text-sm mb-3 font-medium"
+                  class="w-full px-3 py-2 text-gray-700 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center space-x-2 text-sm font-medium"
                 >
                   <svg
                     class="w-4 h-4"
@@ -714,6 +725,7 @@
                       }}</span>
                     </div>
                   </div>
+                </div>
                 </div>
               </div>
             </div>
@@ -1942,10 +1954,21 @@
                    class="hidden"
                    multiple
                  />
+                <div
+                  (dragover)="onDragOver($event, column._id || '')"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event, column._id || '')"
+                  [class.border-indigo-500]="dragOverStatusId === column._id"
+                  [class.bg-indigo-100]="dragOverStatusId === column._id"
+                  [class.border-4]="dragOverStatusId === column._id"
+                  class="w-full px-3 py-2 border-2 border-dashed rounded-md transition-all mb-3"
+                  [class.border-gray-400]="dragOverStatusId !== column._id"
+                  [class.border-indigo-500]="dragOverStatusId === column._id"
+                >
                 <button
                   type="button"
                   (click)="triggerFileInputEdit(column._id || '')"
-                  class="w-full px-3 py-2 border-2 border-dashed border-gray-400 rounded-md text-gray-700 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center space-x-2 text-sm mb-3 font-medium"
+                  class="w-full px-3 py-2 text-gray-700 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center space-x-2 text-sm font-medium"
                 >
                   <svg
                     class="w-4 h-4"
@@ -2095,6 +2118,7 @@
                       {{ formatFileSize(attachment.size) }}
                     </div>
                   </div>
+                </div>
                 </div>
               </div>
             </div>
@@ -2470,96 +2494,6 @@
   </div>
 </div>
 
-<!-- Modal para Título del Adjunto -->
-<div
-  *ngIf="showAttachmentTitleModal"
-  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-[60] flex items-center justify-center p-4"
-  (click)="cancelAttachmentUpload()"
->
-  <div
-    class="relative mx-auto p-6 border w-full max-w-md shadow-lg rounded-md bg-white"
-    (click)="$event.stopPropagation()"
-  >
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-lg font-bold text-gray-900">
-        {{ "tasks.attachmentTitle" | translate }}
-      </h3>
-      <button
-        type="button"
-        (click)="cancelAttachmentUpload()"
-        class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-      >
-        <svg
-          class="w-5 h-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        {{ "admin.statusName" | translate }} <span class="text-red-500">*</span>
-      </label>
-      <select
-        [(ngModel)]="pendingStatusId"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mb-3"
-        required
-      >
-        <option value="">{{ "tasks.selectStatus" | translate }}...</option>
-        <option *ngFor="let column of columns" [value]="column._id">
-          {{ column.name }}
-        </option>
-      </select>
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        {{ "tasks.title" | translate }} <span class="text-red-500">*</span>
-      </label>
-      <input
-        type="text"
-        [(ngModel)]="attachmentTitle"
-        (keyup.enter)="confirmAttachmentUpload()"
-        [placeholder]="'tasks.attachmentTitle' | translate"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-      />
-      <div *ngIf="pendingFiles.length > 0" class="mt-2">
-        <p class="text-xs text-gray-500 mb-1">
-          {{ pendingFiles.length === 1 ? 'Archivo:' : 'Archivos (' + pendingFiles.length + '):' }}
-        </p>
-        <ul class="text-xs text-gray-600 space-y-1 max-h-32 overflow-y-auto">
-          <li *ngFor="let file of pendingFiles" class="flex items-center">
-            <span class="mr-2">•</span>
-            <span>{{ file.name }}</span>
-            <span class="ml-2 text-gray-400">({{ formatFileSize(file.size) }})</span>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <div class="flex justify-end space-x-3">
-      <button
-        type="button"
-        (click)="cancelAttachmentUpload()"
-        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-      >
-        {{ "tasks.cancel" | translate }}
-      </button>
-      <button
-        type="button"
-        (click)="confirmAttachmentUpload()"
-        [disabled]="!attachmentTitle.trim() || !pendingStatusId"
-        class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-      >
-        {{ "tasks.upload" | translate }}
-      </button>
-    </div>
-  </div>
-</div>
 
 <style>
   .comment-editor[data-placeholder]:empty:before {

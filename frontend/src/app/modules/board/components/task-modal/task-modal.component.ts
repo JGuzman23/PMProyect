@@ -122,12 +122,10 @@ export class TaskModalComponent implements OnInit, OnChanges {
   showClientDropdown = false;
   showPriorityDropdown = false;
   showStatusDropdown = false;
-  showAttachmentTitleModal = false;
   pendingFiles: File[] = [];
-  attachmentTitle = '';
   uploadingFiles = false;
+  dragOverStatusId: string | null = null;
   uploadingAttachmentIds: Set<string> = new Set(); // Track which attachments are being uploaded
-  pendingStatusId: string | null = null;
   // Notification state
   notification: { message: string; type: 'success' | 'error' | 'info' } | null = null;
   loadingUsers = false;
@@ -498,6 +496,18 @@ export class TaskModalComponent implements OnInit, OnChanges {
     }
     const search = this.prioritySearchTerm.toLowerCase();
     this.filteredPriorities = priorities.filter(p => p.label.toLowerCase().includes(search));
+  }
+
+  @HostListener('document:dragover', ['$event'])
+  onDocumentDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  @HostListener('document:drop', ['$event'])
+  onDocumentDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
   }
 
   @HostListener('document:click', ['$event'])
@@ -999,13 +1009,15 @@ export class TaskModalComponent implements OnInit, OnChanges {
       if (!this.isEditMode && this.task) {
         this.enableEditMode();
       }
-      // Procesar todos los archivos seleccionados
+      // Procesar todos los archivos seleccionados y subirlos directamente
       const files = Array.from(input.files);
-      if (files.length > 0) {
-        this.pendingFiles = files;
-        this.pendingStatusId = statusId;
-        this.attachmentTitle = '';
-        this.showAttachmentTitleModal = true;
+      if (files.length > 0 && this.task) {
+        const status = this.columns.find(c => c._id === statusId);
+        files.forEach((file) => {
+          // Usar el nombre del archivo (sin extensión) como título
+          const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+          this.uploadFile(file, fileNameWithoutExt, statusId, status?.name || '');
+        });
       }
       // Limpiar el input para permitir subir el mismo archivo de nuevo
       input.value = '';
@@ -1028,30 +1040,39 @@ export class TaskModalComponent implements OnInit, OnChanges {
     }
   }
 
-  confirmAttachmentUpload(): void {
-    if (this.pendingFiles.length > 0 && this.attachmentTitle.trim() && this.pendingStatusId && this.task) {
-      const statusId = this.pendingStatusId; // Guardar en variable local para TypeScript
-      const status = this.columns.find(c => c._id === statusId);
-      // Subir todos los archivos con el mismo título
-      this.pendingFiles.forEach((file, index) => {
-        const title = this.pendingFiles.length > 1 
-          ? `${this.attachmentTitle.trim()} (${index + 1})`
-          : this.attachmentTitle.trim();
-        this.uploadFile(file, title, statusId, status?.name || '');
-      });
-      this.cancelAttachmentUpload();
-    } else if (this.pendingFiles.length > 0 && !this.pendingStatusId) {
-      alert(this.translationService.translate('tasks.mustSelectStatus'));
-    } else if (this.pendingFiles.length > 0) {
-      alert(this.translationService.translate('tasks.mustEnterTitle'));
-    }
+  onDragOver(event: DragEvent, statusId: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragOverStatusId = statusId;
   }
 
-  cancelAttachmentUpload(): void {
-    this.showAttachmentTitleModal = false;
-    this.pendingFiles = [];
-    this.pendingStatusId = null;
-    this.attachmentTitle = '';
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragOverStatusId = null;
+  }
+
+  onDrop(event: DragEvent, statusId: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragOverStatusId = null;
+
+    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+      // Si estamos en modo vista, activar modo edición para poder subir archivos
+      if (!this.isEditMode && this.task) {
+        this.enableEditMode();
+      }
+      // Procesar todos los archivos soltados y subirlos directamente
+      const files = Array.from(event.dataTransfer.files);
+      if (files.length > 0 && this.task) {
+        const status = this.columns.find(c => c._id === statusId);
+        files.forEach((file) => {
+          // Usar el nombre del archivo (sin extensión) como título
+          const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+          this.uploadFile(file, fileNameWithoutExt, statusId, status?.name || '');
+        });
+      }
+    }
   }
 
   uploadFile(file: File, title: string, statusId: string, statusName: string): void {
