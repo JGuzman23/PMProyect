@@ -557,12 +557,13 @@
                     >
                   </div>
                 </div>
-                <input
-                  type="file"
-                  [id]="'fileInput-' + column._id"
-                  (change)="onFileSelected($event, column._id || '')"
-                  class="hidden"
-                />
+                 <input
+                   type="file"
+                   [id]="'fileInput-' + column._id"
+                   (change)="onFileSelected($event, column._id || '')"
+                   class="hidden"
+                   multiple
+                 />
                 <button
                   type="button"
                   (click)="triggerFileInput(column._id || '')"
@@ -1934,12 +1935,13 @@
                     >
                   </div>
                 </div>
-                <input
-                  type="file"
-                  [id]="'fileInputEdit-' + column._id"
-                  (change)="onFileSelected($event, column._id || '')"
-                  class="hidden"
-                />
+                 <input
+                   type="file"
+                   [id]="'fileInputEdit-' + column._id"
+                   (change)="onFileSelected($event, column._id || '')"
+                   class="hidden"
+                   multiple
+                 />
                 <button
                   type="button"
                   (click)="triggerFileInputEdit(column._id || '')"
@@ -2526,9 +2528,18 @@
         [placeholder]="'tasks.attachmentTitle' | translate"
         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
       />
-      <p *ngIf="pendingFile" class="mt-2 text-xs text-gray-500">
-        Archivo: {{ pendingFile.name }}
-      </p>
+      <div *ngIf="pendingFiles.length > 0" class="mt-2">
+        <p class="text-xs text-gray-500 mb-1">
+          {{ pendingFiles.length === 1 ? 'Archivo:' : 'Archivos (' + pendingFiles.length + '):' }}
+        </p>
+        <ul class="text-xs text-gray-600 space-y-1 max-h-32 overflow-y-auto">
+          <li *ngFor="let file of pendingFiles" class="flex items-center">
+            <span class="mr-2">•</span>
+            <span>{{ file.name }}</span>
+            <span class="ml-2 text-gray-400">({{ formatFileSize(file.size) }})</span>
+          </li>
+        </ul>
+      </div>
     </div>
     <div class="flex justify-end space-x-3">
       <button

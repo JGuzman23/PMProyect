@@ -123,7 +123,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
   showPriorityDropdown = false;
   showStatusDropdown = false;
   showAttachmentTitleModal = false;
-  pendingFile: File | null = null;
+  pendingFiles: File[] = [];
   attachmentTitle = '';
   uploadingFiles = false;
   uploadingAttachmentIds: Set<string> = new Set(); // Track which attachments are being uploaded
@@ -999,10 +999,10 @@ export class TaskModalComponent implements OnInit, OnChanges {
       if (!this.isEditMode && this.task) {
         this.enableEditMode();
       }
-      // Procesar archivos uno por uno para pedir título y estado
+      // Procesar todos los archivos seleccionados
       const files = Array.from(input.files);
       if (files.length > 0) {
-        this.pendingFile = files[0];
+        this.pendingFiles = files;
         this.pendingStatusId = statusId;
         this.attachmentTitle = '';
         this.showAttachmentTitleModal = true;
@@ -1029,20 +1029,27 @@ export class TaskModalComponent implements OnInit, OnChanges {
   }
 
   confirmAttachmentUpload(): void {
-    if (this.pendingFile && this.attachmentTitle.trim() && this.pendingStatusId && this.task) {
-      const status = this.columns.find(c => c._id === this.pendingStatusId);
-      this.uploadFile(this.pendingFile, this.attachmentTitle.trim(), this.pendingStatusId, status?.name || '');
+    if (this.pendingFiles.length > 0 && this.attachmentTitle.trim() && this.pendingStatusId && this.task) {
+      const statusId = this.pendingStatusId; // Guardar en variable local para TypeScript
+      const status = this.columns.find(c => c._id === statusId);
+      // Subir todos los archivos con el mismo título
+      this.pendingFiles.forEach((file, index) => {
+        const title = this.pendingFiles.length > 1 
+          ? `${this.attachmentTitle.trim()} (${index + 1})`
+          : this.attachmentTitle.trim();
+        this.uploadFile(file, title, statusId, status?.name || '');
+      });
       this.cancelAttachmentUpload();
-    } else if (this.pendingFile && !this.pendingStatusId) {
+    } else if (this.pendingFiles.length > 0 && !this.pendingStatusId) {
       alert(this.translationService.translate('tasks.mustSelectStatus'));
-    } else if (this.pendingFile) {
+    } else if (this.pendingFiles.length > 0) {
       alert(this.translationService.translate('tasks.mustEnterTitle'));
     }
   }
 
   cancelAttachmentUpload(): void {
     this.showAttachmentTitleModal = false;
-    this.pendingFile = null;
+    this.pendingFiles = [];
     this.pendingStatusId = null;
     this.attachmentTitle = '';
   }
