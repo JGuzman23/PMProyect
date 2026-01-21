@@ -637,7 +637,10 @@
                     <!-- Contenido normal cuando no está subiendo -->
                     <div
                       *ngIf="!isAttachmentUploading(attachment)"
-                      class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white"
+                      [class.cursor-pointer]="canPreview(attachment)"
+                      [class.hover:opacity-90]="canPreview(attachment)"
+                      (click)="canPreview(attachment) && openPreview(attachment)"
+                      class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white transition-opacity"
                     >
                       <img
                         *ngIf="
@@ -669,7 +672,7 @@
                     >
                       <button
                         type="button"
-                        (click)="downloadAttachment(attachment)"
+                        (click)="downloadAttachment(attachment); $event.stopPropagation()"
                         class="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600"
                         [title]="'tasks.download' | translate"
                       >
@@ -691,7 +694,8 @@
                         type="button"
                         (click)="
                           enableEditMode();
-                          removeAttachment(column._id || '', i)
+                          removeAttachment(column._id || '', i);
+                          $event.stopPropagation()
                         "
                         class="bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         [title]="'tasks.remove' | translate"
@@ -1588,7 +1592,10 @@
                     <!-- Contenido normal cuando no está subiendo -->
                     <div
                       *ngIf="!isAttachmentUploading(attachment)"
-                      class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white"
+                      [class.cursor-pointer]="canPreview(attachment)"
+                      [class.hover:opacity-90]="canPreview(attachment)"
+                      (click)="canPreview(attachment) && openPreview(attachment)"
+                      class="aspect-square rounded-lg overflow-hidden border border-gray-300 bg-white transition-opacity"
                     >
                       <img
                         *ngIf="
@@ -1620,7 +1627,7 @@
                     >
                       <button
                         type="button"
-                        (click)="downloadAttachment(attachment)"
+                        (click)="downloadAttachment(attachment); $event.stopPropagation()"
                         class="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600"
                         [title]="'tasks.download' | translate"
                       >
@@ -1640,7 +1647,7 @@
                       </button>
                       <button
                         type="button"
-                        (click)="removeAttachment(column._id || '', i)"
+                        (click)="removeAttachment(column._id || '', i); $event.stopPropagation()"
                         class="bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         [title]="'tasks.remove' | translate"
                       >
@@ -2055,6 +2062,133 @@
   </div>
 </div>
 
+<!-- Preview Modal -->
+<div
+  *ngIf="showPreviewModal && previewAttachment"
+  class="fixed inset-0 z-[200] flex items-center justify-center bg-black bg-opacity-75"
+  (click)="closePreview()"
+>
+  <div
+    class="relative bg-white rounded-lg shadow-xl max-w-7xl max-h-[90vh] w-full mx-4 flex flex-col"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900 truncate flex-1 mr-4">
+        {{ previewAttachment.title || previewAttachment.name }}
+      </h3>
+      <button
+        type="button"
+        (click)="closePreview()"
+        class="text-gray-400 hover:text-gray-600 transition-colors"
+        [title]="getCloseText()"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-100">
+      <!-- Image Preview -->
+      <img
+        *ngIf="getPreviewType(previewAttachment) === 'image'"
+        [src]="previewAttachment.url"
+        [alt]="previewAttachment.name"
+        class="max-w-full max-h-[calc(90vh-120px)] object-contain rounded"
+      />
+
+      <!-- PDF Preview -->
+      <iframe
+        *ngIf="getPreviewType(previewAttachment) === 'pdf' && safePdfUrl"
+        [src]="safePdfUrl"
+        class="w-full h-[calc(90vh-120px)] border-0 rounded"
+        type="application/pdf"
+      >
+        <p>
+          {{ getPdfNotSupportedText() }}
+          <a
+            [href]="previewAttachment.url"
+            target="_blank"
+            class="text-blue-500 hover:underline"
+            >{{ getDownloadText() }}</a
+          >
+        </p>
+      </iframe>
+
+      <!-- Text File Preview -->
+      <div
+        *ngIf="getPreviewType(previewAttachment) === 'text'"
+        class="w-full h-[calc(90vh-120px)] bg-white rounded border border-gray-300 overflow-auto"
+      >
+        <div *ngIf="loadingPreviewText" class="flex items-center justify-center h-full">
+          <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-2"></div>
+            <p class="text-gray-600">Cargando archivo...</p>
+          </div>
+        </div>
+        <pre
+          *ngIf="!loadingPreviewText && previewTextContent"
+          class="p-4 text-sm font-mono whitespace-pre-wrap break-words"
+          >{{ previewTextContent }}</pre
+        >
+        <div
+          *ngIf="!loadingPreviewText && !previewTextContent"
+          class="flex items-center justify-center h-full text-gray-500"
+        >
+          <p>No se pudo cargar el contenido del archivo</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50">
+      <div class="text-sm text-gray-600">
+        <span>{{ formatFileSize(previewAttachment.size) }}</span>
+      </div>
+      <div class="flex gap-2">
+        <button
+          type="button"
+          (click)="downloadAttachment(previewAttachment)"
+          class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          {{ getDownloadText() }}
+        </button>
+        <button
+          type="button"
+          (click)="closePreview()"
+          class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+        >
+          {{ getCloseText() }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <style>
   .comment-editor[data-placeholder]:empty:before {

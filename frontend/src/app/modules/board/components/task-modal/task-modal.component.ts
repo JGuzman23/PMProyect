@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { timeout, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
@@ -129,6 +130,11 @@ export class TaskModalComponent implements OnInit, OnChanges {
   showEmojiPicker = false;
   commentAttachments: File[] = [];
   commentAttachmentPreviews: { file: File; preview?: string }[] = [];
+  showPreviewModal = false;
+  previewAttachment: Attachment | null = null;
+  previewTextContent: string | null = null;
+  loadingPreviewText = false;
+  safePdfUrl: SafeResourceUrl | null = null;
   
   taskForm = {
     title: '',
@@ -155,7 +161,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-    private translationService: TranslationService
+    private translationService: TranslationService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -1310,6 +1317,98 @@ export class TaskModalComponent implements OnInit, OnChanges {
     const extension = name.toLowerCase().substring(name.lastIndexOf('.'));
     return imageExtensions.includes(extension) || url.toLowerCase().includes('image');
   }
+
+  isPdfFile(name: string): boolean {
+    const extension = name.toLowerCase().substring(name.lastIndexOf('.'));
+    return extension === '.pdf';
+  }
+
+  isTextFile(name: string): boolean {
+    const textExtensions = ['.txt', '.md', '.csv', '.json', '.xml', '.html', '.css', '.js', '.ts'];
+    const extension = name.toLowerCase().substring(name.lastIndexOf('.'));
+    return textExtensions.includes(extension);
+  }
+
+  canPreview(attachment: Attachment): boolean {
+    if (!attachment.url) return false;
+    // Permitir preview para imágenes, PDFs, y archivos de texto
+    return this.isImageFile(attachment.url, attachment.name) || 
+           this.isPdfFile(attachment.name) || 
+           this.isTextFile(attachment.name);
+  }
+
+  getPreviewType(attachment: Attachment): 'image' | 'pdf' | 'text' | 'other' {
+    if (this.isImageFile(attachment.url || '', attachment.name)) return 'image';
+    if (this.isPdfFile(attachment.name)) return 'pdf';
+    if (this.isTextFile(attachment.name)) return 'text';
+    return 'other';
+  }
+
+  openPreview(attachment: Attachment): void {
+    this.previewAttachment = attachment;
+    this.showPreviewModal = true;
+    this.previewTextContent = null;
+    this.safePdfUrl = null;
+    
+    // Si es un PDF, cachear la URL sanitizada
+    if (this.isPdfFile(attachment.name) && attachment.url) {
+      this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(attachment.url);
+    }
+    
+    // Si es un archivo de texto, cargar su contenido
+    if (this.isTextFile(attachment.name) && attachment.url) {
+      this.loadTextFile(attachment.url);
+    }
+  }
+
+  loadTextFile(url: string): void {
+    this.loadingPreviewText = true;
+    // Si la URL es relativa, construir la URL completa
+    const fullUrl = url.startsWith('http') ? url : `${this.apiUrl}${url.startsWith('/') ? url : '/' + url}`;
+    
+    this.http.get(fullUrl, { responseType: 'text' }).subscribe({
+      next: (content) => {
+        this.previewTextContent = content;
+        this.loadingPreviewText = false;
+      },
+      error: (err) => {
+        console.error('Error loading text file:', err);
+        this.previewTextContent = 'Error al cargar el archivo';
+        this.loadingPreviewText = false;
+      }
+    });
+  }
+
+  closePreview(): void {
+    this.showPreviewModal = false;
+    this.previewAttachment = null;
+    this.previewTextContent = null;
+    this.safePdfUrl = null;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    if (this.showPreviewModal) {
+      this.closePreview();
+    }
+  }
+
+  getPreviewTitle(): string {
+    return this.translationService.translate('tasks.preview') || 'Vista previa';
+  }
+
+  getCloseText(): string {
+    return this.translationService.translate('common.close') || 'Cerrar';
+  }
+
+  getDownloadText(): string {
+    return this.translationService.translate('tasks.download') || 'Descargar';
+  }
+
+  getPdfNotSupportedText(): string {
+    return this.translationService.translate('tasks.pdfNotSupported') || 'Tu navegador no soporta la visualización de PDFs.';
+  }
+
 
   getFileIcon(name: string): string {
     const extension = name.toLowerCase().substring(name.lastIndexOf('.') + 1);
