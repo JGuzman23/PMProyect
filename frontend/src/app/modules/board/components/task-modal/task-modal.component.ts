@@ -8,6 +8,7 @@ import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { TranslationService } from '../../../../core/services/translation.service';
+import { ComboboxComponent } from '../../../../core/components/combobox/combobox.component';
 
 interface User {
   _id: string;
@@ -100,7 +101,7 @@ interface Column {
 @Component({
   selector: 'app-task-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, ComboboxComponent],
   templateUrl: './task-modal.component.html'
 })
 export class TaskModalComponent implements OnInit, OnChanges {
@@ -117,11 +118,6 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
   isEditMode = false;
   showTaskActionsDropdown = false;
-  showAssigneeDropdown = false;
-  showAgentDropdown = false;
-  showClientDropdown = false;
-  showPriorityDropdown = false;
-  showStatusDropdown = false;
   pendingFiles: File[] = [];
   uploadingFiles = false;
   dragOverStatusId: string | null = null;
@@ -153,17 +149,6 @@ export class TaskModalComponent implements OnInit, OnChanges {
   activityItems: ActivityItem[] = [];
   newCommentText: string = '';
   selectedClient: Client | null = null;
-  
-  clientSearchTerm = '';
-  agentSearchTerm = '';
-  assigneeSearchTerm = '';
-  prioritySearchTerm = '';
-  statusSearchTerm = '';
-  filteredClients: Client[] = [];
-  filteredAgents: Agent[] = [];
-  filteredUsers: User[] = [];
-  filteredPriorities: { value: string; label: string }[] = [];
-  filteredColumns: Column[] = [];
 
   private apiUrl = environment.apiUrl;
 
@@ -174,16 +159,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
   ) {}
 
   ngOnInit(): void {
-    this.updateFilteredPriorities();
-    this.updateFilteredColumns();
     if (this.task) {
       this.loadTaskData();
-    }
-    if (this.clients.length > 0) {
-      this.updateFilteredClients();
-    }
-    if (this.users.length > 0) {
-      this.updateFilteredUsers();
     }
   }
 
@@ -206,7 +183,6 @@ export class TaskModalComponent implements OnInit, OnChanges {
     
     if (clientId) {
       this.selectedClient = this.clients.find(c => c._id === clientId) || null;
-      this.updateFilteredAgents();
     } else {
       this.selectedClient = null;
     }
@@ -389,14 +365,10 @@ export class TaskModalComponent implements OnInit, OnChanges {
       this.selectedClient = this.clients.find(c => c._id === this.taskForm.clientId) || null;
       this.taskForm.agentIds = [];
       this.taskForm.agentNames = [];
-      this.agentSearchTerm = '';
-      this.updateFilteredAgents();
     } else {
       this.selectedClient = null;
       this.taskForm.agentIds = [];
       this.taskForm.agentNames = [];
-      this.agentSearchTerm = '';
-      this.filteredAgents = [];
     }
   }
 
@@ -435,75 +407,127 @@ export class TaskModalComponent implements OnInit, OnChanges {
     return this.selectedClient.agents.findIndex(a => a.name === agent.name && a.email === agent.email);
   }
 
-  updateFilteredClients(): void {
-    if (!this.clientSearchTerm.trim()) {
-      this.filteredClients = this.clients;
-      return;
-    }
-    const search = this.clientSearchTerm.toLowerCase();
-    this.filteredClients = this.clients.filter(client => {
-      const name = client.name.toLowerCase();
-      const lastName = client.lastName?.toLowerCase() || '';
-      return name.includes(search) || lastName.includes(search);
-    });
-  }
 
-  updateFilteredAgents(): void {
-    if (!this.selectedClient?.agents) {
-      this.filteredAgents = [];
-      return;
-    }
-    if (!this.agentSearchTerm.trim()) {
-      this.filteredAgents = this.selectedClient.agents;
-      return;
-    }
-    const search = this.agentSearchTerm.toLowerCase();
-    this.filteredAgents = this.selectedClient.agents.filter(agent => {
-      const name = agent.name.toLowerCase();
-      const email = agent.email?.toLowerCase() || '';
-      const phone = agent.phone?.toLowerCase() || '';
-      return name.includes(search) || email.includes(search) || phone.includes(search);
-    });
-  }
-
-  updateFilteredUsers(): void {
-    if (!this.assigneeSearchTerm.trim()) {
-      this.filteredUsers = this.users;
-      return;
-    }
-    const search = this.assigneeSearchTerm.toLowerCase();
-    this.filteredUsers = this.users.filter(user => {
-      const firstName = user.firstName.toLowerCase();
-      const lastName = user.lastName.toLowerCase();
-      const email = user.email.toLowerCase();
-      return firstName.includes(search) || lastName.includes(search) || email.includes(search);
-    });
-  }
-
-  updateFilteredColumns(): void {
-    if (!this.statusSearchTerm.trim()) {
-      this.filteredColumns = this.columns;
-      return;
-    }
-    const search = this.statusSearchTerm.toLowerCase();
-    this.filteredColumns = this.columns.filter(column =>
-      column.name.toLowerCase().includes(search)
-    );
-  }
-
-  updateFilteredPriorities(): void {
-    const priorities = [
+  // Métodos helper para el combobox
+  getPriorities() {
+    return [
       { value: 'low', label: 'Baja' },
       { value: 'medium', label: 'Media' },
       { value: 'high', label: 'Alta' },
       { value: 'urgent', label: 'Urgente' }
     ];
-    if (!this.prioritySearchTerm.trim()) {
-      this.filteredPriorities = priorities;
+  }
+
+  displayClient(client: Client): string {
+    if (client.type === 'persona' && client.lastName) {
+      return `${client.name} ${client.lastName}`;
+    }
+    return client.name;
+  }
+
+  displayAgent(agent: Agent): string {
+    return agent.name;
+  }
+
+  displayUser(user: User): string {
+    return `${user.firstName} ${user.lastName}`;
+  }
+
+  displayPriority(priority: { value: string; label: string }): string {
+    return priority.label;
+  }
+
+  displayColumn(column: Column): string {
+    return column.name;
+  }
+
+  onClientSelected(client: Client | Client[]): void {
+    if (Array.isArray(client)) {
+      // No debería pasar en modo simple
       return;
     }
-    const search = this.prioritySearchTerm.toLowerCase();
-    this.filteredPriorities = priorities.filter(p => p.label.toLowerCase().includes(search));
+    this.taskForm.clientId = client._id;
+    this.onClientChange();
+  }
+
+  onAgentSelected(agents: Agent | Agent[]): void {
+    if (!Array.isArray(agents)) {
+      agents = [agents];
+    }
+    if (!this.selectedClient?.agents) return;
+    
+    this.taskForm.agentIds = [];
+    this.taskForm.agentNames = [];
+    
+    agents.forEach(selectedAgent => {
+      const index = this.selectedClient!.agents!.findIndex(
+        a => a.name === selectedAgent.name && a.email === selectedAgent.email
+      );
+      if (index !== -1) {
+        this.taskForm.agentIds.push(index.toString());
+        this.taskForm.agentNames.push(selectedAgent.name);
+      }
+    });
+  }
+
+  onAssigneeSelected(users: User | User[]): void {
+    if (!Array.isArray(users)) {
+      users = [users];
+    }
+    this.taskForm.assignees = users.map(u => u._id);
+  }
+
+  onPrioritySelected(priority: { value: string; label: string } | Array<{ value: string; label: string }>): void {
+    if (Array.isArray(priority)) {
+      // No debería pasar en modo simple
+      return;
+    }
+    this.taskForm.priority = priority.value;
+  }
+
+  onStatusSelected(column: Column | Column[]): void {
+    if (Array.isArray(column)) {
+      // No debería pasar en modo simple
+      return;
+    }
+    this.taskForm.columnId = column._id || '';
+  }
+
+  getSelectedClient(): Client | null {
+    if (!this.taskForm.clientId) return null;
+    return this.clients.find(c => c._id === this.taskForm.clientId) || null;
+  }
+
+  getSelectedAgents(): Agent[] {
+    if (!this.selectedClient?.agents || this.taskForm.agentIds.length === 0) return [];
+    return this.taskForm.agentIds
+      .map(id => {
+        const index = parseInt(id);
+        return this.selectedClient!.agents![index];
+      })
+      .filter(agent => agent !== undefined);
+  }
+
+  getSelectedUsers(): User[] {
+    return this.users.filter(u => this.taskForm.assignees.includes(u._id));
+  }
+
+  getSelectedPriority(): { value: string; label: string } | null {
+    return this.getPriorities().find(p => p.value === this.taskForm.priority) || null;
+  }
+
+  getSelectedColumn(): Column | null {
+    if (!this.taskForm.columnId) return null;
+    return this.columns.find(c => c._id === this.taskForm.columnId) || null;
+  }
+
+  // Funciones de comparación para el combobox
+  compareAgents(a: Agent, b: Agent): boolean {
+    return a.name === b.name && a.email === b.email;
+  }
+
+  comparePriorities(a: { value: string; label: string }, b: { value: string; label: string }): boolean {
+    return a.value === b.value;
   }
 
   @HostListener('document:dragover', ['$event'])
@@ -521,26 +545,6 @@ export class TaskModalComponent implements OnInit, OnChanges {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    if (!target.closest('.assignee-dropdown-container')) {
-      this.showAssigneeDropdown = false;
-      this.assigneeSearchTerm = '';
-    }
-    if (!target.closest('.agent-dropdown-container')) {
-      this.showAgentDropdown = false;
-      this.agentSearchTerm = '';
-    }
-    if (!target.closest('.client-dropdown-container')) {
-      this.showClientDropdown = false;
-      this.clientSearchTerm = '';
-    }
-    if (!target.closest('.priority-dropdown-container')) {
-      this.showPriorityDropdown = false;
-      this.prioritySearchTerm = '';
-    }
-    if (!target.closest('.status-dropdown-container')) {
-      this.showStatusDropdown = false;
-      this.statusSearchTerm = '';
-    }
     if (!target.closest('.task-actions-dropdown-container')) {
       this.showTaskActionsDropdown = false;
     }
@@ -1432,12 +1436,6 @@ export class TaskModalComponent implements OnInit, OnChanges {
       this.loadTaskData();
     } else if (changes['task'] && !this.task) {
       this.resetForm();
-    }
-    if (changes['clients'] && this.clients.length > 0) {
-      this.updateFilteredClients();
-    }
-    if (changes['users'] && this.users.length > 0) {
-      this.updateFilteredUsers();
     }
   }
 }

@@ -1,0 +1,58 @@
+<div class="relative combobox-container">
+
+  <label class="flex items-center gap-1 text-[10px] font-semibold text-gray-600 mb-1">
+    {{ label }}
+    <span *ngIf="required" class="text-red-500">*</span>
+  </label>
+
+  <button
+    type="button"
+    (click)="toggle()"
+    class="w-full px-2 py-1.5 text-left border-2 rounded-md bg-white
+           flex justify-between items-center text-xs"
+  >
+    <span class="truncate">{{ labelText() }}</span>
+    <span>▾</span>
+  </button>
+
+  @if (isOpen()) {
+    <div
+      class="absolute z-50 w-full mt-1 bg-white border rounded shadow-lg"
+      (click)="$event.stopPropagation()"
+    >
+
+      @if (searchable) {
+        <div class="p-2 border-b">
+          <input
+            type="text"
+            [value]="search()"
+            (input)="search.set($any($event.target).value)"
+            class="w-full px-2 py-1 text-xs border rounded"
+            placeholder="Buscar..."
+          />
+        </div>
+      }
+
+      <div class="max-h-48 overflow-y-auto">
+        @for (item of filteredItems(); track item) {
+          <div
+            (click)="select(item)"
+            class="px-2 py-1.5 text-xs cursor-pointer
+                   hover:bg-gray-50 flex items-center gap-2"
+          >
+            @if (multiple) {
+              <input type="checkbox" [checked]="isSelected(item)" readonly />
+            }
+            {{ display(item) }}
+          </div>
+        }
+
+        @if (filteredItems().length === 0) {
+          <div class="p-2 text-xs text-gray-400 text-center">
+            Sin resultados
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
