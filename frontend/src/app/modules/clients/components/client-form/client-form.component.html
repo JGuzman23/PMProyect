@@ -1,77 +1,55 @@
-<div class="  px-2 sm:px-4">
+<div class="px-2 sm:px-4">
+  <!-- Header -->
   <div class="mb-6">
-    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">
-      {{ isEditMode ? ('clients.editClient' | translate) : ('clients.newClient' | translate) }}
-    </h2>
-  </div>
-
-  <div class="bg-white shadow rounded-lg p-6">
-    <!-- Stepper -->
-    <div class="mb-8">
-      <div class="flex items-center justify-between">
-        <div
-          *ngFor="let step of [1, 2, 3, 4, 5]; let i = index"
-          class="flex items-center flex-1"
-          [class.flex-1]="i < 4"
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+        <a
+          [routerLink]="['/clients']"
+          class="text-gray-500 hover:text-gray-700"
+          [title]="'common.back' | translate"
         >
-          <div class="flex flex-col items-center flex-1">
-            <button
-              type="button"
-              (click)="goToStep(step)"
-              [class]="
-                currentStep === step
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : currentStep > step
-                  ? 'bg-green-500 text-white border-green-500'
-                  : 'bg-white text-gray-400 border-gray-300'
-              "
-              class="w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold transition-all duration-200 hover:scale-110"
-            >
-              <span *ngIf="currentStep <= step">{{ step }}</span>
-              <svg
-                *ngIf="currentStep > step"
-                class="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-            </button>
-            <span
-              [class]="
-                currentStep === step
-                  ? 'text-indigo-600 font-medium'
-                  : currentStep > step
-                  ? 'text-green-500'
-                  : 'text-gray-400'
-              "
-              class="mt-2 text-xs text-center hidden sm:block"
-            >
-              {{ getStepTitle(step) }}
-            </span>
-          </div>
-          <div
-            *ngIf="i < 4"
-            [class]="currentStep > step ? 'bg-green-500' : 'bg-gray-300'"
-            class="h-0.5 w-full mx-2 transition-colors duration-200"
-          ></div>
-        </div>
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </a>
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">
+          {{ isEditMode ? ('clients.editClient' | translate) : ('clients.newClient' | translate) }}
+        </h2>
       </div>
     </div>
 
-    <form (ngSubmit)="saveClient()" *ngIf="!loading">
-      <!-- Paso 1: Tipo y Datos Básicos -->
-      <div *ngIf="currentStep === 1" class="space-y-6">
-        <div>
-           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.clientType' | translate }} *</label>
+    <!-- Client Type and Status Badges (only in edit mode) -->
+    <div class="flex flex-wrap gap-2 mb-4" *ngIf="isEditMode && clientForm.type">
+      <span
+        [class]="clientForm.type === 'empresa' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'"
+        class="px-3 py-1 text-sm font-semibold rounded-full"
+      >
+        {{ clientForm.type === 'empresa' ? ('clients.company' | translate) : ('clients.person' | translate) }}
+      </span>
+      <span
+        [class]="clientForm.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+        class="px-3 py-1 text-sm font-semibold rounded-full"
+      >
+        {{ clientForm.isActive ? ('clients.active' | translate) : ('clients.inactive' | translate) }}
+      </span>
+    </div>
+  </div>
+
+  <form (ngSubmit)="saveClient()" *ngIf="!loading">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left Column: Client Information -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Tipo de Cliente -->
+        <div class="bg-white shadow rounded-lg p-4 sm:p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.clientType' | translate }}</h3>
+          <div>
+            <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.clientType' | translate }} *</label>
             <select
               [(ngModel)]="clientForm.type"
               name="type"
               (change)="onTypeChange()"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
             >
               <option value="persona">{{ 'clients.person' | translate }}</option>
               <option value="empresa">{{ 'clients.company' | translate }}</option>
@@ -79,313 +57,390 @@
           </div>
         </div>
 
+        <!-- Company/Personal Information -->
         <!-- Datos para Tipo Empresa -->
-        <div *ngIf="clientForm.type === 'empresa'">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ 'clients.companyData' | translate }}</h3>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.companyName' | translate }} *</label>
-            <input
-              type="text"
-              [(ngModel)]="clientForm.name"
-              name="name"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
+        <div *ngIf="clientForm.type === 'empresa'" class="bg-white shadow rounded-lg p-4 sm:p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.companyData' | translate }}</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.companyName' | translate }} *</label>
+              <input
+                type="text"
+                [(ngModel)]="clientForm.name"
+                name="name"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.website' | translate }}</label>
+              <input
+                type="url"
+                [(ngModel)]="clientForm.website"
+                name="website"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+              />
+            </div>
           </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.website' | translate }}</label>
-            <input
-              type="url"
-              [(ngModel)]="clientForm.website"
-              name="website"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
+
+          <!-- Contact Information (for empresa) -->
+          <div class="mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.contactInfo' | translate }}</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.email' | translate }}</label>
+                <input
+                  type="email"
+                  [(ngModel)]="clientForm.email"
+                  name="email"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.phone' | translate }} 1</label>
+                <input
+                  type="text"
+                  [(ngModel)]="clientForm.phones[0]"
+                  name="phone1"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.phone' | translate }} 2</label>
+                <input
+                  type="text"
+                  [(ngModel)]="clientForm.phones[1]"
+                  name="phone2"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Address in Company Data -->
+          <div class="mt-6">
+            <label class="block text-sm font-medium text-gray-500 mb-3">{{ 'clients.address' | translate }}</label>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.street' | translate }}</label>
+                <input
+                  type="text"
+                  [(ngModel)]="clientForm.address.street"
+                  name="addressStreet"
+                  [placeholder]="'clients.street' | translate"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.city' | translate }}</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="clientForm.address.city"
+                    name="addressCity"
+                    [placeholder]="'clients.city' | translate"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.state' | translate }}</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="clientForm.address.state"
+                    name="addressState"
+                    [placeholder]="'clients.state' | translate"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                  />
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.zipCode' | translate }}</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="clientForm.address.zip"
+                    name="addressZip"
+                    [placeholder]="'clients.zipCode' | translate"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.country' | translate }}</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="clientForm.address.country"
+                    name="addressCountry"
+                    [placeholder]="'clients.country' | translate"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agents -->
+          <div class="mt-6">
+            <div class="flex justify-between items-center mb-4">
+              <label class="block text-sm font-medium text-gray-500">{{ 'clients.agents' | translate }}</label>
+              <button
+                type="button"
+                (click)="addAgent()"
+                class="text-sm px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              >
+                + {{ 'clients.addAgent' | translate }}
+              </button>
+            </div>
+            <div class="space-y-4">
+              <div
+                *ngFor="let agent of clientForm.agents; let i = index"
+                class="border border-gray-300 rounded-lg p-4 bg-gray-50"
+              >
+                <div class="flex justify-between items-center mb-3">
+                  <span class="text-sm font-semibold text-gray-700">{{ 'clients.agent' | translate }} {{ i + 1 }}</span>
+                  <button
+                    type="button"
+                    (click)="removeAgent(i)"
+                    class="text-red-600 hover:text-red-800 text-sm font-medium"
+                  >
+                    {{ 'common.remove' | translate }}
+                  </button>
+                </div>
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.name' | translate }} *</label>
+                    <input
+                      type="text"
+                      [(ngModel)]="agent.name"
+                      [name]="'agentName' + i"
+                      required
+                      [placeholder]="'clients.fullName' | translate"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                    />
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.phone' | translate }}</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="agent.phone"
+                        [name]="'agentPhone' + i"
+                        [placeholder]="'tasks.phone' | translate"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.email' | translate }}</label>
+                      <input
+                        type="email"
+                        [(ngModel)]="agent.email"
+                        [name]="'agentEmail' + i"
+                        placeholder="email@example.com"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="clientForm.agents.length === 0" class="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                <p class="text-gray-500 mb-2">{{ 'clients.noAgentsAdded' | translate }}</p>
+                <button
+                  type="button"
+                  (click)="addAgent()"
+                  class="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  {{ 'clients.clickToAddAgent' | translate }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Datos para Tipo Persona -->
-        <div *ngIf="clientForm.type === 'persona'">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ 'clients.personalData' | translate }}</h3>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.name' | translate }} *</label>
-            <input
-              type="text"
-              [(ngModel)]="clientForm.name"
-              name="name"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
+        <div *ngIf="clientForm.type === 'persona'" class="bg-white shadow rounded-lg p-4 sm:p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.personalData' | translate }}</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.name' | translate }} *</label>
+              <input
+                type="text"
+                [(ngModel)]="clientForm.name"
+                name="name"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.lastName' | translate }}</label>
+              <input
+                type="text"
+                [(ngModel)]="clientForm.lastName"
+                name="lastName"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.documentType' | translate }}</label>
+              <select
+                [(ngModel)]="clientForm.documentType"
+                name="documentType"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+              >
+                <option value="">{{ 'common.select' | translate }}...</option>
+                <option value="DNI">DNI</option>
+                <option value="NIE">NIE</option>
+                <option value="Pasaporte">{{ 'clients.passport' | translate }}</option>
+                <option value="Otro">{{ 'common.other' | translate }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.documentNumber' | translate }}</label>
+              <input
+                type="text"
+                [(ngModel)]="clientForm.documentNumber"
+                name="documentNumber"
+                [placeholder]="'clients.documentNumber' | translate"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+              />
+            </div>
           </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.lastName' | translate }}</label>
-            <input
-              type="text"
-              [(ngModel)]="clientForm.lastName"
-              name="lastName"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
+
+          <!-- Contact Information (for persona) -->
+          <div class="mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.contactInfo' | translate }}</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.email' | translate }}</label>
+                <input
+                  type="email"
+                  [(ngModel)]="clientForm.email"
+                  name="email"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.phone' | translate }} 1</label>
+                <input
+                  type="text"
+                  [(ngModel)]="clientForm.phones[0]"
+                  name="phone1"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.phone' | translate }} 2</label>
+                <input
+                  type="text"
+                  [(ngModel)]="clientForm.phones[1]"
+                  name="phone2"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Paso 2: Información de Contacto -->
-      <div *ngIf="currentStep === 2" class="space-y-6">
-         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'tasks.email' | translate }}</label>
-          <input
-            type="email"
-            [(ngModel)]="clientForm.email"
-            name="email"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
+        <!-- Address (only for persona type) -->
+        <div *ngIf="clientForm.type === 'persona'" class="bg-white shadow rounded-lg p-4 sm:p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.address' | translate }}</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.street' | translate }}</label>
+              <input
+                type="text"
+                [(ngModel)]="clientForm.address.street"
+                name="addressStreet"
+                [placeholder]="'clients.street' | translate"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+              />
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.city' | translate }}</label>
+                <input
+                  type="text"
+                  [(ngModel)]="clientForm.address.city"
+                  name="addressCity"
+                  [placeholder]="'clients.city' | translate"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.state' | translate }}</label>
+                <input
+                  type="text"
+                  [(ngModel)]="clientForm.address.state"
+                  name="addressState"
+                  [placeholder]="'clients.state' | translate"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.zipCode' | translate }}</label>
+                <input
+                  type="text"
+                  [(ngModel)]="clientForm.address.zip"
+                  name="addressZip"
+                  [placeholder]="'clients.zipCode' | translate"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.country' | translate }}</label>
+                <input
+                  type="text"
+                  [(ngModel)]="clientForm.address.country"
+                  name="addressCountry"
+                  [placeholder]="'clients.country' | translate"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'tasks.phone' | translate }} 1</label>
-          <input
-            type="text"
-            [(ngModel)]="clientForm.phones[0]"
-            name="phone1"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'tasks.phone' | translate }} 2</label>
-          <input
-            type="text"
-            [(ngModel)]="clientForm.phones[1]"
-            name="phone2"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-      </div>
 
-      <!-- Paso 3: Dirección -->
-      <div *ngIf="currentStep === 3" class="space-y-6">
-         <div class="space-y-4">
+        <!-- Notes -->
+        <div class="bg-white shadow rounded-lg p-4 sm:p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'clients.notes' | translate }}</h3>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.street' | translate }}</label>
-            <input
-              type="text"
-              [(ngModel)]="clientForm.address.street"
-              name="addressStreet"
-              [placeholder]="'clients.street' | translate"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.city' | translate }}</label>
-              <input
-                type="text"
-                [(ngModel)]="clientForm.address.city"
-                name="addressCity"
-                [placeholder]="'clients.city' | translate"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.state' | translate }}</label>
-              <input
-                type="text"
-                [(ngModel)]="clientForm.address.state"
-                name="addressState"
-                [placeholder]="'clients.state' | translate"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.zipCode' | translate }}</label>
-              <input
-                type="text"
-                [(ngModel)]="clientForm.address.zip"
-                name="addressZip"
-                [placeholder]="'clients.zipCode' | translate"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.country' | translate }}</label>
-              <input
-                type="text"
-                [(ngModel)]="clientForm.address.country"
-                name="addressCountry"
-                [placeholder]="'clients.country' | translate"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
+            <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.notes' | translate }}</label>
+            <textarea
+              [(ngModel)]="clientForm.notes"
+              name="notes"
+              rows="6"
+              [placeholder]="'clients.notesPlaceholder' | translate"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+            ></textarea>
           </div>
         </div>
       </div>
 
-      <!-- Paso 4: Agentes (Empresa) o Documentos (Persona) -->
-      <div *ngIf="currentStep === 4" class="space-y-6">
-        <!-- Agentes para Empresa -->
-        <div *ngIf="clientForm.type === 'empresa'">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-gray-800">{{ 'clients.agents' | translate }}</h3>
+      <!-- Right Column: Actions -->
+      <div class="lg:col-span-1">
+        <div class="bg-white shadow rounded-lg p-4 sm:p-6 sticky top-4">
+          <div class="flex flex-col gap-3">
+            <button
+              type="submit"
+              [disabled]="loading"
+              class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              {{ loading ? ('common.saving' | translate) : ('common.save' | translate) }}
+            </button>
             <button
               type="button"
-              (click)="addAgent()"
-              class="text-sm px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              (click)="cancel()"
+              class="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium"
             >
-              + {{ 'clients.addAgent' | translate }}
+              {{ 'common.cancel' | translate }}
             </button>
           </div>
-          <div class="space-y-4">
-            <div
-              *ngFor="let agent of clientForm.agents; let i = index"
-              class="border border-gray-300 rounded-lg p-4 bg-gray-50"
-            >
-              <div class="flex justify-between items-center mb-3">
-                <span class="text-sm font-semibold text-gray-700">{{ 'clients.agent' | translate }} {{ i + 1 }}</span>
-                <button
-                  type="button"
-                  (click)="removeAgent(i)"
-                  class="text-red-600 hover:text-red-800 text-sm font-medium"
-                >
-                  {{ 'common.remove' | translate }}
-                </button>
-              </div>
-              <div class="space-y-3">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'clients.name' | translate }} *</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="agent.name"
-                    [name]="'agentName' + i"
-                    required
-                    [placeholder]="'clients.fullName' | translate"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'tasks.phone' | translate }}</label>
-                    <input
-                      type="text"
-                      [(ngModel)]="agent.phone"
-                      [name]="'agentPhone' + i"
-                      [placeholder]="'tasks.phone' | translate"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ 'tasks.email' | translate }}</label>
-                    <input
-                      type="email"
-                      [(ngModel)]="agent.email"
-                      [name]="'agentEmail' + i"
-                      placeholder="email@example.com"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div *ngIf="clientForm.agents.length === 0" class="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-              <p class="text-gray-500 mb-2">{{ 'clients.noAgentsAdded' | translate }}</p>
-              <button
-                type="button"
-                (click)="addAgent()"
-                class="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
-              >
-                {{ 'clients.clickToAddAgent' | translate }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Documentos para Persona -->
-        <div *ngIf="clientForm.type === 'persona'">
-           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.documentType' | translate }}</label>
-            <select
-              [(ngModel)]="clientForm.documentType"
-              name="documentType"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="">{{ 'common.select' | translate }}...</option>
-              <option value="DNI">DNI</option>
-              <option value="NIE">NIE</option>
-              <option value="Pasaporte">{{ 'clients.passport' | translate }}</option>
-              <option value="Otro">{{ 'common.other' | translate }}</option>
-            </select>
-          </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.documentNumber' | translate }}</label>
-            <input
-              type="text"
-              [(ngModel)]="clientForm.documentNumber"
-              name="documentNumber"
-              [placeholder]="'clients.documentNumber' | translate"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
         </div>
       </div>
-
-      <!-- Paso 5: Notas -->
-      <div *ngIf="currentStep === 5" class="space-y-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ 'clients.additionalNotes' | translate }}</h3>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">{{ 'clients.notes' | translate }}</label>
-          <textarea
-            [(ngModel)]="clientForm.notes"
-            name="notes"
-            rows="6"
-            [placeholder]="'clients.notesPlaceholder' | translate"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          ></textarea>
-        </div>
-      </div>
-
-      <!-- Navegación entre pasos -->
-      <div class="flex justify-between items-center pt-6 mt-6 border-t border-gray-200">
-        <button
-          type="button"
-          (click)="previousStep()"
-          [disabled]="currentStep === 1"
-          [class]="
-            currentStep === 1
-              ? 'px-4 py-2 border border-gray-300 rounded-md text-gray-400 cursor-not-allowed'
-              : 'px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50'
-          "
-        >
-          ← {{ 'common.previous' | translate }}
-        </button>
-
-        <div class="flex space-x-3">
-          <button
-            type="button"
-            (click)="cancel()"
-            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-          >
-            {{ 'common.cancel' | translate }}
-          </button>
-          <button
-            *ngIf="currentStep < totalSteps"
-            type="button"
-            (click)="nextStep()"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-          >
-            {{ 'common.next' | translate }} →
-          </button>
-          <button
-            *ngIf="currentStep === totalSteps"
-            type="submit"
-            [disabled]="loading"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {{ loading ? ('common.saving' | translate) : ('common.save' | translate) }}
-          </button>
-        </div>
-      </div>
-    </form>
-
-    <div *ngIf="loading && isEditMode" class="text-center py-8">
-      <p class="text-gray-500">{{ 'common.loading' | translate }}...</p>
     </div>
+  </form>
+
+  <div *ngIf="loading && isEditMode" class="text-center py-8">
+    <p class="text-gray-500">{{ 'common.loading' | translate }}...</p>
   </div>
 </div>
