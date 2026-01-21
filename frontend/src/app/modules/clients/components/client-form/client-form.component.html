@@ -92,6 +92,7 @@
                 <input
                   type="email"
                   [(ngModel)]="clientForm.email"
+                  name="email"
                   (blur)="validateClientEmail()"
                   (input)="validateClientEmail()"
                   name="email"
@@ -141,6 +142,93 @@
                 />
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="country-dropdown-container">
+                  <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.country' | translate }}</label>
+                  <div class="relative">
+                    <button
+                      type="button"
+                      (click)="toggleCountryDropdown()"
+                      class="w-full px-3 py-2 text-left border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900 bg-white flex items-center justify-between"
+                    >
+                      <span [class.text-gray-400]="!countrySearchTerm">{{ countrySearchTerm || getCountryPlaceholder() }}</span>
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
+                    <div
+                      *ngIf="showCountryDropdown"
+                      class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg"
+                    >
+                      <div class="p-2 border-b border-gray-200">
+                        <input
+                          type="text"
+                          [(ngModel)]="countryFilter"
+                          name="countryFilter"
+                          (click)="$event.stopPropagation()"
+                          [placeholder]="getCountryPlaceholder()"
+                          class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                        />
+                      </div>
+                      <div class="max-h-60 overflow-auto">
+                        <div
+                          *ngFor="let country of getFilteredCountries()"
+                          (click)="selectCountry(country)"
+                          class="px-3 py-2 hover:bg-indigo-50 cursor-pointer text-sm text-gray-900"
+                        >
+                          {{ country.label }}
+                        </div>
+                        <div *ngIf="getFilteredCountries().length === 0" class="px-3 py-2 text-sm text-gray-500 text-center">
+                          {{ 'common.noResults' | translate }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="state-dropdown-container">
+                  <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.state' | translate }}</label>
+                  <div class="relative">
+                    <button
+                      type="button"
+                      (click)="toggleStateDropdown()"
+                      [disabled]="!clientForm.address.country || getStatesForCountry().length === 0"
+                      class="w-full px-3 py-2 text-left border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900 bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    >
+                      <span [class.text-gray-400]="!stateSearchTerm">{{ stateSearchTerm || getStatePlaceholder() }}</span>
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
+                    <div
+                      *ngIf="showStateDropdown && clientForm.address.country && getStatesForCountry().length > 0"
+                      class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg"
+                    >
+                      <div class="p-2 border-b border-gray-200">
+                        <input
+                        type="text"
+                        [(ngModel)]="stateFilter"
+                        name="stateFilter"
+                        (click)="$event.stopPropagation()"
+                        [placeholder]="getStatePlaceholder()"
+                        class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                        />
+                      </div>
+                      <div class="max-h-60 overflow-auto">
+                        <div
+                          *ngFor="let state of getFilteredStates()"
+                          (click)="selectState(state)"
+                          class="px-3 py-2 hover:bg-indigo-50 cursor-pointer text-sm text-gray-900"
+                        >
+                          {{ state }}
+                        </div>
+                        <div *ngIf="getFilteredStates().length === 0" class="px-3 py-2 text-sm text-gray-500 text-center">
+                          {{ 'common.noResults' | translate }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.city' | translate }}</label>
                   <input
@@ -152,34 +240,12 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.state' | translate }}</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="clientForm.address.state"
-                    name="addressState"
-                    [placeholder]="'clients.state' | translate"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
-                  />
-                </div>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
                   <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.zipCode' | translate }}</label>
                   <input
                     type="text"
                     [(ngModel)]="clientForm.address.zip"
                     name="addressZip"
                     [placeholder]="'clients.zipCode' | translate"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.country' | translate }}</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="clientForm.address.country"
-                    name="addressCountry"
-                    [placeholder]="'clients.country' | translate"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
                   />
                 </div>
@@ -242,6 +308,7 @@
                       <input
                         type="email"
                         [(ngModel)]="agent.email"
+                        [name]="'agentEmail' + i"
                         (blur)="validateAgentEmail(i)"
                         (input)="validateAgentEmail(i)"
                         [name]="'agentEmail' + i"
@@ -331,6 +398,7 @@
                 <input
                   type="email"
                   [(ngModel)]="clientForm.email"
+                  name="email"
                   (blur)="validateClientEmail()"
                   (input)="validateClientEmail()"
                   name="email"
@@ -381,6 +449,93 @@
               />
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="country-dropdown-container">
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.country' | translate }}</label>
+                <div class="relative">
+                  <button
+                    type="button"
+                    (click)="toggleCountryDropdown()"
+                    class="w-full px-3 py-2 text-left border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900 bg-white flex items-center justify-between"
+                  >
+                    <span [class.text-gray-400]="!countrySearchTerm">{{ countrySearchTerm || getCountryPlaceholder() }}</span>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                  <div
+                    *ngIf="showCountryDropdown"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg"
+                  >
+                    <div class="p-2 border-b border-gray-200">
+                      <input
+                        type="text"
+                        [(ngModel)]="countryFilter"
+                        name="countryFilter"
+                        (click)="$event.stopPropagation()"
+                        [placeholder]="getCountryPlaceholder()"
+                        class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                      />
+                    </div>
+                    <div class="max-h-60 overflow-auto">
+                      <div
+                        *ngFor="let country of getFilteredCountries()"
+                        (click)="selectCountry(country)"
+                        class="px-3 py-2 hover:bg-indigo-50 cursor-pointer text-sm text-gray-900"
+                      >
+                        {{ country.label }}
+                      </div>
+                      <div *ngIf="getFilteredCountries().length === 0" class="px-3 py-2 text-sm text-gray-500 text-center">
+                        {{ 'common.noResults' | translate }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="state-dropdown-container">
+                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.state' | translate }}</label>
+                <div class="relative">
+                  <button
+                    type="button"
+                    (click)="toggleStateDropdown()"
+                    [disabled]="!clientForm.address.country || getStatesForCountry().length === 0"
+                    class="w-full px-3 py-2 text-left border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900 bg-white flex items-center justify-between disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <span [class.text-gray-400]="!stateSearchTerm">{{ stateSearchTerm || getStatePlaceholder() }}</span>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                  <div
+                    *ngIf="showStateDropdown && clientForm.address.country && getStatesForCountry().length > 0"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg"
+                  >
+                    <div class="p-2 border-b border-gray-200">
+                      <input
+                        type="text"
+                        [(ngModel)]="stateFilter"
+                        name="stateFilter"
+                        (click)="$event.stopPropagation()"
+                        [placeholder]="getStatePlaceholder()"
+                        class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                      />
+                    </div>
+                    <div class="max-h-60 overflow-auto">
+                      <div
+                        *ngFor="let state of getFilteredStates()"
+                        (click)="selectState(state)"
+                        class="px-3 py-2 hover:bg-indigo-50 cursor-pointer text-sm text-gray-900"
+                      >
+                        {{ state }}
+                      </div>
+                      <div *ngIf="getFilteredStates().length === 0" class="px-3 py-2 text-sm text-gray-500 text-center">
+                        {{ 'common.noResults' | translate }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.city' | translate }}</label>
                 <input
@@ -392,34 +547,12 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.state' | translate }}</label>
-                <input
-                  type="text"
-                  [(ngModel)]="clientForm.address.state"
-                  name="addressState"
-                  [placeholder]="'clients.state' | translate"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
-                />
-              </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.zipCode' | translate }}</label>
                 <input
                   type="text"
                   [(ngModel)]="clientForm.address.zip"
                   name="addressZip"
                   [placeholder]="'clients.zipCode' | translate"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'clients.country' | translate }}</label>
-                <input
-                  type="text"
-                  [(ngModel)]="clientForm.address.country"
-                  name="addressCountry"
-                  [placeholder]="'clients.country' | translate"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
                 />
               </div>
