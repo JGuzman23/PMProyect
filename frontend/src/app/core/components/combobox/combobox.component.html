@@ -1,6 +1,6 @@
 <div class="relative combobox-container">
 
-  <label class="flex items-center gap-1 text-[10px] font-semibold text-gray-600 mb-1">
+  <label *ngIf="label" class="flex items-center gap-1 text-[10px] font-semibold text-gray-600 mb-1">
     {{ label }}
     <span *ngIf="required" class="text-red-500">*</span>
   </label>
@@ -8,8 +8,7 @@
   <button
     type="button"
     (click)="toggle()"
-    class="w-full px-2 py-1.5 text-left border-2 rounded-md bg-white
-           flex justify-between items-center text-xs"
+    [class]="label ? 'w-full px-2 py-1.5 text-left border-2 rounded-md bg-white flex justify-between items-center text-xs' : 'inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 relative'"
   >
     <span class="truncate">{{ labelText() }}</span>
     <span>▾</span>
@@ -17,7 +16,7 @@
 
   @if (isOpen()) {
     <div
-      class="absolute z-50 w-full mt-1 bg-white border rounded shadow-lg"
+      [class]="label ? 'absolute z-50 w-full mt-1 bg-white border rounded shadow-lg' : 'absolute z-50 w-72 min-w-[18rem] max-w-md mt-1 bg-white border rounded shadow-lg right-0'"
       (click)="$event.stopPropagation()"
     >
 

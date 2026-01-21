@@ -11,6 +11,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { TaskModalComponent } from '../task-modal/task-modal.component';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { TranslationService } from '../../../../core/services/translation.service';
+import { ComboboxComponent } from '../../../../core/components/combobox/combobox.component';
 
 interface User {
   _id: string;
@@ -120,7 +121,7 @@ interface Board {
 @Component({
   selector: 'app-board-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, FormsModule, TaskModalComponent, TranslatePipe],
+  imports: [CommonModule, DragDropModule, FormsModule, TaskModalComponent, TranslatePipe, ComboboxComponent],
   templateUrl: './board-view.component.html'
 })
 export class BoardViewComponent implements OnInit, OnDestroy {
@@ -160,18 +161,9 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   agentSearchTerm = '';
   assigneeSearchTerm = '';
   prioritySearchTerm = '';
-  filteredClients: Client[] = [];
   filteredAgents: Agent[] = [];
-  filteredUsers: User[] = [];
-  filteredPriorities: { value: string; label: string }[] = [];
   
   // Filter properties
-  showFilterClientDropdown = false;
-  showFilterAssigneeDropdown = false;
-  showFilterStatusDropdown = false;
-  showFilterPriorityDropdown = false;
-  filterClientSearchTerm = '';
-  filterAssigneeSearchTerm = '';
   selectedFilterClients: string[] = [];
   selectedFilterAssignees: string[] = [];
   selectedFilterStatuses: string[] = [];
@@ -222,8 +214,6 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.loadBoard();
     this.loadUsers();
     this.loadClients();
-    // Inicializar listas filtradas
-    this.updateFilteredPriorities();
     
     // Suscribirse a cambios en los query params para abrir el modal cuando se navega desde el buscador
     this.route.queryParams.subscribe(params => {
@@ -308,7 +298,6 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.http.get<User[]>(`${this.apiUrl}/users`).subscribe({
       next: (users) => {
         this.users = users;
-        this.updateFilteredUsers();
         this.loadingUsers = false;
       },
       error: (err) => {
@@ -323,9 +312,6 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     this.http.get<Client[]>(`${this.apiUrl}/clients`).subscribe({
       next: (clients) => {
         this.clients = clients.filter(c => c.isActive);
-        this.updateFilteredClients();
-        // Actualizar también los filtros de búsqueda
-        this.filteredClients = this.clients;
         this.loadingClients = false;
       },
       error: (err) => {
@@ -895,21 +881,6 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     return this.users.filter(u => this.taskForm.assignees.includes(u._id));
   }
 
-  updateFilteredClients(): void {
-    // Usar el término de búsqueda del filtro si está disponible, sino el del formulario
-    const searchTerm = this.filterClientSearchTerm || this.clientSearchTerm;
-    if (!searchTerm.trim()) {
-      this.filteredClients = this.clients;
-      return;
-    }
-    const search = searchTerm.toLowerCase();
-    this.filteredClients = this.clients.filter(client => {
-      const name = client.name.toLowerCase();
-      const lastName = client.lastName?.toLowerCase() || '';
-      return name.includes(search) || lastName.includes(search);
-    });
-  }
-
   updateFilteredAgents(): void {
     if (!this.selectedClient?.agents) {
       this.filteredAgents = [];
@@ -931,37 +902,6 @@ export class BoardViewComponent implements OnInit, OnDestroy {
   getAgentIndex(agent: Agent): number {
     if (!this.selectedClient?.agents) return -1;
     return this.selectedClient.agents.findIndex(a => a.name === agent.name && a.email === agent.email);
-  }
-
-  updateFilteredUsers(): void {
-    // Usar el término de búsqueda del filtro si está disponible, sino el del formulario
-    const searchTerm = this.filterAssigneeSearchTerm || this.assigneeSearchTerm;
-    if (!searchTerm.trim()) {
-      this.filteredUsers = this.users;
-      return;
-    }
-    const search = searchTerm.toLowerCase();
-    this.filteredUsers = this.users.filter(user => {
-      const firstName = user.firstName.toLowerCase();
-      const lastName = user.lastName.toLowerCase();
-      const email = user.email.toLowerCase();
-      return firstName.includes(search) || lastName.includes(search) || email.includes(search);
-    });
-  }
-
-  updateFilteredPriorities(): void {
-    const priorities = [
-      { value: 'low', label: 'Baja' },
-      { value: 'medium', label: 'Media' },
-      { value: 'high', label: 'Alta' },
-      { value: 'urgent', label: 'Urgente' }
-    ];
-    if (!this.prioritySearchTerm.trim()) {
-      this.filteredPriorities = priorities;
-      return;
-    }
-    const search = this.prioritySearchTerm.toLowerCase();
-    this.filteredPriorities = priorities.filter(p => p.label.toLowerCase().includes(search));
   }
 
   getClientName(clientId: string | Client | undefined): string {
@@ -1091,25 +1031,6 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     if (!target.closest('.client-dropdown-container')) {
       this.showClientDropdown = false;
       this.clientSearchTerm = '';
-    }
-    if (!target.closest('.priority-dropdown-container')) {
-      this.showPriorityDropdown = false;
-      this.prioritySearchTerm = '';
-    }
-    // Close filter dropdowns
-    if (!target.closest('.filter-client-dropdown')) {
-      this.showFilterClientDropdown = false;
-      this.filterClientSearchTerm = '';
-    }
-    if (!target.closest('.filter-assignee-dropdown')) {
-      this.showFilterAssigneeDropdown = false;
-      this.filterAssigneeSearchTerm = '';
-    }
-    if (!target.closest('.filter-status-dropdown')) {
-      this.showFilterStatusDropdown = false;
-    }
-    if (!target.closest('.filter-priority-dropdown')) {
-      this.showFilterPriorityDropdown = false;
     }
     if (!target.closest('.priority-dropdown-container')) {
       this.showPriorityDropdown = false;
@@ -2072,13 +1993,97 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     );
   }
 
+  // Métodos helper para el combobox de filtros
+  displayClient(client: Client): string {
+    if (client.type === 'persona' && client.lastName) {
+      return `${client.name} ${client.lastName}`;
+    }
+    return client.name;
+  }
+
+  displayUser(user: User): string {
+    return `${user.firstName} ${user.lastName}`;
+  }
+
+  displayColumn(column: Column): string {
+    return column.name;
+  }
+
+  displayPriority(priority: { value: string; label: string }): string {
+    return priority.label;
+  }
+
+  comparePriorities(a: { value: string; label: string }, b: { value: string; label: string }): boolean {
+    return a.value === b.value;
+  }
+
+  getPriorities() {
+    return [
+      { value: 'low', label: 'Baja' },
+      { value: 'medium', label: 'Media' },
+      { value: 'high', label: 'Alta' },
+      { value: 'urgent', label: 'Urgente' }
+    ];
+  }
+
+  // Métodos para obtener los items seleccionados para el combobox
+  getSelectedFilterClients(): Client[] {
+    return this.clients.filter(c => this.selectedFilterClients.includes(c._id));
+  }
+
+  getSelectedFilterUsers(): User[] {
+    return this.users.filter(u => this.selectedFilterAssignees.includes(u._id));
+  }
+
+  getSelectedFilterColumns(): Column[] {
+    return this.columns.filter(c => {
+      const id = c._id || c.name;
+      return this.selectedFilterStatuses.includes(id);
+    });
+  }
+
+  getSelectedFilterPriorities(): { value: string; label: string }[] {
+    return this.getPriorities().filter(p => this.selectedFilterPriorities.includes(p.value));
+  }
+
+  // Métodos para manejar cambios de selección del combobox
+  onFilterClientSelected(clients: Client | Client[]): void {
+    if (!Array.isArray(clients)) {
+      clients = [clients];
+    }
+    this.selectedFilterClients = clients.map(c => c._id);
+    this.applyFilters();
+  }
+
+  onFilterAssigneeSelected(users: User | User[]): void {
+    if (!Array.isArray(users)) {
+      users = [users];
+    }
+    this.selectedFilterAssignees = users.map(u => u._id);
+    this.applyFilters();
+  }
+
+  onFilterStatusSelected(columns: Column | Column[]): void {
+    if (!Array.isArray(columns)) {
+      columns = [columns];
+    }
+    this.selectedFilterStatuses = columns.map(c => c._id || c.name);
+    this.applyFilters();
+  }
+
+  onFilterPrioritySelected(priorities: { value: string; label: string } | Array<{ value: string; label: string }>): void {
+    if (!Array.isArray(priorities)) {
+      priorities = [priorities];
+    }
+    this.selectedFilterPriorities = priorities.map(p => p.value);
+    this.applyFilters();
+  }
+
   clearFilters(): void {
     this.selectedFilterClients = [];
     this.selectedFilterAssignees = [];
     this.selectedFilterStatuses = [];
     this.selectedFilterPriorities = [];
-    this.filterClientSearchTerm = '';
-    this.filterAssigneeSearchTerm = '';
     
     // Restaurar todas las tareas sin filtros
     if (this.allTasks.length > 0) {
@@ -2153,32 +2158,6 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     return this.selectedFilterPriorities.includes(priority);
   }
 
-  openFilterClientDropdown(): void {
-    this.closeAllFilterDropdowns();
-    this.showFilterClientDropdown = !this.showFilterClientDropdown;
-  }
-
-  openFilterAssigneeDropdown(): void {
-    this.closeAllFilterDropdowns();
-    this.showFilterAssigneeDropdown = !this.showFilterAssigneeDropdown;
-  }
-
-  openFilterStatusDropdown(): void {
-    this.closeAllFilterDropdowns();
-    this.showFilterStatusDropdown = !this.showFilterStatusDropdown;
-  }
-
-  openFilterPriorityDropdown(): void {
-    this.closeAllFilterDropdowns();
-    this.showFilterPriorityDropdown = !this.showFilterPriorityDropdown;
-  }
-
-  private closeAllFilterDropdowns(): void {
-    this.showFilterClientDropdown = false;
-    this.showFilterAssigneeDropdown = false;
-    this.showFilterStatusDropdown = false;
-    this.showFilterPriorityDropdown = false;
-  }
 
   getFilterClientCount(): number {
     return this.selectedFilterClients.length;

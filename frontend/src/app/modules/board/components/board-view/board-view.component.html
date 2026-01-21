@@ -85,206 +85,76 @@
       <!-- Filter Options -->
       <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto flex-shrink-0">
         <!-- Filter by Client -->
-        <div class="relative filter-client-dropdown" *ngIf="clients.length > 0">
-          <button
-            type="button"
-            (click)="openFilterClientDropdown(); $event.stopPropagation()"
-            [class.bg-indigo-50]="hasFilterClients()"
-            [class.border-indigo-500]="hasFilterClients()"
-            [class.text-indigo-700]="hasFilterClients()"
-            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 relative"
-          >
-            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            {{ 'tasks.client' | translate }}
-            <span *ngIf="hasFilterClients()" class="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full">
-              {{ getFilterClientCount() }}
-            </span>
-            <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div
-            *ngIf="showFilterClientDropdown"
-            class="filter-client-dropdown absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-60 overflow-y-auto"
-            (click)="$event.stopPropagation()"
-          >
-            <div class="p-2">
-              <input
-                type="text"
-                [(ngModel)]="filterClientSearchTerm"
-                (ngModelChange)="updateFilteredClients()"
-                [ngModelOptions]="{standalone: true}"
-                [placeholder]="translationService.translate('common.search') + ' ' + translationService.translate('tasks.client')"
-                class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-2"
-              />
-              <div class="space-y-1">
-                <label
-                  *ngFor="let client of filteredClients"
-                  class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    [checked]="isFilterClientSelected(client._id)"
-                    (change)="toggleFilterClient(client._id)"
-                    class="mr-2"
-                  />
-                  <span class="text-xs text-gray-700">{{ client.name }}{{ client.type === 'persona' && client.lastName ? ' ' + client.lastName : '' }}</span>
-                </label>
-              </div>
-            </div>
-          </div>
+        <div *ngIf="clients.length > 0" class="relative inline-block">
+          <app-combobox
+            [label]="''"
+            [placeholder]="('tasks.client' | translate) || 'Cliente'"
+            [items]="clients"
+            [display]="displayClient"
+            [searchable]="true"
+            [multiple]="true"
+            [required]="false"
+            [value]="getSelectedFilterClients()"
+            (selectionChange)="onFilterClientSelected($event)">
+          </app-combobox>
+          <span *ngIf="hasFilterClients()" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full z-10">
+            {{ getFilterClientCount() }}
+          </span>
         </div>
 
         <!-- Filter by Assignee -->
-        <div class="relative filter-assignee-dropdown" *ngIf="users.length > 0">
-          <button
-            type="button"
-            (click)="openFilterAssigneeDropdown(); $event.stopPropagation()"
-            [class.bg-indigo-50]="hasFilterAssignees()"
-            [class.border-indigo-500]="hasFilterAssignees()"
-            [class.text-indigo-700]="hasFilterAssignees()"
-            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 relative"
-          >
-            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            {{ 'tasks.assignedTo' | translate }}
-            <span *ngIf="hasFilterAssignees()" class="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full">
-              {{ getFilterAssigneeCount() }}
-            </span>
-            <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div
-            *ngIf="showFilterAssigneeDropdown"
-            class="filter-assignee-dropdown absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-60 overflow-y-auto"
-            (click)="$event.stopPropagation()"
-          >
-            <div class="p-2">
-              <input
-                type="text"
-                [(ngModel)]="filterAssigneeSearchTerm"
-                (ngModelChange)="updateFilteredUsers()"
-                [ngModelOptions]="{standalone: true}"
-                [placeholder]="translationService.translate('common.search') + ' ' + translationService.translate('tasks.assignedTo')"
-                class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-2"
-              />
-              <div class="space-y-1">
-                <label
-                  *ngFor="let user of filteredUsers"
-                  class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    [checked]="isFilterAssigneeSelected(user._id)"
-                    (change)="toggleFilterAssignee(user._id)"
-                    class="mr-2"
-                  />
-                  <span class="text-xs text-gray-700">{{ user.firstName }} {{ user.lastName }}</span>
-                </label>
-              </div>
-            </div>
-          </div>
+        <div *ngIf="users.length > 0" class="relative inline-block">
+          <app-combobox
+            [label]="''"
+            [placeholder]="('tasks.assignedTo' | translate) || 'Asignado a'"
+            [items]="users"
+            [display]="displayUser"
+            [searchable]="true"
+            [multiple]="true"
+            [required]="false"
+            [value]="getSelectedFilterUsers()"
+            (selectionChange)="onFilterAssigneeSelected($event)">
+          </app-combobox>
+          <span *ngIf="hasFilterAssignees()" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full z-10">
+            {{ getFilterAssigneeCount() }}
+          </span>
         </div>
 
         <!-- Filter by Status -->
-        <div class="relative filter-status-dropdown" *ngIf="columns.length > 0">
-          <button
-            type="button"
-            (click)="openFilterStatusDropdown(); $event.stopPropagation()"
-            [class.bg-indigo-50]="hasFilterStatuses()"
-            [class.border-indigo-500]="hasFilterStatuses()"
-            [class.text-indigo-700]="hasFilterStatuses()"
-            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 relative"
-          >
-            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            {{ 'admin.statusName' | translate }}
-            <span *ngIf="hasFilterStatuses()" class="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full">
-              {{ getFilterStatusCount() }}
-            </span>
-            <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div
-            *ngIf="showFilterStatusDropdown"
-            class="filter-status-dropdown absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-50 border border-gray-200 max-h-60 overflow-y-auto"
-            (click)="$event.stopPropagation()"
-          >
-            <div class="p-2">
-              <div class="space-y-1">
-                <label
-                  *ngFor="let column of columns"
-                  class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    [checked]="isFilterStatusSelected(column._id || column.name)"
-                    (change)="toggleFilterStatus(column._id || column.name)"
-                    class="mr-2"
-                  />
-                  <div class="flex items-center space-x-2">
-                    <div
-                      *ngIf="column.color"
-                      class="w-3 h-3 rounded-full"
-                      [style.background-color]="column.color"
-                    ></div>
-                    <span class="text-xs text-gray-700">{{ column.name }}</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </div>
+        <div *ngIf="columns.length > 0" class="relative inline-block">
+          <app-combobox
+            [label]="''"
+            [placeholder]="('admin.statusName' | translate) || 'Estado'"
+            [items]="columns"
+            [display]="displayColumn"
+            [searchable]="true"
+            [multiple]="true"
+            [required]="false"
+            [value]="getSelectedFilterColumns()"
+            (selectionChange)="onFilterStatusSelected($event)">
+          </app-combobox>
+          <span *ngIf="hasFilterStatuses()" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full z-10">
+            {{ getFilterStatusCount() }}
+          </span>
         </div>
 
         <!-- Filter by Priority -->
-        <div class="relative filter-priority-dropdown">
-          <button
-            type="button"
-            (click)="openFilterPriorityDropdown(); $event.stopPropagation()"
-            [class.bg-indigo-50]="hasFilterPriorities()"
-            [class.border-indigo-500]="hasFilterPriorities()"
-            [class.text-indigo-700]="hasFilterPriorities()"
-            class="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 relative"
-          >
-            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            {{ 'tasks.priority' | translate }}
-            <span *ngIf="hasFilterPriorities()" class="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full">
-              {{ getFilterPriorityCount() }}
-            </span>
-            <svg class="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div
-            *ngIf="showFilterPriorityDropdown"
-            class="filter-priority-dropdown absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200"
-            (click)="$event.stopPropagation()"
-          >
-            <div class="p-2">
-              <div class="space-y-1">
-                <label
-                  *ngFor="let priority of filteredPriorities"
-                  class="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    [checked]="isFilterPrioritySelected(priority.value)"
-                    (change)="toggleFilterPriority(priority.value)"
-                    class="mr-2"
-                  />
-                  <span class="text-xs text-gray-700">{{ priority.label }}</span>
-                </label>
-              </div>
-            </div>
-          </div>
+        <div class="relative inline-block">
+          <app-combobox
+            [label]="''"
+            [placeholder]="('tasks.priority' | translate) || 'Prioridad'"
+            [items]="getPriorities()"
+            [display]="displayPriority"
+            [searchable]="true"
+            [multiple]="true"
+            [required]="false"
+            [value]="getSelectedFilterPriorities()"
+            [compareFn]="comparePriorities"
+            (selectionChange)="onFilterPrioritySelected($event)">
+          </app-combobox>
+          <span *ngIf="hasFilterPriorities()" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full z-10">
+            {{ getFilterPriorityCount() }}
+          </span>
         </div>
 
         <!-- Clear Filters Button -->
