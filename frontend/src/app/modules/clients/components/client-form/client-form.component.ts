@@ -48,6 +48,8 @@ export class ClientFormComponent implements OnInit {
   clientId: string | null = null;
   isEditMode = false;
   loading = false;
+  emailError = false;
+  agentEmailErrors: { [key: number]: boolean } = {};
   currentStep = 1;
   totalSteps = 5;
   clientForm: any = {
@@ -189,11 +191,53 @@ export class ClientFormComponent implements OnInit {
     return titles[step] || '';
   }
 
+  isValidEmail(email: string): boolean {
+    if (!email || email.trim() === '') {
+      return true; // Email vacío es válido (opcional)
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  }
+
+  validateClientEmail(): void {
+    if (this.clientForm.email && this.clientForm.email.trim() !== '') {
+      this.emailError = !this.isValidEmail(this.clientForm.email);
+    } else {
+      this.emailError = false;
+    }
+  }
+
+  validateAgentEmail(index: number): void {
+    const agent = this.clientForm.agents[index];
+    if (agent && agent.email && agent.email.trim() !== '') {
+      this.agentEmailErrors[index] = !this.isValidEmail(agent.email);
+    } else {
+      this.agentEmailErrors[index] = false;
+    }
+  }
+
   saveClient(): void {
     // Validación básica
     if (!this.clientForm.name || this.clientForm.name.trim() === '') {
       alert(this.translationService.translate('clients.nameRequired'));
       return;
+    }
+
+    // Validar email del cliente
+    if (this.clientForm.email && this.clientForm.email.trim() !== '' && !this.isValidEmail(this.clientForm.email)) {
+      alert(this.translationService.translate('clients.invalidEmail') || 'El email no es válido');
+      return;
+    }
+
+    // Validar emails de agentes (si es empresa)
+    if (this.clientForm.type === 'empresa' && this.clientForm.agents) {
+      for (let i = 0; i < this.clientForm.agents.length; i++) {
+        const agent = this.clientForm.agents[i];
+        if (agent.email && agent.email.trim() !== '' && !this.isValidEmail(agent.email)) {
+          alert(`${this.translationService.translate('clients.invalidEmail') || 'El email no es válido'} (${this.translationService.translate('clients.agent') || 'Agente'} ${i + 1})`);
+          return;
+        }
+      }
     }
 
     // Preparar datos para enviar

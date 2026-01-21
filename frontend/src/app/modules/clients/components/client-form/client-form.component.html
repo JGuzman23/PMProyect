@@ -92,9 +92,18 @@
                 <input
                   type="email"
                   [(ngModel)]="clientForm.email"
+                  (blur)="validateClientEmail()"
+                  (input)="validateClientEmail()"
                   name="email"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                  [class.border-red-500]="emailError"
+                  [class.border-gray-300]="!emailError"
+                  [class.focus:border-red-500]="emailError"
+                  [class.focus:ring-red-500]="emailError"
+                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-sm text-gray-900"
+                  [class.focus:border-indigo-500]="!emailError"
+                  [class.focus:ring-indigo-500]="!emailError"
                 />
+                <p *ngIf="emailError" class="mt-1 text-sm text-red-600">{{ 'clients.invalidEmail' | translate }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.phone' | translate }} 1</label>
@@ -233,10 +242,19 @@
                       <input
                         type="email"
                         [(ngModel)]="agent.email"
+                        (blur)="validateAgentEmail(i)"
+                        (input)="validateAgentEmail(i)"
                         [name]="'agentEmail' + i"
                         placeholder="email@example.com"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                        [class.border-red-500]="agentEmailErrors[i]"
+                        [class.border-gray-300]="!agentEmailErrors[i]"
+                        [class.focus:border-red-500]="agentEmailErrors[i]"
+                        [class.focus:ring-red-500]="agentEmailErrors[i]"
+                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-sm text-gray-900"
+                        [class.focus:border-indigo-500]="!agentEmailErrors[i]"
+                        [class.focus:ring-indigo-500]="!agentEmailErrors[i]"
                       />
+                      <p *ngIf="agentEmailErrors[i]" class="mt-1 text-sm text-red-600">{{ 'clients.invalidEmail' | translate }}</p>
                     </div>
                   </div>
                 </div>
@@ -313,9 +331,18 @@
                 <input
                   type="email"
                   [(ngModel)]="clientForm.email"
+                  (blur)="validateClientEmail()"
+                  (input)="validateClientEmail()"
                   name="email"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm text-gray-900"
+                  [class.border-red-500]="emailError"
+                  [class.border-gray-300]="!emailError"
+                  [class.focus:border-red-500]="emailError"
+                  [class.focus:ring-red-500]="emailError"
+                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-sm text-gray-900"
+                  [class.focus:border-indigo-500]="!emailError"
+                  [class.focus:ring-indigo-500]="!emailError"
                 />
+                <p *ngIf="emailError" class="mt-1 text-sm text-red-600">{{ 'clients.invalidEmail' | translate }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">{{ 'tasks.phone' | translate }} 1</label>
