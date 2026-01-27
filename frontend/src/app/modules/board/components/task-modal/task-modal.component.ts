@@ -1279,37 +1279,84 @@ export class TaskModalComponent implements OnInit, OnChanges {
     
     const statusAttachments = this.attachmentsByStatus[statusId] || [];
     const attachment = statusAttachments[index];
-    if (attachment && attachment._id) {
-      // Eliminar del servidor si tiene _id (no es un preview temporal)
-      if (!attachment._id.startsWith('temp')) {
-        this.http.delete(`${this.apiUrl}/tasks/${this.task._id}/attachments/${attachment._id}`).subscribe({
-          next: () => {
-            // Recargar la tarea para obtener los datos actualizados
-            if (!this.task) return;
-            this.http.get<Task>(`${this.apiUrl}/tasks/${this.task._id}`).subscribe({
-              next: (updatedTask) => {
-                this.task = updatedTask;
-                this.taskUpdated.emit(updatedTask);
-                this.attachments = updatedTask.attachments || [];
-                this.groupAttachmentsByStatus();
-              },
-              error: (err) => console.error('Error reloading task', err)
-            });
-          },
-          error: (err) => {
-            console.error('Error deleting attachment', err);
-            alert(this.translationService.translate('tasks.errorDeletingFile'));
-          }
-        });
-      } else {
-        // Si es un preview temporal, solo eliminarlo localmente
-        const globalIndex = this.attachments.findIndex(a => a._id === attachment._id);
-        if (globalIndex !== -1) {
-          this.attachments.splice(globalIndex, 1);
-          this.groupAttachmentsByStatus();
+    
+    if (!attachment) {
+      console.error('Attachment not found at index', index, 'for status', statusId);
+      return;
+    }
+
+    // Si es un preview temporal (empieza con 'temp'), solo eliminarlo localmente
+    if (attachment._id && attachment._id.startsWith('temp')) {
+      const globalIndex = this.attachments.findIndex(a => a._id === attachment._id);
+      if (globalIndex !== -1) {
+        this.attachments.splice(globalIndex, 1);
+        this.groupAttachmentsByStatus();
+      }
+      return;
+    }
+
+    // Eliminar el adjunto del array localmente primero (optimistic update)
+    const globalIndex = this.attachments.findIndex(a => 
+      a.url === attachment.url && 
+      a.name === attachment.name &&
+      a.statusId === attachment.statusId
+    );
+    
+    if (globalIndex === -1) {
+      console.error('Attachment not found in global attachments array');
+      alert(this.translationService.translate('tasks.errorDeletingFile'));
+      return;
+    }
+
+    // Guardar el adjunto que se va a eliminar para poder restaurarlo si falla
+    const attachmentToRemove = this.attachments[globalIndex];
+    
+    // Eliminar localmente
+    this.attachments.splice(globalIndex, 1);
+    this.groupAttachmentsByStatus();
+
+    // Obtener el userId del usuario actual
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) {
+      console.error('No user logged in');
+      // Restaurar el adjunto
+      this.attachments.splice(globalIndex, 0, attachmentToRemove);
+      this.groupAttachmentsByStatus();
+      return;
+    }
+
+    // Actualizar en el servidor usando el endpoint de actualización
+    // El backend espera $push con $each para activityLog
+    const updateData: any = {
+      attachments: this.attachments,
+      $push: {
+        activityLog: {
+          $each: [{
+            type: 'attachment_removed',
+            userId: currentUser.id,
+            description: `Archivo adjunto eliminado: ${attachmentToRemove.title || attachmentToRemove.name}`,
+            createdAt: new Date()
+          }]
         }
       }
-    }
+    };
+
+    this.http.put<any>(`${this.apiUrl}/tasks/${this.task._id}`, updateData).subscribe({
+      next: (updatedTask: any) => {
+        this.task = updatedTask as Task;
+        this.taskUpdated.emit(updatedTask as Task);
+        this.attachments = updatedTask.attachments || [];
+        this.groupAttachmentsByStatus();
+        this.showNotification('tasks.attachmentRemoved', 'success');
+      },
+      error: (err) => {
+        console.error('Error deleting attachment', err);
+        // Restaurar el adjunto si falla la eliminación
+        this.attachments.splice(globalIndex, 0, attachmentToRemove);
+        this.groupAttachmentsByStatus();
+        alert(this.translationService.translate('tasks.errorDeletingFile'));
+      }
+    });
   }
 
   isImageFile(url: string, name: string): boolean {
