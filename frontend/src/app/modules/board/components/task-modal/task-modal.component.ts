@@ -1349,10 +1349,18 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
     this.http.put<any>(`${this.apiUrl}/tasks/${this.task._id}`, updateData).subscribe({
       next: (updatedTask: any) => {
-        this.task = updatedTask as Task;
-        this.taskUpdated.emit(updatedTask as Task);
-        this.attachments = updatedTask.attachments || [];
-        this.groupAttachmentsByStatus();
+        // Solo actualizar los attachments en el task sin reemplazar todo el objeto
+        // Esto evita re-renderizar el modal completo
+        if (this.task) {
+          this.task.attachments = this.attachments;
+          // Actualizar el activityLog si viene en la respuesta
+          if (updatedTask.activityLog) {
+            this.task.activityLog = updatedTask.activityLog;
+            this.combineActivitiesAndComments();
+          }
+        }
+        // Emitir solo la actualización necesaria sin reemplazar todo el task
+        this.taskUpdated.emit(this.task as Task);
         this.showNotification('tasks.attachmentRemoved', 'success');
       },
       error: (err) => {
@@ -1360,6 +1368,10 @@ export class TaskModalComponent implements OnInit, OnChanges {
         // Restaurar el adjunto si falla la eliminación
         this.attachments.splice(globalIndex, 0, attachmentToRemove);
         this.groupAttachmentsByStatus();
+        // Restaurar también en el task
+        if (this.task) {
+          this.task.attachments = [...this.attachments];
+        }
         alert(this.translationService.translate('tasks.errorDeletingFile'));
       }
     });
