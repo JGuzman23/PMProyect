@@ -1285,7 +1285,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
       return;
     }
 
-    // Si es un preview temporal (empieza con 'temp'), solo eliminarlo localmente
+    // Si es un preview temporal (empieza con 'temp'), solo eliminarlo localmente sin confirmación
     if (attachment._id && attachment._id.startsWith('temp')) {
       const globalIndex = this.attachments.findIndex(a => a._id === attachment._id);
       if (globalIndex !== -1) {
@@ -1293,6 +1293,12 @@ export class TaskModalComponent implements OnInit, OnChanges {
         this.groupAttachmentsByStatus();
       }
       return;
+    }
+
+    // Mostrar diálogo de confirmación antes de eliminar
+    const confirmMessage = this.translationService.translate('tasks.confirmDeleteAttachment') || '¿Estás seguro de eliminar este archivo adjunto?';
+    if (!confirm(confirmMessage)) {
+      return; // El usuario canceló la eliminación
     }
 
     // Eliminar el adjunto del array localmente primero (optimistic update)
