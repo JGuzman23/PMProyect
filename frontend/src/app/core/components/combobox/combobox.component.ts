@@ -31,6 +31,7 @@ export class ComboboxComponent<T> implements OnChanges {
   @Input() required = false;
   @Input() value: T | T[] | null = null;
   @Input() compareFn?: (a: T, b: T) => boolean;
+  @Input() disabled = false;
 
   @Output() selectionChange = new EventEmitter<T | T[]>();
 
@@ -52,6 +53,7 @@ export class ComboboxComponent<T> implements OnChanges {
   );
 
   toggle(): void {
+    if (this.disabled) return;
     this.isOpen.update(v => !v);
     this.search.set('');
   }

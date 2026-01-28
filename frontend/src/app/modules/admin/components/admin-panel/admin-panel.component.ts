@@ -31,6 +31,7 @@ interface BoardStatus {
   };
 }
 
+
 @Component({
   selector: 'app-admin-panel',
   standalone: true,

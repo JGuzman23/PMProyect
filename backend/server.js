@@ -17,6 +17,7 @@ import clientRoutes from './src/modules/clients/routes.js';
 import teamRoutes from './src/modules/teams/routes.js';
 import notesRoutes from './src/modules/notes/routes.js';
 import adminRoutes from './src/modules/admin/routes.js';
+import inventoryRoutes from './src/modules/inventory/routes.js';
 
 dotenv.config();
 
@@ -124,6 +125,7 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notes', notesRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // Error handler
 app.use(errorHandler);

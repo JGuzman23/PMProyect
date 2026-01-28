@@ -56,7 +56,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   checkAdminRoute(): void {
     const url = this.router.url;
-    if (url.startsWith('/admin/projects') || url.startsWith('/admin/statuses') || url.startsWith('/admin/teams')) {
+    if (url.startsWith('/admin/projects') || url.startsWith('/admin/statuses') || url.startsWith('/admin/teams') || url.startsWith('/admin/suppliers') || url === '/admin') {
       this.adminExpanded = true;
     }
   }
@@ -74,7 +74,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   isAdminRouteActive(): boolean {
     const url = this.router.url;
-    return url.startsWith('/admin/projects') || url.startsWith('/admin/statuses') || url.startsWith('/admin/teams');
+    return url.startsWith('/admin/projects') || url.startsWith('/admin/statuses') || url.startsWith('/admin/teams') || url.startsWith('/admin/suppliers') || url === '/admin';
   }
 }
 

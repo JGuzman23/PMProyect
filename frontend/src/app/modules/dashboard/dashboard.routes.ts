@@ -73,12 +73,39 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('../teams/components/team-list/team-list.component').then(m => m.TeamListComponent)
       },
       {
+        path: 'admin/suppliers',
+        canActivate: [memberGuard],
+        loadComponent: () => import('../inventory/components/supplier-list/supplier-list.component').then(m => m.SupplierListComponent)
+      },
+      {
+        path: 'admin/suppliers/create',
+        canActivate: [memberGuard],
+        loadComponent: () => import('../inventory/components/supplier-form/supplier-form.component').then(m => m.SupplierFormComponent)
+      },
+      {
+        path: 'admin/suppliers/edit/:id',
+        canActivate: [memberGuard],
+        loadComponent: () => import('../inventory/components/supplier-form/supplier-form.component').then(m => m.SupplierFormComponent)
+      },
+      {
         path: 'profile/edit',
         loadComponent: () => import('../profile/components/profile-edit/profile-edit.component').then(m => m.ProfileEditComponent)
       },
       {
         path: 'notes',
         loadComponent: () => import('../notes/components/notes-list/notes-list.component').then(m => m.NotesListComponent)
+      },
+      {
+        path: 'inventory',
+        loadComponent: () => import('../inventory/components/product-list/product-list.component').then(m => m.ProductListComponent)
+      },
+      {
+        path: 'inventory/create',
+        loadComponent: () => import('../inventory/components/product-form/product-form.component').then(m => m.ProductFormComponent)
+      },
+      {
+        path: 'inventory/edit/:id',
+        loadComponent: () => import('../inventory/components/product-form/product-form.component').then(m => m.ProductFormComponent)
       }
     ]
   }
