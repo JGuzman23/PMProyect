@@ -76,7 +76,8 @@ interface Task {
   _id: string;
   title: string;
   description: string;
-  dueDate: string;
+  dueDate?: string;
+  startDate?: string;
   priority: string;
   assignees: User[];
   attachments?: Attachment[];
@@ -251,7 +252,8 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     this.http.get<Task[]>(`${this.apiUrl}/tasks`).subscribe({
       next: (tasks) => {
         // Normalizar URLs de attachments y convertir assignees de strings a objetos User
-        this.tasks = tasks.filter(t => t.dueDate).map(task => {
+        // Incluir tareas que tengan startDate o dueDate
+        this.tasks = tasks.filter(t => t.dueDate || t.startDate).map(task => {
           // Convertir assignees de strings a objetos User si es necesario
           const normalizedAssignees = (task.assignees || []).map(assignee => {
             if (typeof assignee === 'string') {
@@ -299,25 +301,73 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   }
 
   updateCalendarEvents(): void {
-    const events: EventInput[] = this.tasks.map(task => {
-      const taskDate = new Date(task.dueDate);
+    const events: EventInput[] = [];
+    
+    for (const task of this.tasks) {
       const color = this.getTaskStatusColor(task);
       const boardInitial = this.getBoardInitial(task);
       const title = boardInitial ? `[${boardInitial}] ${task.title}` : task.title;
       
-      return {
-        id: task._id,
-        title: title,
-        start: taskDate,
-        allDay: true,
-        backgroundColor: color,
-        borderColor: color,
-        textColor: '#ffffff',
-        extendedProps: {
-          task: task
-        }
-      };
-    });
+      // Si hay startDate y dueDate, crear un evento de rango
+      if (task.startDate && task.dueDate) {
+        const startDate = new Date(task.startDate);
+        const endDate = new Date(task.dueDate);
+        // FullCalendar necesita que endDate sea el día siguiente para mostrar correctamente el rango
+        endDate.setDate(endDate.getDate() + 1);
+        
+        events.push({
+          id: task._id,
+          title: title,
+          start: startDate,
+          end: endDate,
+          allDay: true,
+          backgroundColor: color,
+          borderColor: color,
+          textColor: '#ffffff',
+          extendedProps: {
+            task: task
+          }
+        });
+        continue;
+      }
+      
+      // Si solo hay startDate, mostrar solo en esa fecha
+      if (task.startDate && !task.dueDate) {
+        const startDate = new Date(task.startDate);
+        
+        events.push({
+          id: task._id,
+          title: title,
+          start: startDate,
+          allDay: true,
+          backgroundColor: color,
+          borderColor: color,
+          textColor: '#ffffff',
+          extendedProps: {
+            task: task
+          }
+        });
+        continue;
+      }
+      
+      // Si solo hay dueDate (comportamiento por defecto)
+      if (task.dueDate) {
+        const taskDate = new Date(task.dueDate);
+        
+        events.push({
+          id: task._id,
+          title: title,
+          start: taskDate,
+          allDay: true,
+          backgroundColor: color,
+          borderColor: color,
+          textColor: '#ffffff',
+          extendedProps: {
+            task: task
+          }
+        });
+      }
+    }
     
     this.calendarOptions.events = events;
   }
@@ -331,7 +381,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
 
   handleEventDrop(dropInfo: EventDropArg): void {
     const task = dropInfo.event.extendedProps['task'] as Task;
-    if (!task) {
+    if (!task || !task.dueDate) {
       return;
     }
 
@@ -351,7 +401,7 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
 
   handleEventResize(resizeInfo: any): void {
     const task = resizeInfo.event.extendedProps['task'] as Task;
-    if (!task) {
+    if (!task || !task.dueDate) {
       return;
     }
 
@@ -463,8 +513,122 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   }
 
   onTaskModalSave(taskFormData: any): void {
-    // El modal maneja el guardado internamente
-    this.loadTasks(); // Recargar tareas después de guardar
+    if (!this.selectedTask) {
+      // No hay tarea seleccionada, no hacer nada
+      return;
+    }
+
+    // Validación: si es empresa, debe tener al menos un agente seleccionado
+    const selectedClient = this.clients.find(c => c._id === taskFormData.clientId);
+    if (taskFormData.clientId && selectedClient?.type === 'empresa') {
+      if (!taskFormData.agentIds || taskFormData.agentIds.length === 0) {
+        alert('Debe seleccionar al menos un agente para clientes tipo empresa');
+        return;
+      }
+    }
+
+    const taskData: any = {};
+    const oldTask = this.selectedTask;
+
+    // Solo enviar los campos que realmente cambiaron
+    // Título
+    if (taskFormData.title !== oldTask.title) {
+      taskData.title = taskFormData.title;
+    }
+
+    // Descripción
+    if (taskFormData.description !== (oldTask.description || '')) {
+      taskData.description = taskFormData.description;
+    }
+
+    // Prioridad
+    if (taskFormData.priority !== oldTask.priority) {
+      taskData.priority = taskFormData.priority;
+    }
+
+    // Asignados - comparar arrays
+    const oldAssignees = (oldTask.assignees || []).map(a => typeof a === 'object' ? a._id : a).sort();
+    const newAssignees = (taskFormData.assignees || []).sort();
+    if (JSON.stringify(oldAssignees) !== JSON.stringify(newAssignees)) {
+      taskData.assignees = taskFormData.assignees;
+    }
+
+    // Fecha de inicio
+    const oldStartDate = oldTask.startDate ? new Date(oldTask.startDate).toISOString().split('T')[0] : '';
+    const newStartDate = taskFormData.startDate || '';
+    if (oldStartDate !== newStartDate) {
+      taskData.startDate = taskFormData.startDate || undefined;
+    }
+
+    // Fecha de fin
+    const oldDueDate = oldTask.dueDate ? new Date(oldTask.dueDate).toISOString().split('T')[0] : '';
+    const newDueDate = taskFormData.dueDate || '';
+    if (oldDueDate !== newDueDate) {
+      taskData.dueDate = taskFormData.dueDate || undefined;
+    }
+
+    // Cliente
+    const oldClientId = typeof oldTask.clientId === 'object' ? oldTask.clientId._id : oldTask.clientId || '';
+    if (taskFormData.clientId !== oldClientId) {
+      taskData.clientId = taskFormData.clientId || undefined;
+    }
+
+    // Agentes (solo si el cliente es empresa)
+    if (selectedClient?.type === 'empresa') {
+      const oldAgentIds = (oldTask.agentIds || []).sort();
+      const newAgentIds = (taskFormData.agentIds || []).sort();
+      if (JSON.stringify(oldAgentIds) !== JSON.stringify(newAgentIds)) {
+        taskData.agentIds = taskFormData.agentIds;
+        taskData.agentNames = taskFormData.agentNames;
+      }
+    }
+
+    // ColumnId - permitir edición desde el modal
+    const oldColumnId = typeof oldTask.columnId === 'object' ? (oldTask.columnId as any)._id : oldTask.columnId || '';
+    if (taskFormData.columnId && taskFormData.columnId !== oldColumnId) {
+      taskData.columnId = taskFormData.columnId;
+    }
+
+    // Si no hay cambios, no hacer nada
+    if (Object.keys(taskData).length === 0) {
+      this.loadTasks(); // Recargar para asegurar sincronización
+      return;
+    }
+
+    // Actualizar en el backend
+    this.http.put<Task>(`${this.apiUrl}/tasks/${this.selectedTask._id}`, taskData).subscribe({
+      next: (updatedTask) => {
+        // Actualizar la tarea seleccionada
+        const normalizedAssignees = (updatedTask.assignees || []).map(assignee => {
+          if (typeof assignee === 'string') {
+            return this.users.find(u => u._id === assignee) || assignee;
+          }
+          return assignee;
+        }).filter(a => a !== undefined) as User[];
+
+        this.selectedTask = {
+          ...updatedTask,
+          assignees: normalizedAssignees,
+          attachments: (updatedTask.attachments || []).map(att => ({
+            ...att,
+            size: att.size || 0,
+            url: att.url && !att.url.startsWith('http') && !att.url.startsWith('data:') && att.url.startsWith('/')
+              ? `${this.staticFilesUrl}${att.url}`
+              : att.url || ''
+          }))
+        };
+        
+        // Emitir evento de actualización para que el modal se actualice
+        this.onTaskUpdated(this.selectedTask);
+        
+        // Recargar tareas para actualizar el calendario
+        this.loadTasks();
+      },
+      error: (err) => {
+        console.error('Error updating task', err);
+        this.loadTasks(); // Recargar en caso de error
+      }
+    });
   }
 
   onTaskModalDelete(taskId: string): void {
@@ -485,7 +649,8 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
       _id: updatedTask._id,
       title: updatedTask.title || '',
       description: updatedTask.description || '',
-      dueDate: updatedTask.dueDate || '',
+      dueDate: updatedTask.dueDate || undefined,
+      startDate: updatedTask.startDate || undefined,
       priority: updatedTask.priority || 'medium',
       order: updatedTask.order || 0,
       assignees: (updatedTask.assignees || []).map((assignee: any) => {

@@ -1153,6 +1153,13 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         taskData.assignees = this.taskForm.assignees;
       }
       
+      // Fecha de inicio
+      const oldStartDate = oldTask.startDate ? new Date(oldTask.startDate).toISOString().split('T')[0] : '';
+      const newStartDate = this.taskForm.startDate || '';
+      if (oldStartDate !== newStartDate) {
+        taskData.startDate = this.taskForm.startDate || undefined;
+      }
+      
       // Fecha de fin
       const oldDueDate = oldTask.dueDate ? new Date(oldTask.dueDate).toISOString().split('T')[0] : '';
       const newDueDate = this.taskForm.dueDate || '';

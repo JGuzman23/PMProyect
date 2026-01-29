@@ -98,8 +98,8 @@
             (selectionChange)="onFilterClientSelected($event)">
           </app-combobox>
           <span *ngIf="hasFilterClients()" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full z-10">
-            {{ getFilterClientCount() }}
-          </span>
+              {{ getFilterClientCount() }}
+            </span>
         </div>
 
         <!-- Filter by Assignee -->
@@ -116,8 +116,8 @@
             (selectionChange)="onFilterAssigneeSelected($event)">
           </app-combobox>
           <span *ngIf="hasFilterAssignees()" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full z-10">
-            {{ getFilterAssigneeCount() }}
-          </span>
+              {{ getFilterAssigneeCount() }}
+            </span>
         </div>
 
         <!-- Filter by Status -->
@@ -134,8 +134,8 @@
             (selectionChange)="onFilterStatusSelected($event)">
           </app-combobox>
           <span *ngIf="hasFilterStatuses()" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full z-10">
-            {{ getFilterStatusCount() }}
-          </span>
+              {{ getFilterStatusCount() }}
+            </span>
         </div>
 
         <!-- Filter by Priority -->
@@ -153,8 +153,8 @@
             (selectionChange)="onFilterPrioritySelected($event)">
           </app-combobox>
           <span *ngIf="hasFilterPriorities()" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-indigo-600 bg-indigo-100 rounded-full z-10">
-            {{ getFilterPriorityCount() }}
-          </span>
+              {{ getFilterPriorityCount() }}
+            </span>
         </div>
 
         <!-- Clear Filters Button -->
