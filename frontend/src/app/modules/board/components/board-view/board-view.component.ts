@@ -1235,6 +1235,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       this.http.put<Task>(`${this.apiUrl}/tasks/${this.selectedTask._id}`, taskData).subscribe({
         next: (updatedTask) => {
           // Actualizar la tarea seleccionada con el historial
+          // Esto disparará ngOnChanges en el task-modal, que cargará los datos y desactivará el modo edición
           this.selectedTask = updatedTask;
           // Actualizar comentarios y actividades
           this.comments = (updatedTask.comments || []).map(comment => ({
@@ -1247,9 +1248,12 @@ export class BoardViewComponent implements OnInit, OnDestroy {
           }));
           this.combineActivitiesAndComments();
           this.loadTasks();
-          this.isEditMode = false; // Volver a modo vista después de guardar
+          this.isEditMode = false; // Volver a modo vista después de guardar (esto es del board-view, no del modal)
         },
-        error: (err) => console.error('Error updating task', err)
+        error: (err) => {
+          console.error('Error updating task', err);
+          // Si falla, el modo edición se mantendrá activo en el modal
+        }
       });
     } else {
       this.http.post(`${this.apiUrl}/tasks`, taskData).subscribe({

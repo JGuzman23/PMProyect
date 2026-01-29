@@ -273,6 +273,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
       );
       return;
     }
+    // Marcar que estamos guardando para que ngOnChanges no restaure el modo edición
+    this.isEditMode = false;
     this.save.emit(this.taskForm);
   }
 
@@ -1629,13 +1631,11 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['task'] && this.task) {
-      // Preservar el modo edición si estaba activo antes de la actualización
-      const wasInEditMode = this.isEditMode;
+      // Si la tarea cambió después de guardar, asegurar que el modo edición esté desactivado
+      // loadTaskData() siempre establece isEditMode = false, que es lo que queremos después de guardar
       this.loadTaskData();
-      // Restaurar el modo edición si estaba activo y no es la primera carga
-      if (wasInEditMode && changes['task'].previousValue) {
-        this.isEditMode = true;
-      }
+      // No restaurar el modo edición después de guardar - siempre quedarse en modo vista
+      this.isEditMode = false;
     } else if (changes['task'] && !this.task) {
       this.resetForm();
     }
