@@ -1046,10 +1046,6 @@ export class TaskModalComponent implements OnInit, OnChanges {
   onFileSelected(event: Event, statusId: string): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      // Si estamos en modo vista, activar modo edición para poder subir archivos
-      if (!this.isEditMode && this.task) {
-        this.enableEditMode();
-      }
       // Procesar todos los archivos seleccionados y subirlos directamente
       const files = Array.from(input.files);
       if (files.length > 0 && this.task) {
@@ -1099,10 +1095,6 @@ export class TaskModalComponent implements OnInit, OnChanges {
     this.dragOverStatusId = null;
 
     if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-      // Si estamos en modo vista, activar modo edición para poder subir archivos
-      if (!this.isEditMode && this.task) {
-        this.enableEditMode();
-      }
       // Procesar todos los archivos soltados y subirlos directamente
       const files = Array.from(event.dataTransfer.files);
       if (files.length > 0 && this.task) {
@@ -1215,13 +1207,24 @@ export class TaskModalComponent implements OnInit, OnChanges {
         this.showNotification('tasks.fileUploadedSuccessfully', 'success');
         
         // Recargar la tarea para obtener los datos actualizados
+        // Preservar el modo edición si estaba activo
+        const wasInEditMode = this.isEditMode;
         if (this.task) {
           this.http.get<Task>(`${this.apiUrl}/tasks/${this.task._id}`).subscribe({
             next: (updatedTask) => {
+              // Actualizar la tarea sin disparar ngOnChanges que desactivaría el modo edición
               this.task = updatedTask;
               this.taskUpdated.emit(updatedTask);
               this.attachments = updatedTask.attachments || [];
               this.groupAttachmentsByStatus();
+              // Restaurar el modo edición solo si estaba activo antes de subir el archivo
+              // Normalmente debería estar en false ya que no activamos el modo edición al subir
+              if (wasInEditMode) {
+                this.isEditMode = true;
+              } else {
+                // Asegurar que el modo edición esté desactivado después de subir
+                this.isEditMode = false;
+              }
             },
             error: (err) => console.error('Error reloading task', err)
           });
@@ -1626,7 +1629,13 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['task'] && this.task) {
+      // Preservar el modo edición si estaba activo antes de la actualización
+      const wasInEditMode = this.isEditMode;
       this.loadTaskData();
+      // Restaurar el modo edición si estaba activo y no es la primera carga
+      if (wasInEditMode && changes['task'].previousValue) {
+        this.isEditMode = true;
+      }
     } else if (changes['task'] && !this.task) {
       this.resetForm();
     }
