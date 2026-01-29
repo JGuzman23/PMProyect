@@ -57,7 +57,7 @@ interface Comment {
 
 interface ActivityLog {
   _id?: string;
-  type: 'created' | 'status_changed' | 'priority_changed' | 'assignees_changed' | 'client_changed' | 'due_date_changed' | 'title_changed' | 'description_changed' | 'comment_added' | 'attachment_added' | 'attachment_removed';
+  type: 'created' | 'status_changed' | 'priority_changed' | 'assignees_changed' | 'client_changed' | 'due_date_changed' | 'start_date_changed' | 'title_changed' | 'description_changed' | 'comment_added' | 'attachment_added' | 'attachment_removed';
   userId: User | string;
   oldValue?: any;
   newValue?: any;
@@ -79,6 +79,7 @@ interface Task {
   assignees: User[];
   priority: string;
   dueDate?: string;
+  startDate?: string;
   order: number;
   columnId?: string | { _id: string; name?: string };
   attachments?: Attachment[];
@@ -142,6 +143,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
     priority: 'medium',
     assignees: [] as string[],
     dueDate: '',
+    startDate: '',
     clientId: '',
     agentIds: [] as string[],
     agentNames: [] as string[],
@@ -181,7 +183,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
       description: this.task.description || '',
       priority: this.task.priority || 'medium',
       assignees: this.task.assignees ? this.task.assignees.map(u => typeof u === 'object' ? u._id : u) : [],
-      dueDate: this.task.dueDate || '',
+      dueDate: this.formatDateForInput(this.task.dueDate),
+      startDate: this.formatDateForInput(this.task.startDate),
       clientId: clientId,
       agentIds: this.task.agentIds ? [...this.task.agentIds] : [],
       agentNames: this.task.agentNames ? [...this.task.agentNames] : [],
@@ -222,6 +225,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
       priority: 'medium',
       assignees: [],
       dueDate: '',
+      startDate: '',
       clientId: '',
       agentIds: [],
       agentNames: [],
@@ -349,6 +353,16 @@ export class TaskModalComponent implements OnInit, OnChanges {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  formatDateForInput(dateString: string | undefined): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    // Usar componentes locales para evitar problemas de timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   getAttachmentsForStatus(statusId: string): Attachment[] {
@@ -664,6 +678,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
         return this.translationService.translate('tasks.clientModified');
       case 'due_date_changed':
         return this.translationService.translate('tasks.dueDateModified');
+      case 'start_date_changed':
+        return this.translationService.translate('tasks.startDateModified');
       case 'title_changed':
         return `${this.translationService.translate('tasks.titleChanged')} ${this.translationService.translate('tasks.from')} "${activity.oldValue}" ${this.translationService.translate('tasks.to')} "${activity.newValue}"`;
       case 'description_changed':

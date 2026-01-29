@@ -95,7 +95,7 @@ const taskSchema = new mongoose.Schema({
   activityLog: [{
     type: {
       type: String,
-      enum: ['created', 'status_changed', 'priority_changed', 'assignees_changed', 'client_changed', 'due_date_changed', 'title_changed', 'description_changed', 'comment_added', 'attachment_added', 'attachment_removed'],
+      enum: ['created', 'status_changed', 'priority_changed', 'assignees_changed', 'client_changed', 'due_date_changed', 'start_date_changed', 'title_changed', 'description_changed', 'comment_added', 'attachment_added', 'attachment_removed'],
       required: true
     },
     userId: {

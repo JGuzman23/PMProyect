@@ -139,6 +139,22 @@ export const taskService = {
       }
     }
     
+    if (updateData.startDate !== undefined) {
+      // Comparar fechas normalizadas (solo fecha, sin hora)
+      const oldDate = oldTask.startDate ? new Date(oldTask.startDate).toISOString().split('T')[0] : null;
+      const newDate = updateData.startDate ? new Date(updateData.startDate).toISOString().split('T')[0] : null;
+      if (oldDate !== newDate) {
+        activityLog.push({
+          type: 'start_date_changed',
+          userId,
+          oldValue: oldTask.startDate,
+          newValue: updateData.startDate,
+          description: 'Fecha de inicio modificada',
+          createdAt: new Date()
+        });
+      }
+    }
+    
     if (updateData.title !== undefined && updateData.title !== oldTask.title) {
       activityLog.push({
         type: 'title_changed',

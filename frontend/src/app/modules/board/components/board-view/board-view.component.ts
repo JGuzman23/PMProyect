@@ -87,6 +87,7 @@ interface Task {
   assignees: User[];
   priority: string;
   dueDate?: string;
+  startDate?: string;
   order: number;
   columnId?: string | { _id: string; name?: string };
   attachments?: Attachment[];
@@ -180,6 +181,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     priority: 'medium',
     assignees: [] as string[],
     dueDate: '',
+    startDate: '',
     clientId: '',
     agentIds: [] as string[],
     agentNames: [] as string[],
@@ -631,6 +633,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         priority: task.priority,
         assignees: task.assignees ? task.assignees.map(a => typeof a === 'object' ? a._id : a) : [],
         dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+        startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
         clientId: clientId,
         agentIds: task.agentIds ? [...task.agentIds] : [],
         agentNames: task.agentNames ? [...task.agentNames] : [],
@@ -679,6 +682,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         priority: 'medium',
         assignees: [],
         dueDate: '',
+        startDate: '',
         clientId: '',
         agentIds: [],
         agentNames: [],
@@ -730,6 +734,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         priority: this.selectedTask.priority,
         assignees: this.selectedTask.assignees ? this.selectedTask.assignees.map(a => typeof a === 'object' ? a._id : a) : [],
         dueDate: this.selectedTask.dueDate ? new Date(this.selectedTask.dueDate).toISOString().split('T')[0] : '',
+        startDate: this.selectedTask.startDate ? new Date(this.selectedTask.startDate).toISOString().split('T')[0] : '',
         clientId: clientId,
         agentIds: this.selectedTask.agentIds ? [...this.selectedTask.agentIds] : [],
         agentNames: this.selectedTask.agentNames ? [...this.selectedTask.agentNames] : [],
@@ -1187,6 +1192,7 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       taskData.priority = this.taskForm.priority;
       taskData.assignees = this.taskForm.assignees;
       taskData.dueDate = this.taskForm.dueDate || undefined;
+      taskData.startDate = this.taskForm.startDate || undefined;
       // Adjuntos - se manejan directamente en el componente task-modal
       taskData.boardId = this.boardId;
       taskData.projectId = this.board!.projectId._id;
