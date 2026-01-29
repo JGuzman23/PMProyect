@@ -530,11 +530,26 @@
                       client.phone
                     }}</span>
                   </div>
+                  <div *ngIf="client.address && (client.address.street || client.address.city || client.address.state || client.address.zip || client.address.country)" class="mt-2">
+                    <span class="text-xs font-medium text-gray-500 block mb-1"
+                      >{{ ("tasks.address" | translate) || "Dirección" }}:</span
+                    >
+                    <div class="text-sm text-gray-900">
+                      <div *ngIf="client.address.street">{{ client.address.street }}</div>
+                      <div *ngIf="client.address.city || client.address.state || client.address.zip">
+                        <span *ngIf="client.address.city">{{ client.address.city }}</span>
+                        <span *ngIf="client.address.city && client.address.state">, </span>
+                        <span *ngIf="client.address.state">{{ client.address.state }}</span>
+                        <span *ngIf="(client.address.city || client.address.state) && client.address.zip"> </span>
+                        <span *ngIf="client.address.zip">{{ client.address.zip }}</span>
+                      </div>
+                      <div *ngIf="client.address.country">{{ client.address.country }}</div>
+                    </div>
+                  </div>
                   <div
                     *ngIf="
                       client.type === 'empresa' &&
-                      client.agents &&
-                      client.agents.length > 0
+                      getSelectedAgentsForDisplay().length > 0
                     "
                     class="mt-2 pt-2 border-t border-gray-200"
                   >
@@ -543,20 +558,34 @@
                     >
                     <div class="space-y-1">
                       <div
-                        *ngFor="let agent of client.agents"
-                        class="text-sm text-gray-900"
+                        *ngFor="let agent of getSelectedAgentsForDisplay()"
+                        class="text-sm text-gray-900 mb-2 pb-2 border-b border-gray-200 last:border-b-0"
                       >
-                        <span class="font-medium">{{ agent.name }}</span>
-                        <span
-                          *ngIf="agent.email"
-                          class="text-xs text-gray-600 ml-2"
-                          >({{ agent.email }})</span
-                        >
-                        <span
-                          *ngIf="agent.phone"
-                          class="text-xs text-gray-600 ml-2"
-                          >{{ agent.phone }}</span
-                        >
+                        <div class="mb-1">
+                          <span class="font-medium">{{ agent.name }}</span>
+                          <span
+                            *ngIf="agent.email"
+                            class="text-xs text-gray-600 ml-2"
+                            >({{ agent.email }})</span
+                          >
+                          <span
+                            *ngIf="agent.phone"
+                            class="text-xs text-gray-600 ml-2"
+                            >{{ agent.phone }}</span
+                          >
+                        </div>
+                        <div *ngIf="agent.address && (agent.address.street || agent.address.city || agent.address.state || agent.address.zip || agent.address.country)" class="text-xs text-gray-600 mt-1.5">
+                          <div class="font-medium text-gray-500 mb-0.5">{{ ("tasks.address" | translate) || "Dirección" }}:</div>
+                          <div *ngIf="agent.address.street" class="ml-2">{{ agent.address.street }}</div>
+                          <div *ngIf="agent.address.city || agent.address.state || agent.address.zip" class="ml-2">
+                            <span *ngIf="agent.address.city">{{ agent.address.city }}</span>
+                            <span *ngIf="agent.address.city && agent.address.state">, </span>
+                            <span *ngIf="agent.address.state">{{ agent.address.state }}</span>
+                            <span *ngIf="(agent.address.city || agent.address.state) && agent.address.zip"> </span>
+                            <span *ngIf="agent.address.zip">{{ agent.address.zip }}</span>
+                          </div>
+                          <div *ngIf="agent.address.country" class="ml-2">{{ agent.address.country }}</div>
+                        </div>
                       </div>
                     </div>
                   </div>

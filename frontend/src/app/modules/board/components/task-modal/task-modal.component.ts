@@ -23,6 +23,13 @@ interface Agent {
   name: string;
   phone: string;
   email: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
 }
 
 interface Client {
@@ -35,6 +42,13 @@ interface Client {
   company?: string;
   agents?: Agent[];
   lastName?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
   isActive: boolean;
 }
 
@@ -525,6 +539,47 @@ export class TaskModalComponent implements OnInit, OnChanges {
         return this.selectedClient!.agents![index];
       })
       .filter(agent => agent !== undefined);
+  }
+
+  getSelectedAgentsForDisplay(): Agent[] {
+    // Obtener los nombres de agentes seleccionados
+    // Priorizar task.agentNames si existe (modo vista), sino usar taskForm.agentNames (modo edición)
+    const agentNames = this.task?.agentNames && this.task.agentNames.length > 0
+      ? this.task.agentNames
+      : (this.taskForm.agentNames && this.taskForm.agentNames.length > 0
+          ? this.taskForm.agentNames
+          : []);
+    
+    if (agentNames.length === 0) return [];
+    
+    // Obtener el cliente actual - primero intentar con selectedClient, luego con getClientById
+    let client = this.selectedClient;
+    
+    if (!client) {
+      const clientId = this.getClientIdAsString();
+      client = this.getClientById(clientId);
+    }
+    
+    // Si aún no tenemos el cliente, intentar obtenerlo desde task.clientId
+    if (!client && this.task?.clientId) {
+      if (typeof this.task.clientId === 'object') {
+        client = this.task.clientId;
+      } else {
+        client = this.clients.find(c => c._id === this.task?.clientId) || null;
+      }
+    }
+    
+    if (!client || !client.agents || client.agents.length === 0) return [];
+    
+    // Filtrar solo los agentes que están en la lista de nombres seleccionados
+    // Usar comparación case-insensitive para mayor robustez
+    const filteredAgents = client.agents.filter(agent => {
+      return agentNames.some(name => 
+        name.trim().toLowerCase() === agent.name.trim().toLowerCase()
+      );
+    });
+    
+    return filteredAgents;
   }
 
   getSelectedUsers(): User[] {

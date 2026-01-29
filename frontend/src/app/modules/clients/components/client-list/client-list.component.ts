@@ -11,6 +11,13 @@ interface Agent {
   name: string;
   phone: string;
   email: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
 }
 
 interface Client {

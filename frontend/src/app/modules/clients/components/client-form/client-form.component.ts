@@ -11,6 +11,13 @@ interface Agent {
   name: string;
   phone: string;
   email: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
 }
 
 interface Client {
@@ -56,6 +63,14 @@ export class ClientFormComponent implements OnInit {
   showStateDropdown = false;
   countryFilter = '';
   stateFilter = '';
+  
+  // Para agentes: arrays para manejar múltiples dropdowns
+  agentCountrySearchTerms: { [key: number]: string } = {};
+  agentStateSearchTerms: { [key: number]: string } = {};
+  showAgentCountryDropdowns: { [key: number]: boolean } = {};
+  showAgentStateDropdowns: { [key: number]: boolean } = {};
+  agentCountryFilters: { [key: number]: string } = {};
+  agentStateFilters: { [key: number]: string } = {};
 
   // Países y estados
   countries = [
@@ -167,12 +182,116 @@ export class ClientFormComponent implements OnInit {
     this.showStateDropdown = false;
   }
 
+  // Métodos para comboboxes de agentes
+  getStatesForAgentCountry(agentIndex: number): string[] {
+    const country = this.clientForm.agents[agentIndex]?.address?.country || '';
+    return this.statesByCountry[country] || [];
+  }
+
+  getFilteredAgentCountries(agentIndex: number): { value: string; label: string }[] {
+    const filter = this.agentCountryFilters[agentIndex] || '';
+    if (!filter || filter.trim() === '') {
+      return this.countries;
+    }
+    const search = filter.toLowerCase().trim();
+    return this.countries.filter(country => 
+      country.label.toLowerCase().includes(search) || 
+      country.value.toLowerCase().includes(search)
+    );
+  }
+
+  getFilteredAgentStates(agentIndex: number): string[] {
+    const states = this.getStatesForAgentCountry(agentIndex);
+    const filter = this.agentStateFilters[agentIndex] || '';
+    if (!filter || filter.trim() === '') {
+      return states;
+    }
+    const search = filter.toLowerCase().trim();
+    return states.filter(state => state.toLowerCase().includes(search));
+  }
+
+  onAgentCountryChange(agentIndex: number): void {
+    if (this.clientForm.agents[agentIndex]?.address) {
+      this.clientForm.agents[agentIndex].address.state = '';
+      this.agentStateSearchTerms[agentIndex] = '';
+    }
+  }
+
+  getAgentCountryPlaceholder(agentIndex: number): string {
+    return `${this.translationService.translate('common.search')} ${this.translationService.translate('clients.country')}`;
+  }
+
+  getAgentStatePlaceholder(agentIndex: number): string {
+    return `${this.translationService.translate('common.search')} ${this.translationService.translate('clients.state')}`;
+  }
+
+  toggleAgentCountryDropdown(agentIndex: number): void {
+    this.showAgentCountryDropdowns[agentIndex] = !this.showAgentCountryDropdowns[agentIndex];
+    if (this.showAgentCountryDropdowns[agentIndex]) {
+      this.agentCountryFilters[agentIndex] = '';
+    }
+  }
+
+  toggleAgentStateDropdown(agentIndex: number): void {
+    if (!this.clientForm.agents[agentIndex]?.address?.country || this.getStatesForAgentCountry(agentIndex).length === 0) {
+      return;
+    }
+    this.showAgentStateDropdowns[agentIndex] = !this.showAgentStateDropdowns[agentIndex];
+    if (this.showAgentStateDropdowns[agentIndex]) {
+      this.agentStateFilters[agentIndex] = '';
+    }
+  }
+
+  selectAgentCountry(agentIndex: number, country: { value: string; label: string }): void {
+    if (!this.clientForm.agents[agentIndex]?.address) {
+      this.clientForm.agents[agentIndex].address = {
+        street: '',
+        city: '',
+        state: '',
+        zip: '',
+        country: ''
+      };
+    }
+    this.clientForm.agents[agentIndex].address.country = country.value;
+    this.agentCountrySearchTerms[agentIndex] = country.label;
+    this.showAgentCountryDropdowns[agentIndex] = false;
+    this.agentCountryFilters[agentIndex] = '';
+    this.onAgentCountryChange(agentIndex);
+  }
+
+  selectAgentState(agentIndex: number, state: string): void {
+    if (!this.clientForm.agents[agentIndex]?.address) {
+      this.clientForm.agents[agentIndex].address = {
+        street: '',
+        city: '',
+        state: '',
+        zip: '',
+        country: ''
+      };
+    }
+    this.clientForm.agents[agentIndex].address.state = state;
+    this.agentStateSearchTerms[agentIndex] = state;
+    this.showAgentStateDropdowns[agentIndex] = false;
+    this.agentStateFilters[agentIndex] = '';
+  }
+
+  closeAgentDropdowns(agentIndex: number): void {
+    this.showAgentCountryDropdowns[agentIndex] = false;
+    this.showAgentStateDropdowns[agentIndex] = false;
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.country-dropdown-container') && !target.closest('.state-dropdown-container')) {
       this.closeDropdowns();
     }
+    // Cerrar dropdowns de agentes si se hace clic fuera
+    this.clientForm.agents.forEach((_agent: Agent, index: number) => {
+      if (!target.closest(`.agent-country-dropdown-${index}`) && !target.closest(`.agent-state-dropdown-${index}`)) {
+        this.closeAgentDropdowns(index);
+      }
+    });
   }
 
   currentStep = 1;
@@ -240,7 +359,16 @@ export class ClientFormComponent implements OnInit {
           phones: phones,
           company: client.company || '',
           website: client.website || '',
-          agents: client.agents ? [...client.agents] : [],
+          agents: client.agents ? client.agents.map(agent => ({
+            ...agent,
+            address: agent.address || {
+              street: '',
+              city: '',
+              state: '',
+              zip: '',
+              country: ''
+            }
+          })) : [],
           lastName: client.lastName || '',
           documentType: client.documentType || '',
           documentNumber: client.documentNumber || '',
@@ -261,6 +389,16 @@ export class ClientFormComponent implements OnInit {
         if (this.clientForm.address?.state) {
           this.stateSearchTerm = this.clientForm.address.state;
         }
+        // Inicializar términos de búsqueda para los agentes
+        this.clientForm.agents.forEach((agent: Agent, index: number) => {
+          if (agent.address?.country) {
+            const selectedCountry = this.countries.find(c => c.value === agent.address?.country);
+            this.agentCountrySearchTerms[index] = selectedCountry ? selectedCountry.label : (agent.address?.country || '');
+          }
+          if (agent.address?.state) {
+            this.agentStateSearchTerms[index] = agent.address.state;
+          }
+        });
         this.loading = false;
       },
       error: (err) => {
@@ -274,7 +412,14 @@ export class ClientFormComponent implements OnInit {
     this.clientForm.agents.push({
       name: '',
       phone: '',
-      email: ''
+      email: '',
+      address: {
+        street: '',
+        city: '',
+        state: '',
+        zip: '',
+        country: ''
+      }
     });
   }
 
@@ -402,7 +547,14 @@ export class ClientFormComponent implements OnInit {
           .map((agent: Agent) => ({
             name: agent.name.trim(),
             phone: agent.phone?.trim() || '',
-            email: agent.email?.trim() || ''
+            email: agent.email?.trim() || '',
+            address: agent.address ? {
+              street: agent.address.street?.trim() || '',
+              city: agent.address.city?.trim() || '',
+              state: agent.address.state?.trim() || '',
+              zip: agent.address.zip?.trim() || '',
+              country: agent.address.country?.trim() || ''
+            } : undefined
           }));
       } else {
         dataToSend.agents = [];

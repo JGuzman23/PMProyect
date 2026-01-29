@@ -78,6 +78,13 @@ const clientSchema = new mongoose.Schema({
       type: String,
       lowercase: true,
       trim: true
+    },
+    address: {
+      street: String,
+      city: String,
+      state: String,
+      zip: String,
+      country: String
     }
   }],
   // Campos específicos para tipo persona
