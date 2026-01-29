@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { TaskModalComponent } from '../../../board/components/task-modal/task-modal.component';
 import { TranslationService, Language } from '../../../../core/services/translation.service';
+import { DateService } from '../../../../core/services/date.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, EventInput, EventApi, DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core';
@@ -145,7 +146,11 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
   private apiUrl = environment.apiUrl;
   staticFilesUrl = environment.apiUrl.replace('/api', '');
 
-  constructor(private http: HttpClient, public translationService: TranslationService) {
+  constructor(
+    private http: HttpClient, 
+    public translationService: TranslationService,
+    private dateService: DateService
+  ) {
   }
 
   ngOnInit(): void {
@@ -554,17 +559,17 @@ export class CalendarViewComponent implements OnInit, OnDestroy {
     }
 
     // Fecha de inicio
-    const oldStartDate = oldTask.startDate ? new Date(oldTask.startDate).toISOString().split('T')[0] : '';
+    const oldStartDate = this.dateService.formatDateForInput(oldTask.startDate);
     const newStartDate = taskFormData.startDate || '';
     if (oldStartDate !== newStartDate) {
-      taskData.startDate = taskFormData.startDate || undefined;
+      taskData.startDate = this.dateService.dateInputToISO(taskFormData.startDate);
     }
 
     // Fecha de fin
-    const oldDueDate = oldTask.dueDate ? new Date(oldTask.dueDate).toISOString().split('T')[0] : '';
+    const oldDueDate = this.dateService.formatDateForInput(oldTask.dueDate);
     const newDueDate = taskFormData.dueDate || '';
     if (oldDueDate !== newDueDate) {
-      taskData.dueDate = taskFormData.dueDate || undefined;
+      taskData.dueDate = this.dateService.dateInputToISO(taskFormData.dueDate);
     }
 
     // Cliente

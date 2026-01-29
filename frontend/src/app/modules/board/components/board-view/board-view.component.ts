@@ -11,6 +11,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { TaskModalComponent } from '../task-modal/task-modal.component';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { TranslationService } from '../../../../core/services/translation.service';
+import { DateService } from '../../../../core/services/date.service';
 import { ComboboxComponent } from '../../../../core/components/combobox/combobox.component';
 
 interface User {
@@ -208,7 +209,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     private router: Router,
     private http: HttpClient,
     private authService: AuthService,
-    public translationService: TranslationService
+    public translationService: TranslationService,
+    private dateService: DateService
   ) {}
 
   ngOnInit(): void {
@@ -632,8 +634,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         description: task.description || '',
         priority: task.priority,
         assignees: task.assignees ? task.assignees.map(a => typeof a === 'object' ? a._id : a) : [],
-        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
-        startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
+        dueDate: this.dateService.formatDateForInput(task.dueDate),
+        startDate: this.dateService.formatDateForInput(task.startDate),
         clientId: clientId,
         agentIds: task.agentIds ? [...task.agentIds] : [],
         agentNames: task.agentNames ? [...task.agentNames] : [],
@@ -733,8 +735,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         description: this.selectedTask.description || '',
         priority: this.selectedTask.priority,
         assignees: this.selectedTask.assignees ? this.selectedTask.assignees.map(a => typeof a === 'object' ? a._id : a) : [],
-        dueDate: this.selectedTask.dueDate ? new Date(this.selectedTask.dueDate).toISOString().split('T')[0] : '',
-        startDate: this.selectedTask.startDate ? new Date(this.selectedTask.startDate).toISOString().split('T')[0] : '',
+        dueDate: this.dateService.formatDateForInput(this.selectedTask.dueDate),
+        startDate: this.dateService.formatDateForInput(this.selectedTask.startDate),
         clientId: clientId,
         agentIds: this.selectedTask.agentIds ? [...this.selectedTask.agentIds] : [],
         agentNames: this.selectedTask.agentNames ? [...this.selectedTask.agentNames] : [],
@@ -985,6 +987,18 @@ export class BoardViewComponent implements OnInit, OnDestroy {
 
   formatDate(dateString: string): string {
     if (!dateString) return '';
+    const currentLang = this.translationService.getCurrentLanguageValue();
+    const localeMap: { [key: string]: string } = {
+      'es': 'es-ES',
+      'en': 'en-US',
+      'fr': 'fr-FR',
+      'de': 'de-DE',
+      'pt': 'pt-PT',
+      'it': 'it-IT'
+    };
+    const locale = localeMap[currentLang] || 'es-ES';
+    const formatted = this.dateService.formatDateForDisplay(dateString, locale);
+    // Convertir formato "15 ene 2024" a "15/01/2024" para mantener consistencia visual
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -1154,17 +1168,17 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       }
       
       // Fecha de inicio
-      const oldStartDate = oldTask.startDate ? new Date(oldTask.startDate).toISOString().split('T')[0] : '';
+      const oldStartDate = this.dateService.formatDateForInput(oldTask.startDate);
       const newStartDate = this.taskForm.startDate || '';
       if (oldStartDate !== newStartDate) {
-        taskData.startDate = this.taskForm.startDate || undefined;
+        taskData.startDate = this.dateService.dateInputToISO(this.taskForm.startDate);
       }
       
       // Fecha de fin
-      const oldDueDate = oldTask.dueDate ? new Date(oldTask.dueDate).toISOString().split('T')[0] : '';
+      const oldDueDate = this.dateService.formatDateForInput(oldTask.dueDate);
       const newDueDate = this.taskForm.dueDate || '';
       if (oldDueDate !== newDueDate) {
-        taskData.dueDate = this.taskForm.dueDate || undefined;
+        taskData.dueDate = this.dateService.dateInputToISO(this.taskForm.dueDate);
       }
       
       // Cliente
@@ -1198,8 +1212,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       taskData.description = this.taskForm.description;
       taskData.priority = this.taskForm.priority;
       taskData.assignees = this.taskForm.assignees;
-      taskData.dueDate = this.taskForm.dueDate || undefined;
-      taskData.startDate = this.taskForm.startDate || undefined;
+      taskData.dueDate = this.dateService.dateInputToISO(this.taskForm.dueDate);
+      taskData.startDate = this.dateService.dateInputToISO(this.taskForm.startDate);
       // Adjuntos - se manejan directamente en el componente task-modal
       taskData.boardId = this.boardId;
       taskData.projectId = this.board!.projectId._id;
@@ -1936,7 +1950,17 @@ export class BoardViewComponent implements OnInit, OnDestroy {
     if (diffMins < 60) return `Hace ${diffMins} minuto${diffMins > 1 ? 's' : ''}`;
     if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
     if (diffDays < 7) return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
-    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const currentLang = this.translationService.getCurrentLanguageValue();
+    const localeMap: { [key: string]: string } = {
+      'es': 'es-ES',
+      'en': 'en-US',
+      'fr': 'fr-FR',
+      'de': 'de-DE',
+      'pt': 'pt-PT',
+      'it': 'it-IT'
+    };
+    const locale = localeMap[currentLang] || 'es-ES';
+    return date.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
   // Filter methods

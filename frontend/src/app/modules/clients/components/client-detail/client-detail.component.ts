@@ -178,8 +178,11 @@ export class ClientDetailComponent implements OnInit {
 
   formatDate(dateString?: string): string {
     if (!dateString) return '';
+    // Usar el locale del usuario basado en el idioma de la aplicación
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+    // Detectar el locale del navegador o usar un valor por defecto
+    const locale = navigator.language || 'es-ES';
+    return date.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   getStatusLabel(status?: string): string {

@@ -9,6 +9,7 @@ import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 import { TranslationService } from '../../../../core/services/translation.service';
+import { DateService } from '../../../../core/services/date.service';
 import { ComboboxComponent } from '../../../../core/components/combobox/combobox.component';
 
 interface User {
@@ -164,7 +165,8 @@ export class TaskModalComponent implements OnInit, OnChanges {
     private http: HttpClient,
     private authService: AuthService,
     private translationService: TranslationService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private dateService: DateService
   ) {}
 
   ngOnInit(): void {
@@ -356,13 +358,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
   }
 
   formatDateForInput(dateString: string | undefined): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    // Usar componentes locales para evitar problemas de timezone
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return this.dateService.formatDateForInput(dateString);
   }
 
   getAttachmentsForStatus(statusId: string): Attachment[] {
@@ -646,7 +642,17 @@ export class TaskModalComponent implements OnInit, OnChanges {
       const days = diffDays === 1 ? this.translationService.translate('tasks.days') : this.translationService.translate('tasks.daysPlural');
       return `${this.translationService.translate('tasks.ago')} ${diffDays} ${days}`;
     }
-    return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+    const currentLang = this.translationService.getCurrentLanguageValue();
+    const localeMap: { [key: string]: string } = {
+      'es': 'es-ES',
+      'en': 'en-US',
+      'fr': 'fr-FR',
+      'de': 'de-DE',
+      'pt': 'pt-PT',
+      'it': 'it-IT'
+    };
+    const locale = localeMap[currentLang] || 'es-ES';
+    return this.dateService.formatDateForDisplay(dateString, locale);
   }
 
   getActivityDescription(item: ActivityItem): string {

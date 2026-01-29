@@ -378,7 +378,7 @@
                      <span class="text-[10px]">{{ "tasks.noStartDate" | translate }}</span>
                    </div>
                    <div *ngIf="taskForm.startDate" class="font-medium text-xs">
-                     {{ formatDate(taskForm.startDate) }}
+                     {{ taskForm.startDate| date:'MM/dd/yyyy' }}
                    </div>
                  </div>
                </div>
@@ -414,7 +414,7 @@
                      <span class="text-[10px]">{{ "tasks.noDueDate" | translate }}</span>
                    </div>
                    <div *ngIf="taskForm.dueDate" class="font-medium text-xs">
-                     {{ formatDate(taskForm.dueDate) }}
+                     {{ taskForm.dueDate | date:'MM/dd/yyyy' }}
                    </div>
                  </div>
                </div>
