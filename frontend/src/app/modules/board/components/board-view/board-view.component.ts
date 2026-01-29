@@ -60,7 +60,7 @@ interface Comment {
 
 interface ActivityLog {
   _id?: string;
-  type: 'created' | 'status_changed' | 'priority_changed' | 'assignees_changed' | 'client_changed' | 'due_date_changed' | 'title_changed' | 'description_changed' | 'comment_added' | 'attachment_added' | 'attachment_removed';
+  type: 'created' | 'status_changed' | 'priority_changed' | 'assignees_changed' | 'client_changed' | 'due_date_changed' | 'start_date_changed' | 'title_changed' | 'description_changed' | 'comment_added' | 'attachment_added' | 'attachment_removed';
   userId: User | string;
   oldValue?: any;
   newValue?: any;
@@ -1891,6 +1891,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
         return 'Cliente modificado';
       case 'due_date_changed':
         return 'Fecha de fin modificada';
+      case 'start_date_changed':
+        return 'Fecha de inicio modificada';
       case 'title_changed':
         return `Título cambiado de "${activity.oldValue}" a "${activity.newValue}"`;
       case 'description_changed':
@@ -1921,6 +1923,8 @@ export class BoardViewComponent implements OnInit, OnDestroy {
       case 'client_changed':
         return 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z';
       case 'due_date_changed':
+        return 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z';
+      case 'start_date_changed':
         return 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z';
       case 'title_changed':
         return 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z';
