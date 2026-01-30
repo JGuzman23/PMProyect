@@ -143,7 +143,9 @@ export class TranslationService {
         noResults: 'No se encontraron resultados',
         view: 'Ver',
         remove: 'Eliminar',
-        select: 'Seleccionar'
+        select: 'Seleccionar',
+        collapse: 'Colapsar',
+        expand: 'Expandir'
       },
       footer: {
         createdBy: 'Creado por',
@@ -668,7 +670,9 @@ export class TranslationService {
         confirm: 'Confirm',
         view: 'View',
         remove: 'Remove',
-        select: 'Select'
+        select: 'Select',
+        collapse: 'Collapse',
+        expand: 'Expand'
       },
       footer: {
         createdBy: 'Created by',
@@ -1190,7 +1194,9 @@ export class TranslationService {
         yes: 'Oui',
         no: 'Non',
         confirm: 'Confirmer',
-        select: 'Sélectionner'
+        select: 'Sélectionner',
+        collapse: 'Réduire',
+        expand: 'Développer'
       },
       footer: {
         createdBy: 'Créé par',
@@ -1592,7 +1598,9 @@ export class TranslationService {
         yes: 'Ja',
         no: 'Nein',
         confirm: 'Bestätigen',
-        select: 'Auswählen'
+        select: 'Auswählen',
+        collapse: 'Einklappen',
+        expand: 'Ausklappen'
       },
       footer: {
         createdBy: 'Erstellt von',
@@ -2001,7 +2009,9 @@ export class TranslationService {
         yes: 'Sim',
         no: 'Não',
         confirm: 'Confirmar',
-        select: 'Selecionar'
+        select: 'Selecionar',
+        collapse: 'Recolher',
+        expand: 'Expandir'
       },
       footer: {
         createdBy: 'Criado por',
@@ -2405,7 +2415,9 @@ export class TranslationService {
         yes: 'Sì',
         no: 'No',
         confirm: 'Conferma',
-        select: 'Seleziona'
+        select: 'Seleziona',
+        collapse: 'Comprimi',
+        expand: 'Espandi'
       },
       footer: {
         createdBy: 'Creato da',

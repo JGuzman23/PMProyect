@@ -135,6 +135,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
   isEditMode = false;
   showTaskActionsDropdown = false;
+  isCompanyInfoCollapsed = false; // Para colapsar información de empresa
   pendingFiles: File[] = [];
   uploadingFiles = false;
   dragOverStatusId: string | null = null;
@@ -257,7 +258,12 @@ export class TaskModalComponent implements OnInit, OnChanges {
   }
 
   closeModal(): void {
+    this.isCompanyInfoCollapsed = false; // Resetear el estado de colapso
     this.close.emit();
+  }
+
+  toggleCompanyInfo(): void {
+    this.isCompanyInfoCollapsed = !this.isCompanyInfoCollapsed;
   }
 
   enableEditMode(): void {

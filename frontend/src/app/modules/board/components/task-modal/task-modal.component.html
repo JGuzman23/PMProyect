@@ -492,66 +492,92 @@
                 *ngIf="getClientById(getClientIdAsString()); let client"
               >
                 <div class="space-y-2">
-                  <div>
-                    <span class="text-xs font-medium text-gray-500"
-                      >{{ "tasks.client" | translate }}:</span
+                  <!-- Header con botón de colapsar para empresas -->
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <span class="text-xs font-medium text-gray-500"
+                        >{{ "tasks.client" | translate }}:</span
+                      >
+                      <span class="ml-2 text-sm text-gray-900 font-medium">
+                        {{ client.name
+                        }}{{
+                          client.type === "persona" && client.lastName
+                            ? " " + client.lastName
+                            : ""
+                        }}
+                      </span>
+                      <span
+                        class="ml-2 px-2 py-0.5 text-xs rounded-full"
+                        [class.bg-blue-100]="client.type === 'empresa'"
+                        [class.text-blue-800]="client.type === 'empresa'"
+                        [class.bg-purple-100]="client.type === 'persona'"
+                        [class.text-purple-800]="client.type === 'persona'"
+                      >
+                        {{ client.type === "empresa" ? "Empresa" : "Persona" }}
+                      </span>
+                    </div>
+                    <!-- Botón de colapsar solo para empresas -->
+                    <button
+                      *ngIf="client.type === 'empresa'"
+                      type="button"
+                      (click)="toggleCompanyInfo()"
+                      class="ml-2 text-gray-500 hover:text-gray-700 transition-transform"
+                      [class.rotate-180]="isCompanyInfoCollapsed"
+                      [title]="isCompanyInfoCollapsed ? ('common.expand' | translate) || 'Expandir' : ('common.collapse' | translate) || 'Colapsar'"
                     >
-                    <span class="ml-2 text-sm text-gray-900 font-medium">
-                      {{ client.name
-                      }}{{
-                        client.type === "persona" && client.lastName
-                          ? " " + client.lastName
-                          : ""
-                      }}
-                    </span>
-                    <span
-                      class="ml-2 px-2 py-0.5 text-xs rounded-full"
-                      [class.bg-blue-100]="client.type === 'empresa'"
-                      [class.text-blue-800]="client.type === 'empresa'"
-                      [class.bg-purple-100]="client.type === 'persona'"
-                      [class.text-purple-800]="client.type === 'persona'"
-                    >
-                      {{ client.type === "empresa" ? "Empresa" : "Persona" }}
-                    </span>
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
                   </div>
-                  <div *ngIf="client.email">
-                    <span class="text-xs font-medium text-gray-500"
-                      >{{ "tasks.email" | translate }}:</span
-                    >
-                    <span class="ml-2 text-sm text-gray-900">{{
-                      client.email
-                    }}</span>
-                  </div>
-                  <div *ngIf="client.phone">
-                    <span class="text-xs font-medium text-gray-500"
-                      >{{ "tasks.phone" | translate }}:</span
-                    >
-                    <span class="ml-2 text-sm text-gray-900">{{
-                      client.phone
-                    }}</span>
-                  </div>
-                  <div *ngIf="client.address && (client.address.street || client.address.city || client.address.state || client.address.zip || client.address.country)" class="mt-2">
-                    <span class="text-xs font-medium text-gray-500 block mb-1"
-                      >{{ ("tasks.address" | translate) || "Dirección" }}:</span
-                    >
-                    <div class="text-sm text-gray-900">
-                      <div *ngIf="client.address.street">{{ client.address.street }}</div>
-                      <div *ngIf="client.address.city || client.address.state || client.address.zip">
-                        <span *ngIf="client.address.city">{{ client.address.city }}</span>
-                        <span *ngIf="client.address.city && client.address.state">, </span>
-                        <span *ngIf="client.address.state">{{ client.address.state }}</span>
-                        <span *ngIf="(client.address.city || client.address.state) && client.address.zip"> </span>
-                        <span *ngIf="client.address.zip">{{ client.address.zip }}</span>
+                  <!-- Información de la empresa (colapsable) -->
+                  <div 
+                    *ngIf="client.type !== 'empresa' || !isCompanyInfoCollapsed"
+                    class="space-y-2 transition-all duration-300"
+                  >
+                    <div *ngIf="client.email">
+                      <span class="text-xs font-medium text-gray-500"
+                        >{{ "tasks.email" | translate }}:</span
+                      >
+                      <span class="ml-2 text-sm text-gray-900">{{
+                        client.email
+                      }}</span>
+                    </div>
+                    <div *ngIf="client.phone">
+                      <span class="text-xs font-medium text-gray-500"
+                        >{{ "tasks.phone" | translate }}:</span
+                      >
+                      <span class="ml-2 text-sm text-gray-900">{{
+                        client.phone
+                      }}</span>
+                    </div>
+                    <div *ngIf="client.address && (client.address.street || client.address.city || client.address.state || client.address.zip || client.address.country)" class="mt-2">
+                      <span class="text-xs font-medium text-gray-500 block mb-1"
+                        >{{ ("tasks.address" | translate) || "Dirección" }}:</span
+                      >
+                      <div class="text-sm text-gray-900">
+                        <div *ngIf="client.address.street">{{ client.address.street }}</div>
+                        <div *ngIf="client.address.city || client.address.state || client.address.zip">
+                          <span *ngIf="client.address.city">{{ client.address.city }}</span>
+                          <span *ngIf="client.address.city && client.address.state">, </span>
+                          <span *ngIf="client.address.state">{{ client.address.state }}</span>
+                          <span *ngIf="(client.address.city || client.address.state) && client.address.zip"> </span>
+                          <span *ngIf="client.address.zip">{{ client.address.zip }}</span>
+                        </div>
+                        <div *ngIf="client.address.country">{{ client.address.country }}</div>
                       </div>
-                      <div *ngIf="client.address.country">{{ client.address.country }}</div>
                     </div>
                   </div>
+                  <!-- Agentes (siempre visibles para empresas) -->
                   <div
                     *ngIf="
                       client.type === 'empresa' &&
                       getSelectedAgentsForDisplay().length > 0
                     "
-                    class="mt-2 pt-2 border-t border-gray-200"
+                    [class.mt-2]="!isCompanyInfoCollapsed"
+                    [class.pt-2]="!isCompanyInfoCollapsed"
+                    [class.border-t]="!isCompanyInfoCollapsed"
+                    [class.border-gray-200]="!isCompanyInfoCollapsed"
                   >
                     <span class="text-xs font-medium text-gray-500 block mb-1"
                       >{{ "tasks.agents" | translate }}:</span
