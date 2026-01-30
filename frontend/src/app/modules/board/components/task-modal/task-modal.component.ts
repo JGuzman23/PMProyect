@@ -783,7 +783,9 @@ export class TaskModalComponent implements OnInit, OnChanges {
       });
     });
 
-    this.activityItems = items.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    this.activityItems = items.sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    );
   }
 
   onCommentChange(event: Event): void {
