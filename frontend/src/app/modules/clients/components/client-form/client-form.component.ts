@@ -57,6 +57,35 @@ export class ClientFormComponent implements OnInit {
   loading = false;
   emailError = false;
   agentEmailErrors: { [key: number]: boolean } = {};
+  // Agent Modal (same as client-detail)
+  showAgentModal = false;
+  selectedAgent: Agent | null = null;
+  selectedAgentIndex: number = -1;
+  isEditingAgent = false;
+  isAddingAgent = false;
+  agentCountrySearchTerm: string = '';
+  agentStateSearchTerm: string = '';
+  showAgentCountryDropdown: boolean = false;
+  showAgentStateDropdown: boolean = false;
+  agentCountryFilter: string = '';
+  agentStateFilter: string = '';
+
+  // Agent Pagination (for edit mode)
+  agentCurrentPage = 1;
+  agentItemsPerPage = 5;
+  get agentTotalPages(): number {
+    if (!this.clientForm.agents || this.clientForm.agents.length === 0) return 0;
+    return Math.ceil(this.clientForm.agents.length / this.agentItemsPerPage);
+  }
+  get paginatedAgents(): Agent[] {
+    if (!this.clientForm.agents || this.clientForm.agents.length === 0) return [];
+    const start = (this.agentCurrentPage - 1) * this.agentItemsPerPage;
+    const end = start + this.agentItemsPerPage;
+    return this.clientForm.agents.slice(start, end);
+  }
+  get agentStartIndex(): number {
+    return (this.agentCurrentPage - 1) * this.agentItemsPerPage;
+  }
   countrySearchTerm = '';
   stateSearchTerm = '';
   showCountryDropdown = false;
@@ -182,103 +211,6 @@ export class ClientFormComponent implements OnInit {
     this.showStateDropdown = false;
   }
 
-  // Métodos para comboboxes de agentes
-  getStatesForAgentCountry(agentIndex: number): string[] {
-    const country = this.clientForm.agents[agentIndex]?.address?.country || '';
-    return this.statesByCountry[country] || [];
-  }
-
-  getFilteredAgentCountries(agentIndex: number): { value: string; label: string }[] {
-    const filter = this.agentCountryFilters[agentIndex] || '';
-    if (!filter || filter.trim() === '') {
-      return this.countries;
-    }
-    const search = filter.toLowerCase().trim();
-    return this.countries.filter(country => 
-      country.label.toLowerCase().includes(search) || 
-      country.value.toLowerCase().includes(search)
-    );
-  }
-
-  getFilteredAgentStates(agentIndex: number): string[] {
-    const states = this.getStatesForAgentCountry(agentIndex);
-    const filter = this.agentStateFilters[agentIndex] || '';
-    if (!filter || filter.trim() === '') {
-      return states;
-    }
-    const search = filter.toLowerCase().trim();
-    return states.filter(state => state.toLowerCase().includes(search));
-  }
-
-  onAgentCountryChange(agentIndex: number): void {
-    if (this.clientForm.agents[agentIndex]?.address) {
-      this.clientForm.agents[agentIndex].address.state = '';
-      this.agentStateSearchTerms[agentIndex] = '';
-    }
-  }
-
-  getAgentCountryPlaceholder(agentIndex: number): string {
-    return `${this.translationService.translate('common.search')} ${this.translationService.translate('clients.country')}`;
-  }
-
-  getAgentStatePlaceholder(agentIndex: number): string {
-    return `${this.translationService.translate('common.search')} ${this.translationService.translate('clients.state')}`;
-  }
-
-  toggleAgentCountryDropdown(agentIndex: number): void {
-    this.showAgentCountryDropdowns[agentIndex] = !this.showAgentCountryDropdowns[agentIndex];
-    if (this.showAgentCountryDropdowns[agentIndex]) {
-      this.agentCountryFilters[agentIndex] = '';
-    }
-  }
-
-  toggleAgentStateDropdown(agentIndex: number): void {
-    if (!this.clientForm.agents[agentIndex]?.address?.country || this.getStatesForAgentCountry(agentIndex).length === 0) {
-      return;
-    }
-    this.showAgentStateDropdowns[agentIndex] = !this.showAgentStateDropdowns[agentIndex];
-    if (this.showAgentStateDropdowns[agentIndex]) {
-      this.agentStateFilters[agentIndex] = '';
-    }
-  }
-
-  selectAgentCountry(agentIndex: number, country: { value: string; label: string }): void {
-    if (!this.clientForm.agents[agentIndex]?.address) {
-      this.clientForm.agents[agentIndex].address = {
-        street: '',
-        city: '',
-        state: '',
-        zip: '',
-        country: ''
-      };
-    }
-    this.clientForm.agents[agentIndex].address.country = country.value;
-    this.agentCountrySearchTerms[agentIndex] = country.label;
-    this.showAgentCountryDropdowns[agentIndex] = false;
-    this.agentCountryFilters[agentIndex] = '';
-    this.onAgentCountryChange(agentIndex);
-  }
-
-  selectAgentState(agentIndex: number, state: string): void {
-    if (!this.clientForm.agents[agentIndex]?.address) {
-      this.clientForm.agents[agentIndex].address = {
-        street: '',
-        city: '',
-        state: '',
-        zip: '',
-        country: ''
-      };
-    }
-    this.clientForm.agents[agentIndex].address.state = state;
-    this.agentStateSearchTerms[agentIndex] = state;
-    this.showAgentStateDropdowns[agentIndex] = false;
-    this.agentStateFilters[agentIndex] = '';
-  }
-
-  closeAgentDropdowns(agentIndex: number): void {
-    this.showAgentCountryDropdowns[agentIndex] = false;
-    this.showAgentStateDropdowns[agentIndex] = false;
-  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
@@ -286,12 +218,10 @@ export class ClientFormComponent implements OnInit {
     if (!target.closest('.country-dropdown-container') && !target.closest('.state-dropdown-container')) {
       this.closeDropdowns();
     }
-    // Cerrar dropdowns de agentes si se hace clic fuera
-    this.clientForm.agents.forEach((_agent: Agent, index: number) => {
-      if (!target.closest(`.agent-country-dropdown-${index}`) && !target.closest(`.agent-state-dropdown-${index}`)) {
-        this.closeAgentDropdowns(index);
-      }
-    });
+    // Cerrar dropdowns de agente modal si se hace clic fuera
+    if (!target.closest('.agent-country-dropdown-modal') && !target.closest('.agent-state-dropdown-modal')) {
+      this.closeAgentDropdowns();
+    }
   }
 
   currentStep = 1;
@@ -425,6 +355,311 @@ export class ClientFormComponent implements OnInit {
 
   removeAgent(index: number): void {
     this.clientForm.agents.splice(index, 1);
+  }
+
+
+  // Agent methods (same as client-detail)
+  viewAgent(agent: Agent, index: number): void {
+    // Calcular el índice real en el array completo
+    const realIndex = this.agentStartIndex + index;
+    this.selectedAgent = {
+      ...agent,
+      address: agent.address || {
+        street: '',
+        city: '',
+        state: '',
+        zip: '',
+        country: ''
+      }
+    };
+    this.selectedAgentIndex = realIndex;
+    this.isEditingAgent = false;
+    this.isAddingAgent = false;
+    this.initializeAgentSearchTerms();
+    this.showAgentModal = true;
+  }
+
+  editAgent(agent: Agent, index: number): void {
+    // Calcular el índice real en el array completo
+    const realIndex = this.agentStartIndex + index;
+    this.selectedAgent = {
+      ...agent,
+      address: agent.address || {
+        street: '',
+        city: '',
+        state: '',
+        zip: '',
+        country: ''
+      }
+    };
+    this.selectedAgentIndex = realIndex;
+    this.isEditingAgent = true;
+    this.isAddingAgent = false;
+    this.initializeAgentSearchTerms();
+    this.showAgentModal = true;
+  }
+
+  addNewAgent(): void {
+    this.selectedAgent = {
+      name: '',
+      phone: '',
+      email: '',
+      address: {
+        street: '',
+        city: '',
+        state: '',
+        zip: '',
+        country: ''
+      }
+    };
+    this.selectedAgentIndex = -1;
+    this.isEditingAgent = true;
+    this.isAddingAgent = true;
+    this.agentCountrySearchTerm = '';
+    this.agentStateSearchTerm = '';
+    this.showAgentModal = true;
+  }
+
+  initializeAgentSearchTerms(): void {
+    if (this.selectedAgent?.address?.country) {
+      const selectedCountry = this.countries.find(c => c.value === this.selectedAgent?.address?.country);
+      this.agentCountrySearchTerm = selectedCountry ? selectedCountry.label : (this.selectedAgent.address.country || '');
+    } else {
+      this.agentCountrySearchTerm = '';
+    }
+    if (this.selectedAgent?.address?.state) {
+      this.agentStateSearchTerm = this.selectedAgent.address.state;
+    } else {
+      this.agentStateSearchTerm = '';
+    }
+  }
+
+  deleteAgent(index: number): void {
+    if (!this.clientForm.agents) return;
+    
+    // Calcular el índice real en el array completo
+    const realIndex = this.agentStartIndex + index;
+    const agent = this.clientForm.agents[realIndex];
+    const confirmMessage = `${this.translationService.translate('clients.confirmDeleteAgent') || '¿Está seguro de que desea eliminar al agente'} "${agent.name}"?`;
+    
+    if (confirm(confirmMessage)) {
+      // Crear una copia de los agentes sin el agente eliminado
+      const updatedAgents = this.clientForm.agents.filter((_: Agent, i: number) => i !== realIndex);
+      this.clientForm.agents = updatedAgents;
+      
+      // Ajustar la página si es necesario
+      if (this.paginatedAgents.length === 1 && this.agentCurrentPage > 1) {
+        this.agentCurrentPage--;
+      }
+      
+      // Limpiar términos de búsqueda del agente eliminado
+      delete this.agentCountrySearchTerms[realIndex];
+      delete this.agentStateSearchTerms[realIndex];
+      delete this.showAgentCountryDropdowns[realIndex];
+      delete this.showAgentStateDropdowns[realIndex];
+      delete this.agentCountryFilters[realIndex];
+      delete this.agentStateFilters[realIndex];
+    }
+  }
+
+  closeAgentModal(): void {
+    this.showAgentModal = false;
+    this.selectedAgent = null;
+    this.selectedAgentIndex = -1;
+    this.isEditingAgent = false;
+    this.isAddingAgent = false;
+    this.agentCountrySearchTerm = '';
+    this.agentStateSearchTerm = '';
+    this.showAgentCountryDropdown = false;
+    this.showAgentStateDropdown = false;
+    this.agentCountryFilter = '';
+    this.agentStateFilter = '';
+  }
+
+  // Agent Address Combobox methods
+  getStatesForAgentCountry(): string[] {
+    const country = this.selectedAgent?.address?.country || '';
+    return this.statesByCountry[country] || [];
+  }
+
+  getFilteredAgentCountries(): { value: string; label: string }[] {
+    const filter = this.agentCountryFilter?.toLowerCase().trim();
+    if (!filter) {
+      return this.countries;
+    }
+    return this.countries.filter(country =>
+      country.label.toLowerCase().includes(filter) ||
+      country.value.toLowerCase().includes(filter)
+    );
+  }
+
+  getFilteredAgentStates(): string[] {
+    const states = this.getStatesForAgentCountry();
+    const filter = this.agentStateFilter?.toLowerCase().trim();
+    if (!filter) {
+      return states;
+    }
+    return states.filter(state => state.toLowerCase().includes(filter));
+  }
+
+  getAgentCountryPlaceholder(): string {
+    return `${this.translationService.translate('common.search')} ${this.translationService.translate('clients.country')}`;
+  }
+
+  getAgentStatePlaceholder(): string {
+    return `${this.translationService.translate('common.search')} ${this.translationService.translate('clients.state')}`;
+  }
+
+  toggleAgentCountryDropdown(): void {
+    this.showAgentCountryDropdown = !this.showAgentCountryDropdown;
+    if (this.showAgentCountryDropdown) {
+      this.agentCountryFilter = '';
+    }
+    this.showAgentStateDropdown = false;
+  }
+
+  toggleAgentStateDropdown(): void {
+    if (!this.selectedAgent?.address?.country || this.getStatesForAgentCountry().length === 0) {
+      return;
+    }
+    this.showAgentStateDropdown = !this.showAgentStateDropdown;
+    if (this.showAgentStateDropdown) {
+      this.agentStateFilter = '';
+    }
+    this.showAgentCountryDropdown = false;
+  }
+
+  selectAgentCountry(country: { value: string; label: string }): void {
+    if (this.selectedAgent && this.selectedAgent.address) {
+      this.selectedAgent.address.country = country.value;
+      this.agentCountrySearchTerm = country.label;
+      this.showAgentCountryDropdown = false;
+      this.agentCountryFilter = '';
+      this.onAgentCountryChange();
+    }
+  }
+
+  selectAgentState(state: string): void {
+    if (this.selectedAgent && this.selectedAgent.address) {
+      this.selectedAgent.address.state = state;
+      this.agentStateSearchTerm = state;
+      this.showAgentStateDropdown = false;
+      this.agentStateFilter = '';
+    }
+  }
+
+  onAgentCountryChange(): void {
+    if (this.selectedAgent && this.selectedAgent.address) {
+      this.selectedAgent.address.state = '';
+      this.agentStateSearchTerm = '';
+    }
+  }
+
+  closeAgentDropdowns(): void {
+    this.showAgentCountryDropdown = false;
+    this.showAgentStateDropdown = false;
+  }
+
+  saveAgent(agent: Agent): void {
+    if (!this.clientForm.agents) {
+      this.clientForm.agents = [];
+    }
+
+    // Validar nombre
+    if (!agent.name || agent.name.trim() === '') {
+      alert(this.translationService.translate('clients.agentNameRequired') || 'El nombre del agente es requerido');
+      return;
+    }
+
+    // Validar email si está presente
+    if (agent.email && agent.email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(agent.email)) {
+        alert(this.translationService.translate('clients.invalidEmail') || 'El email no es válido');
+        return;
+      }
+    }
+
+    // Preparar el agente para guardar
+    const agentToSave = {
+      name: agent.name.trim(),
+      phone: agent.phone?.trim() || '',
+      email: agent.email?.trim() || '',
+      address: agent.address ? {
+        street: agent.address.street?.trim() || '',
+        city: agent.address.city?.trim() || '',
+        state: agent.address.state?.trim() || '',
+        zip: agent.address.zip?.trim() || '',
+        country: agent.address.country?.trim() || ''
+      } : undefined
+    };
+
+    // Actualizar o agregar el agente
+    let updatedAgents: Agent[];
+    if (this.isAddingAgent) {
+      // Agregar nuevo agente
+      updatedAgents = [...(this.clientForm.agents || []), agentToSave];
+      // Ir a la última página después de agregar
+      this.agentCurrentPage = Math.ceil(updatedAgents.length / this.agentItemsPerPage);
+    } else {
+      // Actualizar agente existente
+      updatedAgents = [...(this.clientForm.agents || [])];
+      if (this.selectedAgentIndex >= 0 && this.selectedAgentIndex < updatedAgents.length) {
+        updatedAgents[this.selectedAgentIndex] = agentToSave;
+      } else {
+        return; // Índice inválido
+      }
+    }
+
+    // Actualizar clientForm.agents
+    this.clientForm.agents = updatedAgents.map(agent => ({
+      name: agent.name.trim(),
+      phone: agent.phone?.trim() || '',
+      email: agent.email?.trim() || '',
+      address: agent.address ? {
+        street: agent.address.street?.trim() || '',
+        city: agent.address.city?.trim() || '',
+        state: agent.address.state?.trim() || '',
+        zip: agent.address.zip?.trim() || '',
+        country: agent.address.country?.trim() || ''
+      } : undefined
+    }));
+
+    // Reinicializar términos de búsqueda para todos los agentes
+    this.clientForm.agents.forEach((agent: Agent, index: number) => {
+      if (agent.address?.country) {
+        const selectedCountry = this.countries.find(c => c.value === agent.address?.country);
+        this.agentCountrySearchTerms[index] = selectedCountry ? selectedCountry.label : (agent.address.country || '');
+      } else {
+        this.agentCountrySearchTerms[index] = '';
+      }
+      if (agent.address?.state) {
+        this.agentStateSearchTerms[index] = agent.address.state;
+      } else {
+        this.agentStateSearchTerms[index] = '';
+      }
+    });
+
+    this.closeAgentModal();
+  }
+
+  // Agent Pagination methods
+  agentPreviousPage(): void {
+    if (this.agentCurrentPage > 1) {
+      this.agentCurrentPage--;
+    }
+  }
+
+  agentNextPage(): void {
+    if (this.agentCurrentPage < this.agentTotalPages) {
+      this.agentCurrentPage++;
+    }
+  }
+
+  agentGoToPage(page: number): void {
+    if (page >= 1 && page <= this.agentTotalPages) {
+      this.agentCurrentPage = page;
+    }
   }
 
   onTypeChange(): void {
